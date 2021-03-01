@@ -1,0 +1,14 @@
+[package]
+name = "rutag"
+version = "0.1.0"
+authors = ["wojciechkepka <wojtek.kepka@protonmail.com>"]
+edition = "2018"
+
+[[bin]]
+name = "rutag"
+path = "src/main.rs"
+
+[dependencies]
+libc = "0.2"
+anyhow = "1"
+thiserror = "1"
