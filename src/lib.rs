@@ -70,12 +70,26 @@ where
     P: AsRef<Path>,
     S: AsRef<str>,
 {
-    for (key, value) in list_xattrs(path.as_ref())? {
+    for (key, val) in list_xattrs(path.as_ref())? {
         // make sure to only remove attributes corresponding to this namespace
-        if value == tag.as_ref() && key.starts_with(RUTAG_NAMESPACE) {
+        if val == tag.as_ref() && key.starts_with(RUTAG_NAMESPACE) {
             return remove_xattr(path, key);
         }
     }
 
     Err(Error::TagNotFound)
+}
+
+pub fn clear_tags<P>(path: P) -> Result<(), Error>
+where
+    P: AsRef<Path>,
+{
+    for (key, _) in list_xattrs(path.as_ref())?
+        .iter()
+        .filter(|(key, _)| key.starts_with(RUTAG_NAMESPACE))
+    {
+        remove_xattr(path.as_ref(), key)?;
+    }
+
+    Ok(())
 }

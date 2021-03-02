@@ -10,17 +10,16 @@ pub struct RutagOpts {
 
 #[derive(Clap)]
 pub enum RutagCmd {
+    /// Lists all tags of the file located at the given path
     List {
         path: PathBuf,
         #[clap(short, long)]
         pretty: bool,
     },
-    Set {
-        path: PathBuf,
-        tag: String,
-    },
-    Rm {
-        path: PathBuf,
-        tag: String,
-    },
+    /// Sets a tag of the file located at at the given path
+    Set { path: PathBuf, tag: String },
+    /// Removes a tag of the file located at the given path
+    Rm { path: PathBuf, tag: String },
+    /// Clears all tags of the file located at the given path
+    Clear { path: PathBuf },
 }
