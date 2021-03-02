@@ -22,4 +22,6 @@ pub enum RutagCmd {
     Rm { path: PathBuf, tag: String },
     /// Clears all tags of the file located at the given path
     Clear { path: PathBuf },
+    /// Recursively searches down the filesystem for files tagged with the given tag
+    Search { tag: String },
 }

@@ -1,7 +1,7 @@
 use clap::Clap;
 
 use rutag::opt::{RutagCmd, RutagOpts};
-use rutag::{clear_tags, list_tags, remove_tag, tag_file};
+use rutag::{clear_tags, list_tags, remove_tag, search_files_with_tag, tag_file};
 
 fn main() {
     let opts = RutagOpts::parse();
@@ -29,5 +29,14 @@ fn main() {
                 eprintln!("{}", e);
             }
         }
+        RutagCmd::Search { tag } => match search_files_with_tag(&tag) {
+            Ok(files) => {
+                println!("Files with tag `{}`:", tag);
+                for file in files {
+                    println!("\t- {}", file.display());
+                }
+            }
+            Err(e) => eprintln!("{}", e),
+        },
     }
 }

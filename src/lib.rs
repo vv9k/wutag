@@ -1,9 +1,11 @@
 pub mod opt;
 mod xattr;
 
+use std::env;
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use thiserror::Error;
+use walkdir::WalkDir;
 
 pub use xattr::*;
 
@@ -92,4 +94,24 @@ where
     }
 
     Ok(())
+}
+
+pub fn search_files_with_tag<S>(tag: S) -> Result<Vec<PathBuf>, Error>
+where
+    S: AsRef<str>,
+{
+    let tag = tag.as_ref().to_string();
+    let mut files = Vec::new();
+
+    for entry in WalkDir::new(env::current_dir()?) {
+        if let Ok(entry) = entry {
+            if let Ok(tags) = list_tags(entry.path()) {
+                if tags.contains(&tag) {
+                    files.push(entry.path().to_path_buf());
+                }
+            }
+        }
+    }
+
+    Ok(files)
 }
