@@ -43,21 +43,7 @@ where
     let size = value.as_ref().as_bytes().len();
     let value = CString::new(value.as_ref().as_bytes())?;
 
-    unsafe {
-        let ret = setxattr(
-            path.as_ptr(),
-            name.as_ptr(),
-            value.as_ptr() as *const c_void,
-            size,
-            XATTR_CREATE,
-        );
-
-        if ret != 0 {
-            return Err(Error::from(io::Error::last_os_error()));
-        }
-    }
-
-    Ok(())
+    _set_xattr(&path, &name, &value, size)
 }
 
 pub fn get_xattr<P, S>(path: P, name: S) -> Result<String, Error>
@@ -94,6 +80,24 @@ fn get_xattr_size(path: &CStr, name: &CStr) -> Result<usize, Error> {
     }
 
     Ok(ret as usize)
+}
+
+fn _set_xattr(path: &CStr, name: &CStr, value: &CStr, size: usize) -> Result<(), Error> {
+    unsafe {
+        let ret = setxattr(
+            path.as_ptr(),
+            name.as_ptr(),
+            value.as_ptr() as *const c_void,
+            size,
+            XATTR_CREATE,
+        );
+
+        if ret != 0 {
+            return Err(Error::from(io::Error::last_os_error()));
+        }
+    }
+
+    Ok(())
 }
 
 fn _get_xattr(path: &CStr, name: &CStr) -> Result<String, Error> {
