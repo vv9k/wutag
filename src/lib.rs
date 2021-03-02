@@ -1,10 +1,11 @@
 use libc::{
     getxattr, lgetxattr, listxattr, lremovexattr, lsetxattr, removexattr, setxattr, XATTR_CREATE,
 };
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr, CString, OsStr};
 use std::io;
 use std::mem;
 use std::os::raw::{c_char, c_void};
+use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 use std::ptr;
 use thiserror::Error;
@@ -19,7 +20,7 @@ pub enum Error {
     FileNotFound,
     #[error("error: {0}")]
     Other(String),
-    #[error("provided string was invalid")]
+    #[error("provided string was invalid - {0}")]
     InvalidString(#[from] std::ffi::NulError),
     #[error("provided string was not valid UTF-8")]
     Utf8ConversionFailed(#[from] std::string::FromUtf8Error),
@@ -251,18 +252,37 @@ fn list_xattrs_raw(path: &CStr) -> Result<Vec<u8>, Error> {
 }
 
 fn parse_xattrs(input: &[u8]) -> Result<Vec<String>, Error> {
-    let mut it = input.iter();
+    let mut it = input.iter().enumerate();
     let mut keys = Vec::new();
-    let mut key = Vec::new();
+    let mut start = 0;
 
-    while let Some(ch) = it.next() {
-        match ch {
-            b'\0' => {
-                keys.push(String::from_utf8(mem::take(&mut key))?);
-            }
-            _ => key.push(*ch),
+    while let Some((i, ch)) = it.next() {
+        if *ch == b'\0' {
+            keys.push(
+                OsStr::from_bytes(&input[start..i])
+                    .to_string_lossy()
+                    .to_string(),
+            );
+            start += i - start + 1;
         }
     }
 
     Ok(keys)
+}
+
+#[test]
+fn parses_xattrs_from_raw() {
+    let raw = &[
+        117, 115, 101, 114, 46, 107, 101, 121, 49, 0, 117, 115, 101, 114, 46, 107, 101, 121, 50, 0,
+        117, 115, 101, 114, 46, 107, 101, 121, 51, 0, 115, 101, 99, 117, 114, 105, 116, 121, 46,
+        116, 101, 115, 116, 105, 110, 103, 0,
+    ];
+
+    let attrs = parse_xattrs(raw).unwrap();
+    let mut it = attrs.iter();
+
+    assert_eq!(it.next(), Some(&"user.key1".to_string()));
+    assert_eq!(it.next(), Some(&"user.key2".to_string()));
+    assert_eq!(it.next(), Some(&"user.key3".to_string()));
+    assert_eq!(it.next(), Some(&"security.testing".to_string()));
 }
