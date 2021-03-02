@@ -42,6 +42,8 @@ impl From<io::Error> for Error {
     }
 }
 
+/// Sets the value of the extended attribute identified by `name` and associated with the given `path` in the
+/// filesystem.
 pub fn set_xattr<P, S>(path: P, name: S, value: S) -> Result<(), Error>
 where
     P: AsRef<Path>,
@@ -52,6 +54,8 @@ where
     _set_xattr(path.as_ref(), name.as_ref(), value.as_ref(), size, false)
 }
 
+/// Retrieves the value of the extended attribute identified by `name` and associated with the given
+/// `path` in the filesystem.
 pub fn get_xattr<P, S>(path: P, name: S) -> Result<String, Error>
 where
     P: AsRef<Path>,
@@ -60,6 +64,8 @@ where
     _get_xattr(path.as_ref(), name.as_ref(), false)
 }
 
+/// Retrieves a list of all extended attributes with their values associated with the given `path`
+/// in the filesystem.
 pub fn list_xattrs<P>(path: P) -> Result<Vec<(String, String)>, Error>
 where
     P: AsRef<Path>,
@@ -67,6 +73,8 @@ where
     _list_xattrs(path.as_ref(), false)
 }
 
+/// Removes the extended attribute identified by `name` and associated with the given `path` in the
+/// filesystem.
 pub fn remove_xattr<P, S>(path: P, name: S) -> Result<(), Error>
 where
     P: AsRef<Path>,
@@ -75,6 +83,8 @@ where
     _remove_xattr(path.as_ref(), name.as_ref(), false)
 }
 
+/// Provides identical functionality to [`set_xattr`](set_xattr) except in the case of a symbolic
+/// link where the extended attribute is set on the link itself, not the file that it refers to.
 pub fn set_link_xattr<P, S>(path: P, name: S, value: S) -> Result<(), Error>
 where
     P: AsRef<Path>,
@@ -85,6 +95,8 @@ where
     _set_xattr(path.as_ref(), name.as_ref(), value.as_ref(), size, true)
 }
 
+/// Provides identical functionality to [`get_xattr`](get_xattr) except in the case of a symbolic
+/// link where the extended attribute is retrieved from the link not the file that it refers to.
 pub fn get_link_xattr<P, S>(path: P, name: S) -> Result<String, Error>
 where
     P: AsRef<Path>,
@@ -93,6 +105,8 @@ where
     _get_xattr(path.as_ref(), name.as_ref(), true)
 }
 
+/// Provides identical functionality to [`list_xattrs`](list_xattrs) except in the case of a symbolic
+/// link where the list of extended attributes is retrieved from the link no the file it refers to.
 pub fn list_link_xattrs<P>(path: P) -> Result<Vec<(String, String)>, Error>
 where
     P: AsRef<Path>,
@@ -100,6 +114,9 @@ where
     _list_xattrs(path.as_ref(), true)
 }
 
+/// Provides identical functionality to [`remove_xattr`](remove_xattr) except in the case of a symbolic
+/// link where the value of the extended attribute is removed from the link not the file that it
+/// refers to.
 pub fn remove_link_xattr<P, S>(path: P, name: S) -> Result<(), Error>
 where
     P: AsRef<Path>,
