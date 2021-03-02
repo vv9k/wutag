@@ -1,4 +1,6 @@
-use libc::{getxattr, listxattr, removexattr, setxattr, XATTR_CREATE};
+use libc::{
+    getxattr, lgetxattr, listxattr, lremovexattr, lsetxattr, removexattr, setxattr, XATTR_CREATE,
+};
 use std::ffi::{CStr, CString};
 use std::io;
 use std::mem;
@@ -45,7 +47,7 @@ where
 {
     let size = value.as_ref().as_bytes().len();
 
-    _set_xattr(path.as_ref(), name.as_ref(), value.as_ref(), size)
+    _set_xattr(path.as_ref(), name.as_ref(), value.as_ref(), size, false)
 }
 
 pub fn get_xattr<P, S>(path: P, name: S) -> Result<String, Error>
@@ -53,14 +55,14 @@ where
     P: AsRef<Path>,
     S: AsRef<str>,
 {
-    _get_xattr(path.as_ref(), name.as_ref())
+    _get_xattr(path.as_ref(), name.as_ref(), false)
 }
 
 pub fn list_xattrs<P>(path: P) -> Result<Vec<(String, String)>, Error>
 where
     P: AsRef<Path>,
 {
-    _list_xattrs(path.as_ref())
+    _list_xattrs(path.as_ref(), false)
 }
 
 pub fn remove_xattr<P, S>(path: P, name: S) -> Result<(), Error>
@@ -68,19 +70,54 @@ where
     P: AsRef<Path>,
     S: AsRef<str>,
 {
-    _remove_xattr(path.as_ref(), name.as_ref())
+    _remove_xattr(path.as_ref(), name.as_ref(), false)
+}
+
+pub fn set_link_xattr<P, S>(path: P, name: S, value: S) -> Result<(), Error>
+where
+    P: AsRef<Path>,
+    S: AsRef<str>,
+{
+    let size = value.as_ref().as_bytes().len();
+
+    _set_xattr(path.as_ref(), name.as_ref(), value.as_ref(), size, true)
+}
+
+pub fn get_link_xattr<P, S>(path: P, name: S) -> Result<String, Error>
+where
+    P: AsRef<Path>,
+    S: AsRef<str>,
+{
+    _get_xattr(path.as_ref(), name.as_ref(), true)
+}
+
+pub fn list_link_xattrs<P>(path: P) -> Result<Vec<(String, String)>, Error>
+where
+    P: AsRef<Path>,
+{
+    _list_xattrs(path.as_ref(), true)
+}
+
+pub fn remove_link_xattr<P, S>(path: P, name: S) -> Result<(), Error>
+where
+    P: AsRef<Path>,
+    S: AsRef<str>,
+{
+    _remove_xattr(path.as_ref(), name.as_ref(), true)
 }
 
 //################################################################################
 // Impl
 //################################################################################
 
-fn _remove_xattr(path: &Path, name: &str) -> Result<(), Error> {
+fn _remove_xattr(path: &Path, name: &str, symlink: bool) -> Result<(), Error> {
     let path = CString::new(path.to_string_lossy().as_bytes())?;
     let name = CString::new(name.as_bytes())?;
 
+    let func = if symlink { lremovexattr } else { removexattr };
+
     unsafe {
-        let ret = removexattr(path.as_ptr(), name.as_ptr());
+        let ret = func(path.as_ptr(), name.as_ptr());
         if ret != 0 {
             return Err(Error::from(io::Error::last_os_error()));
         }
@@ -89,13 +126,21 @@ fn _remove_xattr(path: &Path, name: &str) -> Result<(), Error> {
     Ok(())
 }
 
-fn _set_xattr(path: &Path, name: &str, value: &str, size: usize) -> Result<(), Error> {
+fn _set_xattr(
+    path: &Path,
+    name: &str,
+    value: &str,
+    size: usize,
+    symlink: bool, // if provided path is a symlink set the attribute on the symlink not the file/directory it points to
+) -> Result<(), Error> {
     let path = CString::new(path.to_string_lossy().as_bytes())?;
     let name = CString::new(name.as_bytes())?;
     let value = CString::new(value.as_bytes())?;
 
+    let func = if symlink { lsetxattr } else { setxattr };
+
     unsafe {
-        let ret = setxattr(
+        let ret = func(
             path.as_ptr(),
             name.as_ptr(),
             value.as_ptr() as *const c_void,
@@ -111,16 +156,18 @@ fn _set_xattr(path: &Path, name: &str, value: &str, size: usize) -> Result<(), E
     Ok(())
 }
 
-fn _get_xattr(path: &Path, name: &str) -> Result<String, Error> {
+fn _get_xattr(path: &Path, name: &str, symlink: bool) -> Result<String, Error> {
     let path = CString::new(path.to_string_lossy().as_bytes())?;
     let name = CString::new(name.as_bytes())?;
     let size = get_xattr_size(path.as_c_str(), name.as_c_str())?;
     let mut buf = Vec::<u8>::with_capacity(size);
     let buf_ptr = buf.as_mut_ptr();
 
+    let func = if symlink { lgetxattr } else { getxattr };
+
     mem::forget(buf);
 
-    let ret = unsafe { getxattr(path.as_ptr(), name.as_ptr(), buf_ptr as *mut c_void, size) };
+    let ret = unsafe { func(path.as_ptr(), name.as_ptr(), buf_ptr as *mut c_void, size) };
 
     if ret == -1 {
         return Err(Error::from(io::Error::last_os_error()));
@@ -139,7 +186,7 @@ fn _get_xattr(path: &Path, name: &str) -> Result<String, Error> {
         .to_string())
 }
 
-fn _list_xattrs(path: &Path) -> Result<Vec<(String, String)>, Error> {
+fn _list_xattrs(path: &Path, symlink: bool) -> Result<Vec<(String, String)>, Error> {
     let cpath = CString::new(path.to_string_lossy().as_bytes())?;
     let raw = list_xattrs_raw(cpath.as_c_str())?;
     let keys = parse_xattrs(&raw)?;
@@ -147,7 +194,7 @@ fn _list_xattrs(path: &Path) -> Result<Vec<(String, String)>, Error> {
     let mut attrs = Vec::new();
 
     for key in keys {
-        attrs.push((key.clone(), _get_xattr(path, key.as_str())?));
+        attrs.push((key.clone(), _get_xattr(path, key.as_str(), symlink)?));
     }
 
     Ok(attrs)
