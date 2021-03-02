@@ -43,7 +43,11 @@ impl From<io::Error> for Error {
 }
 
 fn rutag_timestamp() -> String {
-    format!("{}.{}", RUTAG_NAMESPACE, chrono::offset::Utc::now())
+    format!(
+        "{}.{}",
+        RUTAG_NAMESPACE,
+        chrono::offset::Utc::now().to_rfc3339()
+    )
 }
 
 pub fn tag_file<P, S>(path: P, tag: S) -> Result<(), Error>
