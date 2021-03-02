@@ -2,7 +2,7 @@ use clap::Clap;
 use serde_json::Value;
 use std::path::PathBuf;
 
-use rutag::{get_xattr, list_xattrs, set_xattr};
+use rutag::{get_xattr, list_xattrs, remove_xattr, set_xattr};
 
 #[derive(Clap)]
 #[clap(version = "0.1.0", author = "Wojciech Kępka <wojciech@wkepka.dev>")]
@@ -24,6 +24,10 @@ enum RutagCmd {
         value: String,
     },
     Get {
+        path: PathBuf,
+        key: String,
+    },
+    Rm {
         path: PathBuf,
         key: String,
     },
@@ -61,6 +65,11 @@ fn main() {
         },
         RutagCmd::Set { path, key, value } => {
             if let Err(e) = set_xattr(path.as_path(), &key, &value) {
+                eprintln!("{}", e);
+            }
+        }
+        RutagCmd::Rm { path, key } => {
+            if let Err(e) = remove_xattr(path.as_path(), &key) {
                 eprintln!("{}", e);
             }
         }

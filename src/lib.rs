@@ -1,4 +1,4 @@
-use libc::{getxattr, listxattr, setxattr, XATTR_CREATE};
+use libc::{getxattr, listxattr, removexattr, setxattr, XATTR_CREATE};
 use std::ffi::{CStr, CString};
 use std::io;
 use std::mem;
@@ -43,12 +43,9 @@ where
     P: AsRef<Path>,
     S: AsRef<str>,
 {
-    let path = CString::new(path.as_ref().to_string_lossy().as_bytes())?;
-    let name = CString::new(name.as_ref().as_bytes())?;
     let size = value.as_ref().as_bytes().len();
-    let value = CString::new(value.as_ref().as_bytes())?;
 
-    _set_xattr(&path, &name, &value, size)
+    _set_xattr(path.as_ref(), name.as_ref(), value.as_ref(), size)
 }
 
 pub fn get_xattr<P, S>(path: P, name: S) -> Result<String, Error>
@@ -56,38 +53,47 @@ where
     P: AsRef<Path>,
     S: AsRef<str>,
 {
-    let path = CString::new(path.as_ref().to_string_lossy().as_bytes())?;
-    let name = CString::new(name.as_ref().as_bytes())?;
-
-    _get_xattr(path.as_c_str(), name.as_c_str())
+    _get_xattr(path.as_ref(), name.as_ref())
 }
 
 pub fn list_xattrs<P>(path: P) -> Result<Vec<(String, String)>, Error>
 where
     P: AsRef<Path>,
 {
-    let path = CString::new(path.as_ref().to_string_lossy().as_bytes())?;
-    _list_xattrs(path.as_c_str())
+    _list_xattrs(path.as_ref())
+}
+
+pub fn remove_xattr<P, S>(path: P, name: S) -> Result<(), Error>
+where
+    P: AsRef<Path>,
+    S: AsRef<str>,
+{
+    _remove_xattr(path.as_ref(), name.as_ref())
 }
 
 //################################################################################
 // Impl
 //################################################################################
 
-fn get_xattr_size(path: &CStr, name: &CStr) -> Result<usize, Error> {
-    let path = path.as_ref();
-    let name = name.as_ref();
+fn _remove_xattr(path: &Path, name: &str) -> Result<(), Error> {
+    let path = CString::new(path.to_string_lossy().as_bytes())?;
+    let name = CString::new(name.as_bytes())?;
 
-    let ret = unsafe { getxattr(path.as_ptr(), name.as_ptr(), ptr::null_mut(), 0) };
-
-    if ret == -1 {
-        return Err(Error::from(io::Error::last_os_error()));
+    unsafe {
+        let ret = removexattr(path.as_ptr(), name.as_ptr());
+        if ret != 0 {
+            return Err(Error::from(io::Error::last_os_error()));
+        }
     }
 
-    Ok(ret as usize)
+    Ok(())
 }
 
-fn _set_xattr(path: &CStr, name: &CStr, value: &CStr, size: usize) -> Result<(), Error> {
+fn _set_xattr(path: &Path, name: &str, value: &str, size: usize) -> Result<(), Error> {
+    let path = CString::new(path.to_string_lossy().as_bytes())?;
+    let name = CString::new(name.as_bytes())?;
+    let value = CString::new(value.as_bytes())?;
+
     unsafe {
         let ret = setxattr(
             path.as_ptr(),
@@ -105,8 +111,10 @@ fn _set_xattr(path: &CStr, name: &CStr, value: &CStr, size: usize) -> Result<(),
     Ok(())
 }
 
-fn _get_xattr(path: &CStr, name: &CStr) -> Result<String, Error> {
-    let size = get_xattr_size(path, name)?;
+fn _get_xattr(path: &Path, name: &str) -> Result<String, Error> {
+    let path = CString::new(path.to_string_lossy().as_bytes())?;
+    let name = CString::new(name.as_bytes())?;
+    let size = get_xattr_size(path.as_c_str(), name.as_c_str())?;
     let mut buf = Vec::<u8>::with_capacity(size);
     let buf_ptr = buf.as_mut_ptr();
 
@@ -131,18 +139,32 @@ fn _get_xattr(path: &CStr, name: &CStr) -> Result<String, Error> {
         .to_string())
 }
 
-fn _list_xattrs(path: &CStr) -> Result<Vec<(String, String)>, Error> {
-    let raw = list_xattrs_raw(path)?;
+fn _list_xattrs(path: &Path) -> Result<Vec<(String, String)>, Error> {
+    let cpath = CString::new(path.to_string_lossy().as_bytes())?;
+    let raw = list_xattrs_raw(cpath.as_c_str())?;
     let keys = parse_xattrs(&raw)?;
 
     let mut attrs = Vec::new();
 
     for key in keys {
-        let _key = CString::new(key.as_str())?;
-        attrs.push((key, _get_xattr(path, _key.as_c_str())?));
+        attrs.push((key.clone(), _get_xattr(path, key.as_str())?));
     }
 
     Ok(attrs)
+}
+
+//################################################################################
+// Other
+//################################################################################
+
+fn get_xattr_size(path: &CStr, name: &CStr) -> Result<usize, Error> {
+    let ret = unsafe { getxattr(path.as_ptr(), name.as_ptr(), ptr::null_mut(), 0) };
+
+    if ret == -1 {
+        return Err(Error::from(io::Error::last_os_error()));
+    }
+
+    Ok(ret as usize)
 }
 
 fn get_xattrs_list_size(path: &CStr) -> Result<usize, Error> {
