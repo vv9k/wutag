@@ -1,5 +1,6 @@
 use libc::{
-    getxattr, lgetxattr, listxattr, lremovexattr, lsetxattr, removexattr, setxattr, XATTR_CREATE,
+    getxattr, lgetxattr, listxattr, llistxattr, lremovexattr, lsetxattr, removexattr, setxattr,
+    XATTR_CREATE,
 };
 use std::ffi::{CStr, CString, OsStr};
 use std::io;
@@ -189,7 +190,7 @@ fn _get_xattr(path: &Path, name: &str, symlink: bool) -> Result<String, Error> {
 
 fn _list_xattrs(path: &Path, symlink: bool) -> Result<Vec<(String, String)>, Error> {
     let cpath = CString::new(path.to_string_lossy().as_bytes())?;
-    let raw = list_xattrs_raw(cpath.as_c_str())?;
+    let raw = list_xattrs_raw(cpath.as_c_str(), symlink)?;
     let keys = parse_xattrs(&raw)?;
 
     let mut attrs = Vec::new();
@@ -215,10 +216,12 @@ fn get_xattr_size(path: &CStr, name: &CStr) -> Result<usize, Error> {
     Ok(ret as usize)
 }
 
-fn get_xattrs_list_size(path: &CStr) -> Result<usize, Error> {
+fn get_xattrs_list_size(path: &CStr, symlink: bool) -> Result<usize, Error> {
     let path = path.as_ref();
 
-    let ret = unsafe { listxattr(path.as_ptr(), ptr::null_mut(), 0) };
+    let func = if symlink { llistxattr } else { listxattr };
+
+    let ret = unsafe { func(path.as_ptr(), ptr::null_mut(), 0) };
 
     if ret == -1 {
         return Err(Error::from(io::Error::last_os_error()));
@@ -227,14 +230,16 @@ fn get_xattrs_list_size(path: &CStr) -> Result<usize, Error> {
     Ok(ret as usize)
 }
 
-fn list_xattrs_raw(path: &CStr) -> Result<Vec<u8>, Error> {
-    let size = get_xattrs_list_size(path)?;
+fn list_xattrs_raw(path: &CStr, symlink: bool) -> Result<Vec<u8>, Error> {
+    let size = get_xattrs_list_size(path, symlink)?;
     let mut buf = Vec::<u8>::with_capacity(size);
     let buf_ptr = buf.as_mut_ptr();
 
     mem::forget(buf);
 
-    let ret = unsafe { listxattr(path.as_ptr(), buf_ptr as *mut c_char, size) };
+    let func = if symlink { llistxattr } else { listxattr };
+
+    let ret = unsafe { func(path.as_ptr(), buf_ptr as *mut c_char, size) };
 
     if ret == -1 {
         return Err(Error::from(io::Error::last_os_error()));
