@@ -72,18 +72,16 @@ pub enum WutagCmd {
         /// iterate over all files.
         recursive: bool,
     },
-    /// Recursively searches down the filesystem, starting from the current directory, for files tagged
-    /// with the given tags. By default only first level of the directory is scanned.
+    /// Searches for files that have all of the provided `tags` in the current directory.
     Search {
         #[clap(required = true)]
         tags: Vec<String>,
         #[clap(short, long)]
         /// When this parameter is specified the program will look for files in the location
-        /// specified by this parameter instead of current working directory.
+        /// specified by this parameter instead of the current working directory.
         base_path: Option<PathBuf>,
         #[clap(long, short)]
-        /// If this parameter is specified that path will be treated as a glob and will recursively
-        /// iterate over all files.
+        /// If this parameter is specified recursively look for files in all subdirectories.
         recursive: bool,
     },
 }

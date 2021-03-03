@@ -1,7 +1,7 @@
 pub mod opt;
+pub mod util;
 mod xattr;
 
-use globwalk::GlobWalkerBuilder;
 use std::collections::BTreeSet;
 use std::env;
 use std::io;
@@ -10,7 +10,8 @@ use thiserror::Error;
 
 pub use xattr::*;
 
-const WUTAG_NAMESPACE: &str = "user.wutag";
+pub const WUTAG_NAMESPACE: &str = "user.wutag";
+pub const DEFAULT_MAX_DEPTH: usize = 512;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -139,13 +140,7 @@ where
         env::current_dir()?.as_path().to_string_lossy().to_string()
     };
 
-    let mut builder = GlobWalkerBuilder::new(dir, "*");
-
-    if recursive {
-        builder = builder.max_depth(0);
-    }
-
-    for entry in builder.build()? {
+    for entry in util::glob_walker(dir.as_str(), "**/*", recursive)? {
         if let Ok(entry) = entry {
             if let Ok(_tags) = list_tags_btree(entry.path()) {
                 if !tags.is_subset(&_tags) {
