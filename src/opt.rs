@@ -3,13 +3,13 @@ use std::path::PathBuf;
 
 #[derive(Clap)]
 #[clap(version = "0.1.0", author = "Wojciech Kępka <wojciech@wkepka.dev>")]
-pub struct RutagOpts {
+pub struct WutagOpts {
     #[clap(subcommand)]
-    pub cmd: RutagCmd,
+    pub cmd: WutagCmd,
 }
 
 #[derive(Clap)]
-pub enum RutagCmd {
+pub enum WutagCmd {
     /// Lists all tags of the files located at the given paths.
     List {
         #[clap(required = true)]

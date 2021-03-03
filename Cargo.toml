@@ -1,11 +1,11 @@
 [package]
-name = "rutag"
+name = "wutag"
 version = "0.1.0"
 authors = ["wojciechkepka <wojtek.kepka@protonmail.com>"]
 edition = "2018"
 
 [[bin]]
-name = "rutag"
+name = "wutag"
 path = "src/main.rs"
 
 [dependencies]

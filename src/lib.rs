@@ -10,7 +10,7 @@ use walkdir::WalkDir;
 
 pub use xattr::*;
 
-const RUTAG_NAMESPACE: &str = "user.rutag";
+const WUTAG_NAMESPACE: &str = "user.wutag";
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -43,10 +43,10 @@ impl From<io::Error> for Error {
     }
 }
 
-fn rutag_timestamp() -> String {
+fn wutag_timestamp() -> String {
     format!(
         "{}.{}",
-        RUTAG_NAMESPACE,
+        WUTAG_NAMESPACE,
         chrono::offset::Utc::now().timestamp()
     )
 }
@@ -61,7 +61,7 @@ where
             return Err(Error::TagExists);
         }
     }
-    set_xattr(path, rutag_timestamp().as_str(), tag.as_ref())
+    set_xattr(path, wutag_timestamp().as_str(), tag.as_ref())
 }
 
 pub fn list_tags<P>(path: P) -> Result<Vec<String>, Error>
@@ -71,7 +71,7 @@ where
     list_xattrs(path).map(|attrs| {
         attrs
             .into_iter()
-            .filter(|(key, _)| key.starts_with(RUTAG_NAMESPACE))
+            .filter(|(key, _)| key.starts_with(WUTAG_NAMESPACE))
             .map(|(_, val)| val)
             .collect::<Vec<String>>()
     })
@@ -84,7 +84,7 @@ where
     list_xattrs(path).map(|attrs| {
         attrs
             .into_iter()
-            .filter(|(key, _)| key.starts_with(RUTAG_NAMESPACE))
+            .filter(|(key, _)| key.starts_with(WUTAG_NAMESPACE))
             .map(|(_, val)| val)
             .collect::<BTreeSet<String>>()
     })
@@ -97,7 +97,7 @@ where
 {
     for (key, val) in list_xattrs(path.as_ref())? {
         // make sure to only remove attributes corresponding to this namespace
-        if val == tag.as_ref() && key.starts_with(RUTAG_NAMESPACE) {
+        if val == tag.as_ref() && key.starts_with(WUTAG_NAMESPACE) {
             return remove_xattr(path, key);
         }
     }
@@ -111,7 +111,7 @@ where
 {
     for (key, _) in list_xattrs(path.as_ref())?
         .iter()
-        .filter(|(key, _)| key.starts_with(RUTAG_NAMESPACE))
+        .filter(|(key, _)| key.starts_with(WUTAG_NAMESPACE))
     {
         remove_xattr(path.as_ref(), key)?;
     }

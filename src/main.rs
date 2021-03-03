@@ -4,8 +4,8 @@ use std::fmt::Display;
 use std::path::Path;
 use walkdir::WalkDir;
 
-use rutag::opt::{RutagCmd, RutagOpts};
-use rutag::{clear_tags, list_tags, remove_tag, search_files_with_tags, tag_file};
+use wutag::opt::{WutagCmd, WutagOpts};
+use wutag::{clear_tags, list_tags, remove_tag, search_files_with_tags, tag_file};
 
 fn fmt_err<E: Display>(err: E) -> String {
     format!(
@@ -28,10 +28,10 @@ fn fmt_tag<T: AsRef<str>>(tag: T) -> ColoredString {
 }
 
 fn main() {
-    let opts = RutagOpts::parse();
+    let opts = WutagOpts::parse();
 
     match opts.cmd {
-        RutagCmd::List {
+        WutagCmd::List {
             paths,
             recursive,
             show_missing,
@@ -67,7 +67,7 @@ fn main() {
                 }
             }
         }),
-        RutagCmd::Set { paths, tags } => paths.into_iter().for_each(|path| {
+        WutagCmd::Set { paths, tags } => paths.into_iter().for_each(|path| {
             println!("{}:", fmt_path(&path));
             tags.iter().for_each(|tag| {
                 if let Err(e) = tag_file(path.as_path(), &tag) {
@@ -77,7 +77,7 @@ fn main() {
                 }
             });
         }),
-        RutagCmd::Rm { paths, tags } => paths.into_iter().for_each(|path| {
+        WutagCmd::Rm { paths, tags } => paths.into_iter().for_each(|path| {
             println!("{}:", fmt_path(&path));
             tags.iter().for_each(|tag| {
                 if let Err(e) = remove_tag(path.as_path(), &tag) {
@@ -87,7 +87,7 @@ fn main() {
                 }
             })
         }),
-        RutagCmd::Clear { paths } => {
+        WutagCmd::Clear { paths } => {
             paths.into_iter().for_each(|path| {
                 println!("{}:", fmt_path(&path));
                 if let Err(e) = clear_tags(path.as_path()) {
@@ -97,7 +97,7 @@ fn main() {
                 }
             });
         }
-        RutagCmd::Search { path, tags } => match search_files_with_tags(tags.clone(), path) {
+        WutagCmd::Search { path, tags } => match search_files_with_tags(tags.clone(), path) {
             Ok(files) => {
                 if files.is_empty() {
                     print!("No files with tags ");
