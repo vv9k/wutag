@@ -1,6 +1,7 @@
 use clap::Clap;
-use colored::Colorize;
+use colored::{ColoredString, Colorize};
 use std::fmt::Display;
+use std::path::Path;
 
 use rutag::opt::{RutagCmd, RutagOpts};
 use rutag::{clear_tags, list_tags, remove_tag, search_files_with_tag, tag_file};
@@ -13,14 +14,12 @@ fn fmt_err<E: Display>(err: E) -> String {
     )
 }
 
-fn fmt_arrow<D: Display>(from: D, to: D) -> String {
-    format!(
-        "{} {}{} {}",
-        from,
-        "~~~".green().bold(),
-        ">".red().bold(),
-        to
-    )
+fn fmt_path<P: AsRef<Path>>(path: P) -> String {
+    format!("`{}`", path.as_ref().display().to_string().bold().blue())
+}
+
+fn fmt_tag<T: AsRef<str>>(tag: T) -> ColoredString {
+    tag.as_ref().bold().yellow()
 }
 
 fn main() {
@@ -29,30 +28,30 @@ fn main() {
     match opts.cmd {
         RutagCmd::List { path, pretty: _ } => match list_tags(path.as_path()) {
             Ok(tags) => {
-                print!("{}:\t", path.display().to_string().bold().blue());
+                print!("{}:\t", fmt_path(path));
                 for tag in tags {
-                    print!("{}\t", tag.bold().yellow());
+                    print!("{}\t", fmt_tag(tag));
                 }
             }
             Err(e) => eprintln!("{}", fmt_err(e)),
         },
         RutagCmd::Set { paths, tags } => paths.into_iter().for_each(|path| {
-            println!("`{}`:", path.display().to_string().bold().blue());
+            println!("{}:", fmt_path(&path));
             tags.iter().for_each(|tag| {
                 if let Err(e) = tag_file(path.as_path(), &tag) {
-                    eprintln!("  {}", fmt_err(e));
+                    eprintln!("\t{}", fmt_err(e));
                 } else {
-                    println!("  {} {}", "+".bold().green(), tag.bold().yellow());
+                    println!("\t{} {}", "+".bold().green(), fmt_tag(tag));
                 }
             });
         }),
         RutagCmd::Rm { paths, tags } => paths.into_iter().for_each(|path| {
-            println!("`{}`:", path.display().to_string().bold().blue());
+            println!("{}:", fmt_path(&path));
             tags.iter().for_each(|tag| {
                 if let Err(e) = remove_tag(path.as_path(), &tag) {
-                    eprintln!("  {}", fmt_err(e));
+                    eprintln!("\t{}", fmt_err(e));
                 } else {
-                    println!("  {} {}", "X".bold().red(), tag.bold().yellow());
+                    println!("\t{} {}", "X".bold().red(), fmt_tag(tag));
                 }
             })
         }),
@@ -64,11 +63,11 @@ fn main() {
         RutagCmd::Search { tag } => match search_files_with_tag(&tag) {
             Ok(files) => {
                 if files.is_empty() {
-                    println!("No files with tag {} were found.", tag.bold().yellow(),);
+                    println!("No files with tag {} were found.", fmt_tag(tag));
                 } else {
-                    println!("Files with tag {}:", tag.bold().yellow());
+                    println!("Files with tag {}:", fmt_tag(tag));
                     for file in files {
-                        println!("\t{}", file.display().to_string().bold().blue());
+                        println!("\t{}", fmt_path(file));
                     }
                 }
             }
