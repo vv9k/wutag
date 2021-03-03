@@ -1,12 +1,11 @@
-use std::fmt::Display;
-
 use clap::Clap;
 use colored::Colorize;
+use std::fmt::Display;
 
 use rutag::opt::{RutagCmd, RutagOpts};
 use rutag::{clear_tags, list_tags, remove_tag, search_files_with_tag, tag_file};
 
-fn display_err<E: std::fmt::Display>(err: E) {
+fn display_err<E: Display>(err: E) {
     eprintln!(
         "{}:\t{}",
         "ERROR".red().bold(),
@@ -32,7 +31,7 @@ fn main() {
             Ok(tags) => {
                 print!("{}:\t", path.display().to_string().bold().blue());
                 for tag in tags {
-                    print!("{}\t", tag.bold().white());
+                    print!("{}\t", tag.bold().yellow());
                 }
             }
             Err(e) => display_err(e),
@@ -41,7 +40,10 @@ fn main() {
             if let Err(e) = tag_file(path.as_path(), &tag) {
                 display_err(e);
             } else {
-                display_arrow(tag.bold().white(), path.display().to_string().bold().blue());
+                display_arrow(
+                    tag.bold().yellow(),
+                    path.display().to_string().bold().blue(),
+                );
             }
         }
         RutagCmd::Rm { path, tag } => {
@@ -57,9 +59,13 @@ fn main() {
         }
         RutagCmd::Search { tag } => match search_files_with_tag(&tag) {
             Ok(files) => {
-                println!("Files with tag {}:", tag.bold().white());
-                for file in files {
-                    println!("\t- {}", file.display().to_string().bold().blue());
+                if files.is_empty() {
+                    println!("No files with tag {} were found.", tag.bold().yellow(),);
+                } else {
+                    println!("Files with tag {}:", tag.bold().yellow());
+                    for file in files {
+                        println!("\t{}", file.display().to_string().bold().blue());
+                    }
                 }
             }
             Err(e) => display_err(e),
