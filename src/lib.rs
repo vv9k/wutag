@@ -1,12 +1,12 @@
 pub mod opt;
 mod xattr;
 
+use globwalk::DirEntry;
 use std::collections::BTreeSet;
 use std::env;
 use std::io;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
-use walkdir::WalkDir;
 
 pub use xattr::*;
 
@@ -24,6 +24,8 @@ pub enum Error {
     Other(String),
     #[error("provided string was invalid - {0}")]
     InvalidString(#[from] std::ffi::NulError),
+    #[error("provided path was invalid - {0}")]
+    InvalidPath(#[from] globwalk::GlobError),
     #[error("provided string was not valid UTF-8")]
     Utf8ConversionFailed(#[from] std::string::FromUtf8Error),
     #[error("xattrs changed while getting their size")]
@@ -119,41 +121,21 @@ where
     Ok(())
 }
 
-pub fn search_files_with_tag<T>(tag: T) -> Result<Vec<PathBuf>, Error>
-where
-    T: AsRef<str>,
-{
-    let tag = tag.as_ref().to_string();
-    let mut files = Vec::new();
-
-    for entry in WalkDir::new(env::current_dir()?) {
-        if let Ok(entry) = entry {
-            if let Ok(tags) = list_tags(entry.path()) {
-                if tags.contains(&tag) {
-                    files.push(entry.path().to_path_buf());
-                }
-            }
-        }
-    }
-
-    Ok(files)
-}
-
-pub fn search_files_with_tags<Ts, P>(tags: Ts, path: Option<P>) -> Result<Vec<PathBuf>, Error>
+pub fn search_files_with_tags<Ts, S>(tags: Ts, path: Option<S>) -> Result<Vec<PathBuf>, Error>
 where
     Ts: IntoIterator<Item = String>,
-    P: AsRef<Path>,
+    S: AsRef<str>,
 {
     let tags = tags.into_iter().collect::<BTreeSet<_>>();
     let mut files = Vec::new();
 
     let dir = if let Some(path) = path {
-        WalkDir::new(path.as_ref())
+        path.as_ref().to_string()
     } else {
-        WalkDir::new(env::current_dir()?)
+        env::current_dir()?.to_string_lossy().to_string()
     };
 
-    for entry in dir {
+    for entry in globwalk::glob(dir)? {
         if let Ok(entry) = entry {
             if let Ok(_tags) = list_tags_btree(entry.path()) {
                 if !tags.is_subset(&_tags) {

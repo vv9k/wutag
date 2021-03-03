@@ -17,3 +17,4 @@ chrono = "0.4"
 serde = { version = "1", features = ["derive"] }
 walkdir = "2"
 colored = "2"
+globwalk = "0.8"
