@@ -55,6 +55,11 @@ where
     P: AsRef<Path>,
     S: AsRef<str>,
 {
+    for _tag in list_tags(path.as_ref())? {
+        if _tag == tag.as_ref() {
+            return Err(Error::TagExists);
+        }
+    }
     set_xattr(path, rutag_timestamp().as_str(), tag.as_ref())
 }
 
