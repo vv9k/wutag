@@ -14,6 +14,14 @@ fn fmt_err<E: Display>(err: E) -> String {
     )
 }
 
+fn fmt_ok<S: AsRef<str>>(msg: S) -> String {
+    format!(
+        "{}:\t{}",
+        "OK".green().bold(),
+        format!("{}", msg.as_ref()).white().bold()
+    )
+}
+
 fn fmt_path<P: AsRef<Path>>(path: P) -> String {
     format!("`{}`", path.as_ref().display().to_string().bold().blue())
 }
@@ -26,15 +34,20 @@ fn main() {
     let opts = RutagOpts::parse();
 
     match opts.cmd {
-        RutagCmd::List { path } => match list_tags(path.as_path()) {
-            Ok(tags) => {
-                print!("{}:\t", fmt_path(path));
-                for tag in tags {
-                    print!("{}\t", fmt_tag(tag));
-                }
-            }
-            Err(e) => eprintln!("{}", fmt_err(e)),
-        },
+        RutagCmd::List { paths } => {
+            paths
+                .into_iter()
+                .for_each(|path| match list_tags(path.as_path()) {
+                    Ok(tags) => {
+                        print!("{}:\t", fmt_path(path));
+                        for tag in tags {
+                            print!("{}\t", fmt_tag(tag));
+                        }
+                        print!("\n");
+                    }
+                    Err(e) => eprintln!("{}", fmt_err(e)),
+                })
+        }
         RutagCmd::Set { paths, tags } => paths.into_iter().for_each(|path| {
             println!("{}:", fmt_path(&path));
             tags.iter().for_each(|tag| {
@@ -55,10 +68,15 @@ fn main() {
                 }
             })
         }),
-        RutagCmd::Clear { path } => {
-            if let Err(e) = clear_tags(path.as_path()) {
-                eprintln!("{}", fmt_err(e));
-            }
+        RutagCmd::Clear { paths } => {
+            paths.into_iter().for_each(|path| {
+                println!("{}:", fmt_path(&path));
+                if let Err(e) = clear_tags(path.as_path()) {
+                    eprintln!("\t{}", fmt_err(e));
+                } else {
+                    println!("\t{}", fmt_ok("cleared."));
+                }
+            });
         }
         RutagCmd::Search { tag } => match search_files_with_tag(&tag) {
             Ok(files) => {

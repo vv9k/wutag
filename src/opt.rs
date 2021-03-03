@@ -11,7 +11,10 @@ pub struct RutagOpts {
 #[derive(Clap)]
 pub enum RutagCmd {
     /// Lists all tags of the file located at the given path
-    List { path: PathBuf },
+    List {
+        #[clap(required = true)]
+        paths: Vec<PathBuf>,
+    },
     /// Tags the files located at the given paths with the set of tags.
     Set {
         #[clap(takes_value = true, required = true)]
@@ -26,8 +29,11 @@ pub enum RutagCmd {
         #[clap(last = true)]
         tags: Vec<String>,
     },
-    /// Clears all tags of the file located at the given path
-    Clear { path: PathBuf },
+    /// Clears all tags of the files located at the given paths
+    Clear {
+        #[clap(required = true)]
+        paths: Vec<PathBuf>,
+    },
     /// Recursively searches down the filesystem for files tagged with the given tag
     Search { tag: String },
 }
