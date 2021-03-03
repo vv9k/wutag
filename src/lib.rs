@@ -1,6 +1,7 @@
 pub mod opt;
 mod xattr;
 
+use std::collections::BTreeSet;
 use std::env;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -76,6 +77,19 @@ where
     })
 }
 
+pub fn list_tags_btree<P>(path: P) -> Result<BTreeSet<String>, Error>
+where
+    P: AsRef<Path>,
+{
+    list_xattrs(path).map(|attrs| {
+        attrs
+            .into_iter()
+            .filter(|(key, _)| key.starts_with(RUTAG_NAMESPACE))
+            .map(|(_, val)| val)
+            .collect::<BTreeSet<String>>()
+    })
+}
+
 pub fn remove_tag<P, S>(path: P, tag: S) -> Result<(), Error>
 where
     P: AsRef<Path>,
@@ -105,9 +119,9 @@ where
     Ok(())
 }
 
-pub fn search_files_with_tag<S>(tag: S) -> Result<Vec<PathBuf>, Error>
+pub fn search_files_with_tag<T>(tag: T) -> Result<Vec<PathBuf>, Error>
 where
-    S: AsRef<str>,
+    T: AsRef<str>,
 {
     let tag = tag.as_ref().to_string();
     let mut files = Vec::new();
@@ -118,6 +132,29 @@ where
                 if tags.contains(&tag) {
                     files.push(entry.path().to_path_buf());
                 }
+            }
+        }
+    }
+
+    Ok(files)
+}
+
+pub fn search_files_with_tags<Ts>(tags: Ts) -> Result<Vec<PathBuf>, Error>
+where
+    Ts: IntoIterator<Item = String>,
+{
+    let tags = tags.into_iter().collect::<BTreeSet<_>>();
+    let mut files = Vec::new();
+
+    for entry in WalkDir::new(env::current_dir()?) {
+        if let Ok(entry) = entry {
+            if let Ok(_tags) = list_tags_btree(entry.path()) {
+                if !tags.is_subset(&_tags) {
+                    // File doesn't have all tags
+                    continue;
+                }
+
+                files.push(entry.path().to_path_buf());
             }
         }
     }

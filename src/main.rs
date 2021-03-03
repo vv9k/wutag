@@ -4,7 +4,7 @@ use std::fmt::Display;
 use std::path::Path;
 
 use rutag::opt::{RutagCmd, RutagOpts};
-use rutag::{clear_tags, list_tags, remove_tag, search_files_with_tag, tag_file};
+use rutag::{clear_tags, list_tags, remove_tag, search_files_with_tags, tag_file};
 
 fn fmt_err<E: Display>(err: E) -> String {
     format!(
@@ -78,12 +78,21 @@ fn main() {
                 }
             });
         }
-        RutagCmd::Search { tag } => match search_files_with_tag(&tag) {
+        RutagCmd::Search { tags } => match search_files_with_tags(tags.clone()) {
             Ok(files) => {
                 if files.is_empty() {
-                    println!("No files with tag {} were found.", fmt_tag(tag));
+                    print!("No files with tags ");
+                    for tag in &tags {
+                        print!("{} ", fmt_tag(tag));
+                    }
+
+                    println!("were found.");
                 } else {
-                    println!("Files with tag {}:", fmt_tag(tag));
+                    print!("Files with tags ");
+                    for tag in tags {
+                        print!("{} ", fmt_tag(tag));
+                    }
+                    println!(":");
                     for file in files {
                         println!("\t{}", fmt_path(file));
                     }

@@ -34,6 +34,9 @@ pub enum RutagCmd {
         #[clap(required = true)]
         paths: Vec<PathBuf>,
     },
-    /// Recursively searches down the filesystem for files tagged with the given tag
-    Search { tag: String },
+    /// Recursively searches down the filesystem for files tagged with the given tags
+    Search {
+        #[clap(required = true)]
+        tags: Vec<String>,
+    },
 }
