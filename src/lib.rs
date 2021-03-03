@@ -6,7 +6,7 @@ pub mod xattr;
 use std::{ffi, io, string};
 use thiserror::Error;
 
-/// Prefixed used to identify extra attributes added by wutag on files
+/// Prefix used to identify extra attributes added by wutag on files
 pub const WUTAG_NAMESPACE: &str = "user.wutag";
 /// Default max depth passed to [GlobWalker](globwalker::GlobWalker)
 pub const DEFAULT_MAX_DEPTH: usize = 512;

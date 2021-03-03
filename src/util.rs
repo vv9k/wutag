@@ -1,3 +1,4 @@
+//! Utility functions used through this crate and by the main executable
 use colored::{ColoredString, Colorize};
 use globwalk::{DirEntry, GlobWalker, GlobWalkerBuilder};
 use std::fmt::Display;
@@ -25,9 +26,9 @@ pub fn fmt_tag<T: AsRef<str>>(tag: T) -> ColoredString {
     tag.as_ref().bold().yellow()
 }
 
-/// Returns a GlobWalker instance with base path set to `base_path` and pattern to `pattern. If
+/// Returns a GlobWalker instance with base path set to `base_path` and pattern to `pattern`. If
 /// `recursive` is true the maximum depth is going to be [DEFAULT_MAX_DEPTH](DEFAULT_MAX_DEPTH)
-/// otherwise 1 (only top level files).
+/// otherwise `1` (only top level files).
 pub fn glob_walker<S>(base_path: S, pattern: S, recursive: bool) -> Result<GlobWalker, Error>
 where
     S: AsRef<str>,

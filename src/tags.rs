@@ -1,3 +1,4 @@
+//! Functions for manipulating tags on files.
 use std::collections::BTreeSet;
 use std::env;
 use std::path::{Path, PathBuf};
@@ -42,7 +43,7 @@ where
     })
 }
 
-/// Lists tags ofthe file at the given `path` as a [BTreeSet](BTreeSet).
+/// Lists tags of the file at the given `path` as a [BTreeSet](BTreeSet).
 pub fn list_tags_btree<P>(path: P) -> Result<BTreeSet<String>, Error>
 where
     P: AsRef<Path>,
@@ -57,7 +58,7 @@ where
 }
 
 /// Removes the `tag` of the file at the given `path`. If the tag doesn't exists returns
-/// [Error::TagTagNotFound](Error)
+/// [Error::TagNotFound](wutag::Error::TagNotFound)
 pub fn remove_tag<P, S>(path: P, tag: S) -> Result<(), Error>
 where
     P: AsRef<Path>,

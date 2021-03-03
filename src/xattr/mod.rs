@@ -1,3 +1,4 @@
+//! Safe and os-agnostic(TODO) wrappers for manipulating extra attributes
 #[cfg(unix)]
 mod unix;
 #[cfg(windows)]

@@ -1,3 +1,4 @@
+//! Options used by the main executable
 use std::path::PathBuf;
 
 use clap::Clap;
