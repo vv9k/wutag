@@ -97,7 +97,7 @@ fn main() {
                 }
             });
         }
-        RutagCmd::Search { tags } => match search_files_with_tags(tags.clone()) {
+        RutagCmd::Search { path, tags } => match search_files_with_tags(tags.clone(), path) {
             Ok(files) => {
                 if files.is_empty() {
                     print!("No files with tags ");

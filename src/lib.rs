@@ -139,14 +139,21 @@ where
     Ok(files)
 }
 
-pub fn search_files_with_tags<Ts>(tags: Ts) -> Result<Vec<PathBuf>, Error>
+pub fn search_files_with_tags<Ts, P>(tags: Ts, path: Option<P>) -> Result<Vec<PathBuf>, Error>
 where
     Ts: IntoIterator<Item = String>,
+    P: AsRef<Path>,
 {
     let tags = tags.into_iter().collect::<BTreeSet<_>>();
     let mut files = Vec::new();
 
-    for entry in WalkDir::new(env::current_dir()?) {
+    let dir = if let Some(path) = path {
+        WalkDir::new(path.as_ref())
+    } else {
+        WalkDir::new(env::current_dir()?)
+    };
+
+    for entry in dir {
         if let Ok(entry) = entry {
             if let Ok(_tags) = list_tags_btree(entry.path()) {
                 if !tags.is_subset(&_tags) {
