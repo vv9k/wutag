@@ -47,7 +47,7 @@ fn rutag_timestamp() -> String {
     format!(
         "{}.{}",
         RUTAG_NAMESPACE,
-        chrono::offset::Utc::now().to_rfc3339()
+        chrono::offset::Utc::now().timestamp()
     )
 }
 
