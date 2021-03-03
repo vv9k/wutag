@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Clap;
 
 #[derive(Clap)]
@@ -9,41 +11,79 @@ pub struct WutagOpts {
 
 #[derive(Clap)]
 pub enum WutagCmd {
-    /// Lists all tags of the files located at the given path.
+    /// Lists all tags of the files that match the provided pattern in the current working
+    /// directory. By default only first level of the directory is scanned.
     List {
-        /// A normal path or a glob like `'*.png'`.
-        path: String,
+        /// A glob pattern like '*.png'.
+        pattern: String,
+        #[clap(long)]
+        /// When this parameter is specified the program will match files against provided pattern
+        /// at the location specified by `base_path`.
+        base_path: Option<PathBuf>,
         #[clap(long)]
         /// Whether to show files with no tags
         show_missing: bool,
+        #[clap(long, short)]
+        /// If this parameter is specified that path will be treated as a glob and will recursively
+        /// iterate over all files.
+        recursive: bool,
     },
-    /// Tags the files located at the given `path` with the set of `tags`.
+    /// Tags the files located at the given `path` with the set of `tags`. By default only first level of the directory is processed.
     Set {
-        #[clap(takes_value = true, required = true)]
-        /// A normal path or a glob like `'*.png'`.
-        path: String,
-        tags: Vec<String>,
-    },
-    /// Removes the specified tags of the files located at the give path.
-    Rm {
-        #[clap(takes_value = true, required = true)]
-        /// A normal path or a glob like `'*.png'`.
-        path: String,
-        tags: Vec<String>,
-    },
-    /// Clears all tags of the files located at the given paths.
-    Clear {
+        /// A glob pattern like '*.png'.
+        pattern: String,
+        #[clap(long)]
+        /// When this parameter is specified the program will match files against provided pattern
+        /// at the location specified by `base_path`.
+        base_path: Option<PathBuf>,
+        #[clap(long, short)]
+        /// If this parameter is specified that path will be treated as a glob and will recursively
+        /// iterate over all files.
+        recursive: bool,
         #[clap(required = true)]
-        /// A normal path or a glob like `'*.png'`.
-        path: String,
+        tags: Vec<String>,
+    },
+    /// Removes the specified tags of the files that match the provided pattern in the current
+    /// working directory. By default only first level of the directory is processed.
+    Rm {
+        /// A glob pattern like '*.png'.
+        pattern: String,
+        #[clap(long)]
+        /// When this parameter is specified the program will match files against provided pattern
+        /// at the location specified by `base_path`.
+        base_path: Option<PathBuf>,
+        #[clap(long, short)]
+        /// If this parameter is specified that path will be treated as a glob and will recursively
+        /// iterate over all files.
+        recursive: bool,
+        tags: Vec<String>,
+    },
+    /// Clears all tags of the files that match the provided pattern in the current working directory.
+    /// By default only first level of the directory is processed.
+    Clear {
+        /// A glob pattern like '*.png'.
+        pattern: String,
+        #[clap(long)]
+        /// When this parameter is specified the program will match files against provided pattern
+        /// at the location specified by `base_path`.
+        base_path: Option<PathBuf>,
+        #[clap(long, short)]
+        /// If this parameter is specified that path will be treated as a glob and will recursively
+        /// iterate over all files.
+        recursive: bool,
     },
     /// Recursively searches down the filesystem, starting from the current directory, for files tagged
-    /// with the given tags.
+    /// with the given tags. By default only first level of the directory is scanned.
     Search {
         #[clap(required = true)]
         tags: Vec<String>,
         #[clap(short, long)]
-        /// A normal path or a glob like `'*.png'`
-        path: Option<String>,
+        /// When this parameter is specified the program will look for files in the location
+        /// specified by this parameter instead of current working directory.
+        base_path: Option<PathBuf>,
+        #[clap(long, short)]
+        /// If this parameter is specified that path will be treated as a glob and will recursively
+        /// iterate over all files.
+        recursive: bool,
     },
 }

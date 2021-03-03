@@ -1,7 +1,7 @@
 pub mod opt;
 mod xattr;
 
-use globwalk::DirEntry;
+use globwalk::GlobWalkerBuilder;
 use std::collections::BTreeSet;
 use std::env;
 use std::io;
@@ -121,21 +121,31 @@ where
     Ok(())
 }
 
-pub fn search_files_with_tags<Ts, S>(tags: Ts, path: Option<S>) -> Result<Vec<PathBuf>, Error>
+pub fn search_files_with_tags<Ts, P>(
+    tags: Ts,
+    recursive: bool,
+    path: Option<P>,
+) -> Result<Vec<PathBuf>, Error>
 where
     Ts: IntoIterator<Item = String>,
-    S: AsRef<str>,
+    P: AsRef<Path>,
 {
     let tags = tags.into_iter().collect::<BTreeSet<_>>();
     let mut files = Vec::new();
 
     let dir = if let Some(path) = path {
-        path.as_ref().to_string()
+        path.as_ref().to_string_lossy().to_string()
     } else {
-        env::current_dir()?.to_string_lossy().to_string()
+        env::current_dir()?.as_path().to_string_lossy().to_string()
     };
 
-    for entry in globwalk::glob(dir)? {
+    let mut builder = GlobWalkerBuilder::new(dir, "*");
+
+    if recursive {
+        builder = builder.max_depth(0);
+    }
+
+    for entry in builder.build()? {
         if let Ok(entry) = entry {
             if let Ok(_tags) = list_tags_btree(entry.path()) {
                 if !tags.is_subset(&_tags) {

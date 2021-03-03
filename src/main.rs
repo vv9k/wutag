@@ -1,11 +1,13 @@
 use clap::Clap;
 use colored::{ColoredString, Colorize};
-use globwalk::DirEntry;
+use globwalk::{DirEntry, GlobWalkerBuilder};
 use std::fmt::Display;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use wutag::opt::{WutagCmd, WutagOpts};
 use wutag::{clear_tags, list_tags, remove_tag, search_files_with_tags, tag_file, Error};
+
+const DEFAULT_MAX_DEPTH: usize = 128;
 
 fn fmt_err<E: Display>(err: E) -> String {
     format!(
@@ -27,8 +29,26 @@ fn fmt_tag<T: AsRef<str>>(tag: T) -> ColoredString {
     tag.as_ref().bold().yellow()
 }
 
-fn glob_ok<F: Fn(&DirEntry)>(path: &str, f: F) -> Result<(), Error> {
-    for entry in globwalk::glob(path)? {
+fn glob_ok<F: Fn(&DirEntry)>(
+    pattern: &str,
+    base_path: Option<PathBuf>,
+    recursive: bool,
+    f: F,
+) -> Result<(), Error> {
+    let base_path = if let Some(base_path) = base_path {
+        base_path.to_string_lossy().to_string()
+    } else {
+        ".".to_string()
+    };
+    let mut builder = GlobWalkerBuilder::new(base_path, pattern);
+
+    if !recursive {
+        builder = builder.max_depth(1);
+    } else {
+        builder = builder.max_depth(DEFAULT_MAX_DEPTH);
+    }
+
+    for entry in builder.build()? {
         if let Ok(entry) = entry {
             f(&entry);
         }
@@ -41,25 +61,37 @@ fn main() {
     let opts = WutagOpts::parse();
 
     match opts.cmd {
-        WutagCmd::List { path, show_missing } => {
-            if let Err(e) = glob_ok(&path, |entry| match list_tags(entry.path()) {
-                Ok(tags) => {
-                    if tags.is_empty() && !show_missing {
-                        return;
+        WutagCmd::List {
+            pattern,
+            base_path,
+            recursive,
+            show_missing,
+        } => {
+            if let Err(e) = glob_ok(&pattern, base_path, recursive, |entry| {
+                match list_tags(entry.path()) {
+                    Ok(tags) => {
+                        if tags.is_empty() && !show_missing {
+                            return;
+                        }
+                        print!("{}:\t", fmt_path(entry.path()));
+                        for tag in tags {
+                            print!("{}\t", fmt_tag(tag));
+                        }
+                        print!("\n");
                     }
-                    print!("{}:\t", fmt_path(entry.path()));
-                    for tag in tags {
-                        print!("{}\t", fmt_tag(tag));
-                    }
-                    print!("\n");
+                    Err(e) => eprintln!("{}", fmt_err(e)),
                 }
-                Err(e) => eprintln!("{}", fmt_err(e)),
             }) {
                 eprintln!("{}", fmt_err(e));
             }
         }
-        WutagCmd::Set { path, tags } => {
-            if let Err(e) = glob_ok(&path, |entry| {
+        WutagCmd::Set {
+            pattern,
+            base_path,
+            recursive,
+            tags,
+        } => {
+            if let Err(e) = glob_ok(&pattern, base_path, recursive, |entry| {
                 let path = entry.path();
                 println!("{}:", fmt_path(path));
                 tags.iter().for_each(|tag| {
@@ -73,8 +105,13 @@ fn main() {
                 eprintln!("{}", fmt_err(e));
             }
         }
-        WutagCmd::Rm { path, tags } => {
-            if let Err(e) = glob_ok(&path, |entry| {
+        WutagCmd::Rm {
+            pattern,
+            base_path,
+            recursive,
+            tags,
+        } => {
+            if let Err(e) = glob_ok(&pattern, base_path, recursive, |entry| {
                 let path = entry.path();
                 println!("{}:", fmt_path(&path));
                 tags.iter().for_each(|tag| {
@@ -88,8 +125,12 @@ fn main() {
                 eprintln!("{}", fmt_err(e));
             }
         }
-        WutagCmd::Clear { path } => {
-            if let Err(e) = glob_ok(&path, |entry| {
+        WutagCmd::Clear {
+            pattern,
+            base_path,
+            recursive,
+        } => {
+            if let Err(e) = glob_ok(&pattern, base_path, recursive, |entry| {
                 let path = entry.path();
                 println!("{}:", fmt_path(&path));
                 if let Err(e) = clear_tags(path) {
@@ -101,7 +142,11 @@ fn main() {
                 eprintln!("{}", fmt_err(e));
             }
         }
-        WutagCmd::Search { path, tags } => match search_files_with_tags(tags.clone(), path) {
+        WutagCmd::Search {
+            base_path,
+            recursive,
+            tags,
+        } => match search_files_with_tags(tags.clone(), recursive, base_path) {
             Ok(files) => {
                 if files.is_empty() {
                     print!("No files with tags ");
