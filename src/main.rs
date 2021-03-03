@@ -2,8 +2,8 @@ use clap::Clap;
 use colored::Colorize;
 
 use wutag::opt::{WutagCmd, WutagOpts};
+use wutag::tags::{clear_tags, list_tags, remove_tag, search_files_with_tags, tag_file};
 use wutag::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
-use wutag::{clear_tags, list_tags, remove_tag, search_files_with_tags, tag_file};
 
 fn main() {
     let opts = WutagOpts::parse();
