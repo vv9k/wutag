@@ -16,10 +16,10 @@ pub enum RutagCmd {
         #[clap(short, long)]
         pretty: bool,
     },
-    /// Sets a tag of the file located at at the given path
-    Set { path: PathBuf, tag: String },
-    /// Removes a tag of the file located at the given path
-    Rm { path: PathBuf, tag: String },
+    /// Tags the file at the given path with the set of tags
+    Set { path: PathBuf, tags: Vec<String> },
+    /// Removes the specified tags of the file located at the given path
+    Rm { path: PathBuf, tags: Vec<String> },
     /// Clears all tags of the file located at the given path
     Clear { path: PathBuf },
     /// Recursively searches down the filesystem for files tagged with the given tag

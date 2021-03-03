@@ -36,7 +36,7 @@ fn main() {
             }
             Err(e) => display_err(e),
         },
-        RutagCmd::Set { path, tag } => {
+        RutagCmd::Set { path, tags } => tags.into_iter().for_each(|tag| {
             if let Err(e) = tag_file(path.as_path(), &tag) {
                 display_err(e);
             } else {
@@ -45,13 +45,14 @@ fn main() {
                     path.display().to_string().bold().blue(),
                 );
             }
-        }
-        RutagCmd::Rm { path, tag } => {
+        }),
+        RutagCmd::Rm { path, tags } => tags.into_iter().for_each(|tag| {
             if let Err(e) = remove_tag(path.as_path(), &tag) {
                 display_err(e);
+            } else {
+                println!("{} {}", "X".bold().red(), tag.bold().yellow());
             }
-        }
-
+        }),
         RutagCmd::Clear { path } => {
             if let Err(e) = clear_tags(path.as_path()) {
                 display_err(e);
