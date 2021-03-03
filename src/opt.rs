@@ -11,20 +11,15 @@ pub struct RutagOpts {
 #[derive(Clap)]
 pub enum RutagCmd {
     /// Lists all tags of the file located at the given path
-    List {
-        path: PathBuf,
-        #[clap(short, long)]
-        pretty: bool,
-    },
-    /// Tags the file at the given path with the set of tags. The path can be a glob like `*`.
+    List { path: PathBuf },
+    /// Tags the files located at the given paths with the set of tags.
     Set {
         #[clap(takes_value = true, required = true)]
         paths: Vec<PathBuf>,
         #[clap(last = true)]
         tags: Vec<String>,
     },
-    /// Removes the specified tags of the file located at the given path. The path can be a glob
-    /// like `*`.
+    /// Removes the specified tags of the files located at the given paths.
     Rm {
         #[clap(takes_value = true, required = true)]
         paths: Vec<PathBuf>,

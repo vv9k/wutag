@@ -26,7 +26,7 @@ fn main() {
     let opts = RutagOpts::parse();
 
     match opts.cmd {
-        RutagCmd::List { path, pretty: _ } => match list_tags(path.as_path()) {
+        RutagCmd::List { path } => match list_tags(path.as_path()) {
             Ok(tags) => {
                 print!("{}:\t", fmt_path(path));
                 for tag in tags {
