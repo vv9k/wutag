@@ -10,10 +10,18 @@ pub struct RutagOpts {
 
 #[derive(Clap)]
 pub enum RutagCmd {
-    /// Lists all tags of the file located at the given path
+    /// Lists all tags of the files located at the given paths.
     List {
         #[clap(required = true)]
         paths: Vec<PathBuf>,
+        #[clap(short, long)]
+        /// If enabled treats all provided paths as directories and recursively lists tags of all
+        /// files in those directories and all subdirectories. This flag has higher precedence than
+        /// `dirs` flag.
+        recursive: bool,
+        #[clap(long)]
+        /// Whether to show files with no tags
+        show_missing: bool,
     },
     /// Tags the files located at the given paths with the set of tags.
     Set {
@@ -29,7 +37,7 @@ pub enum RutagCmd {
         #[clap(last = true)]
         tags: Vec<String>,
     },
-    /// Clears all tags of the files located at the given paths
+    /// Clears all tags of the files located at the given paths.
     Clear {
         #[clap(required = true)]
         paths: Vec<PathBuf>,

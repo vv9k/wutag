@@ -2,6 +2,7 @@ use clap::Clap;
 use colored::{ColoredString, Colorize};
 use std::fmt::Display;
 use std::path::Path;
+use walkdir::WalkDir;
 
 use rutag::opt::{RutagCmd, RutagOpts};
 use rutag::{clear_tags, list_tags, remove_tag, search_files_with_tags, tag_file};
@@ -15,11 +16,7 @@ fn fmt_err<E: Display>(err: E) -> String {
 }
 
 fn fmt_ok<S: AsRef<str>>(msg: S) -> String {
-    format!(
-        "{}:\t{}",
-        "OK".green().bold(),
-        format!("{}", msg.as_ref()).white().bold()
-    )
+    format!("{}:\t{}", "OK".green().bold(), msg.as_ref().white().bold())
 }
 
 fn fmt_path<P: AsRef<Path>>(path: P) -> String {
@@ -34,10 +31,31 @@ fn main() {
     let opts = RutagOpts::parse();
 
     match opts.cmd {
-        RutagCmd::List { paths } => {
-            paths
-                .into_iter()
-                .for_each(|path| match list_tags(path.as_path()) {
+        RutagCmd::List {
+            paths,
+            recursive,
+            show_missing,
+        } => paths.into_iter().for_each(|path| {
+            if recursive {
+                for entry in WalkDir::new(path) {
+                    if let Ok(entry) = entry {
+                        match list_tags(entry.path()) {
+                            Ok(tags) => {
+                                if tags.is_empty() && !show_missing {
+                                    continue;
+                                }
+                                print!("{}:\t", fmt_path(entry.path()));
+                                for tag in tags {
+                                    print!("{}\t", fmt_tag(tag));
+                                }
+                                print!("\n");
+                            }
+                            Err(e) => eprintln!("{}", fmt_err(e)),
+                        }
+                    }
+                }
+            } else {
+                match list_tags(path.as_path()) {
                     Ok(tags) => {
                         print!("{}:\t", fmt_path(path));
                         for tag in tags {
@@ -46,8 +64,9 @@ fn main() {
                         print!("\n");
                     }
                     Err(e) => eprintln!("{}", fmt_err(e)),
-                })
-        }
+                }
+            }
+        }),
         RutagCmd::Set { paths, tags } => paths.into_iter().for_each(|path| {
             println!("{}:", fmt_path(&path));
             tags.iter().for_each(|tag| {
