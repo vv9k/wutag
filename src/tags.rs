@@ -37,7 +37,12 @@ impl Tag {
     }
 
     fn xattr_name(&self) -> String {
-        format!("{}.{}", WUTAG_NAMESPACE, self.timestamp.timestamp())
+        format!(
+            "{}.{}.{}",
+            WUTAG_NAMESPACE,
+            self.timestamp.timestamp(),
+            util::calculate_hash(&self.name)
+        )
     }
 
     /// Tags the file at the given `path` with this tag. If the tag exists returns an error.

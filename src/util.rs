@@ -1,7 +1,9 @@
 //! Utility functions used through this crate and by the main executable
 use colored::{ColoredString, Colorize};
 use globwalk::{DirEntry, GlobWalker, GlobWalkerBuilder};
+use std::collections::hash_map::DefaultHasher;
 use std::fmt::Display;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
 use crate::tags::Tag;
@@ -63,4 +65,13 @@ where
     }
 
     Ok(())
+}
+
+pub fn calculate_hash<T>(item: &T) -> u64
+where
+    T: Hash,
+{
+    let mut hasher = DefaultHasher::new();
+    item.hash(&mut hasher);
+    hasher.finish()
 }
