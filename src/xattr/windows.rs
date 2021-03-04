@@ -1,4 +1,8 @@
 #![cfg(windows)]
+#![allow(unused_variables)]
+use std::path::Path;
+
+use crate::Error;
 
 pub fn set_xattr<P, S>(path: P, name: S, value: S) -> Result<(), Error>
 where
@@ -30,3 +34,11 @@ where
 {
     Ok(())
 }
+
+//################################################################################
+// Impl
+//################################################################################
+
+
+// Blocked by `windows-rs` `bindings::windows::win32::system_services::WIN32_STREAM_ID` type having unsupported field
+// type.

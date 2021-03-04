@@ -12,7 +12,7 @@ use unix::{
     set_xattr as _set_xattr,
 };
 #[cfg(windows)]
-pub use windows::{get_xattr, list_xattrs, remove_xattr, set_xattr};
+pub use windows::{get_xattr as _get_xattr, list_xattrs as _list_xattrs, remove_xattr as _remove_xattr, set_xattr as _set_xattr};
 
 use crate::Error;
 use std::path::Path;
