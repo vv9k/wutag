@@ -1,8 +1,9 @@
 #![cfg(unix)]
-use libc::{
-    getxattr, lgetxattr, listxattr, llistxattr, lremovexattr, lsetxattr, removexattr, setxattr,
-    XATTR_CREATE,
-};
+#[cfg(target_os = "macos")]
+use libc::XATTR_NOFOLLOW;
+use libc::{getxattr, listxattr, removexattr, setxattr, XATTR_CREATE};
+#[cfg(target_os = "linux")]
+use libc::{lgetxattr, llistxattr, lremovexattr, lsetxattr};
 use std::ffi::{CStr, CString, OsStr};
 use std::io;
 use std::mem;
@@ -97,6 +98,90 @@ where
 }
 
 //################################################################################
+// Wrappers
+//################################################################################
+
+#[cfg(target_os = "linux")]
+unsafe fn __getxattr(
+    path: *const i8,
+    name: *const i8,
+    value: *mut c_void,
+    size: usize,
+    symlink: bool,
+) -> isize {
+    let func = if symlink { lgetxattr } else { getxattr };
+
+    func(path, name, value, size)
+}
+
+#[cfg(target_os = "macos")]
+unsafe fn __getxattr(
+    path: *const i8,
+    name: *const i8,
+    value: *mut c_void,
+    size: usize,
+    symlink: bool,
+) -> isize {
+    let opts = if symlink { XATTR_NOFOLLOW } else { 0 };
+
+    getxattr(path, name, value, size, 0, opts)
+}
+
+#[cfg(target_os = "linux")]
+unsafe fn __setxattr(
+    path: *const i8,
+    name: *const i8,
+    value: *const c_void,
+    size: usize,
+    symlink: bool,
+) -> isize {
+    let func = if symlink { lsetxattr } else { setxattr };
+
+    func(path, name, value, size, XATTR_CREATE) as isize
+}
+
+#[cfg(target_os = "macos")]
+unsafe fn __setxattr(
+    path: *const i8,
+    name: *const i8,
+    value: *const c_void,
+    size: usize,
+    symlink: bool,
+) -> isize {
+    let opts = if symlink { XATTR_NOFOLLOW } else { 0 };
+
+    setxattr(path, name, value, size, 0, opts | XATTR_CREATE) as isize
+}
+
+#[cfg(target_os = "linux")]
+unsafe fn __removexattr(path: *const i8, name: *const i8, symlink: bool) -> isize {
+    let func = if symlink { lremovexattr } else { removexattr };
+
+    func(path, name) as isize
+}
+
+#[cfg(target_os = "macos")]
+unsafe fn __removexattr(path: *const i8, name: *const i8, symlink: bool) -> isize {
+    let opts = if symlink { XATTR_NOFOLLOW } else { 0 };
+
+    removexattr(path, name, opts) as isize
+}
+
+#[cfg(target_os = "linux")]
+unsafe fn __listxattr(path: *const i8, list: *mut i8, size: usize, symlink: bool) -> isize {
+    let func = if symlink { llistxattr } else { listxattr };
+
+    func(path, list, size) as isize
+}
+
+#[cfg(target_os = "macos")]
+unsafe fn __listxattr(path: *const i8, list: *mut i8, size: usize, symlink: bool) -> isize {
+    let opts = if symlink { XATTR_NOFOLLOW } else { 0 };
+
+    listxattrs(path, list, size, opts | XATTR_CREATE) as isize
+}
+
+//################################################################################
 // Impl
 //################################################################################
 
@@ -104,10 +189,8 @@ fn _remove_xattr(path: &Path, name: &str, symlink: bool) -> Result<(), Error> {
     let path = CString::new(path.to_string_lossy().as_bytes())?;
     let name = CString::new(name.as_bytes())?;
 
-    let func = if symlink { lremovexattr } else { removexattr };
-
     unsafe {
-        let ret = func(path.as_ptr(), name.as_ptr());
+        let ret = __removexattr(path.as_ptr(), name.as_ptr(), symlink);
         if ret != 0 {
             return Err(Error::from(io::Error::last_os_error()));
         }
@@ -127,15 +210,13 @@ fn _set_xattr(
     let name = CString::new(name.as_bytes())?;
     let value = CString::new(value.as_bytes())?;
 
-    let func = if symlink { lsetxattr } else { setxattr };
-
     unsafe {
-        let ret = func(
+        let ret = __setxattr(
             path.as_ptr(),
             name.as_ptr(),
             value.as_ptr() as *const c_void,
             size,
-            XATTR_CREATE,
+            symlink,
         );
 
         if ret != 0 {
@@ -149,15 +230,21 @@ fn _set_xattr(
 fn _get_xattr(path: &Path, name: &str, symlink: bool) -> Result<String, Error> {
     let path = CString::new(path.to_string_lossy().as_bytes())?;
     let name = CString::new(name.as_bytes())?;
-    let size = get_xattr_size(path.as_c_str(), name.as_c_str())?;
+    let size = get_xattr_size(path.as_c_str(), name.as_c_str(), symlink)?;
     let mut buf = Vec::<u8>::with_capacity(size);
     let buf_ptr = buf.as_mut_ptr();
 
-    let func = if symlink { lgetxattr } else { getxattr };
-
     mem::forget(buf);
 
-    let ret = unsafe { func(path.as_ptr(), name.as_ptr(), buf_ptr as *mut c_void, size) };
+    let ret = unsafe {
+        __getxattr(
+            path.as_ptr(),
+            name.as_ptr(),
+            buf_ptr as *mut c_void,
+            size,
+            symlink,
+        )
+    };
 
     if ret == -1 {
         return Err(Error::from(io::Error::last_os_error()));
@@ -194,8 +281,8 @@ fn _list_xattrs(path: &Path, symlink: bool) -> Result<Vec<(String, String)>, Err
 // Other
 //################################################################################
 
-fn get_xattr_size(path: &CStr, name: &CStr) -> Result<usize, Error> {
-    let ret = unsafe { getxattr(path.as_ptr(), name.as_ptr(), ptr::null_mut(), 0) };
+fn get_xattr_size(path: &CStr, name: &CStr, symlink: bool) -> Result<usize, Error> {
+    let ret = unsafe { __getxattr(path.as_ptr(), name.as_ptr(), ptr::null_mut(), 0, symlink) };
 
     if ret == -1 {
         return Err(Error::from(io::Error::last_os_error()));
@@ -207,9 +294,7 @@ fn get_xattr_size(path: &CStr, name: &CStr) -> Result<usize, Error> {
 fn get_xattrs_list_size(path: &CStr, symlink: bool) -> Result<usize, Error> {
     let path = path.as_ref();
 
-    let func = if symlink { llistxattr } else { listxattr };
-
-    let ret = unsafe { func(path.as_ptr(), ptr::null_mut(), 0) };
+    let ret = unsafe { __listxattr(path.as_ptr(), ptr::null_mut(), 0, symlink) };
 
     if ret == -1 {
         return Err(Error::from(io::Error::last_os_error()));
@@ -225,9 +310,7 @@ fn list_xattrs_raw(path: &CStr, symlink: bool) -> Result<Vec<u8>, Error> {
 
     mem::forget(buf);
 
-    let func = if symlink { llistxattr } else { listxattr };
-
-    let ret = unsafe { func(path.as_ptr(), buf_ptr as *mut c_char, size) };
+    let ret = unsafe { __listxattr(path.as_ptr(), buf_ptr as *mut c_char, size, symlink) };
 
     if ret == -1 {
         return Err(Error::from(io::Error::last_os_error()));
