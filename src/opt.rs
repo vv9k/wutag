@@ -17,7 +17,7 @@ pub enum WutagCmd {
     List {
         /// A glob pattern like '*.png'.
         pattern: String,
-        #[clap(long)]
+        #[clap(short, long)]
         /// When this parameter is specified the program will match files against provided pattern
         /// at the location specified by `dir`.
         dir: Option<PathBuf>,
@@ -33,7 +33,7 @@ pub enum WutagCmd {
     Set {
         /// A glob pattern like '*.png'.
         pattern: String,
-        #[clap(long)]
+        #[clap(short, long)]
         /// When this parameter is specified the program will match files against provided pattern
         /// at the location specified by `dir`.
         dir: Option<PathBuf>,
@@ -49,7 +49,7 @@ pub enum WutagCmd {
     Rm {
         /// A glob pattern like '*.png'.
         pattern: String,
-        #[clap(long)]
+        #[clap(short, long)]
         /// When this parameter is specified the program will match files against provided pattern
         /// at the location specified by `dir`.
         dir: Option<PathBuf>,
@@ -64,7 +64,7 @@ pub enum WutagCmd {
     Clear {
         /// A glob pattern like '*.png'.
         pattern: String,
-        #[clap(long)]
+        #[clap(short, long)]
         /// When this parameter is specified the program will match files against provided pattern
         /// at the location specified by `dir`.
         dir: Option<PathBuf>,
