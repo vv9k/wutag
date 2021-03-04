@@ -11,11 +11,11 @@ fn main() {
     match opts.cmd {
         WutagCmd::List {
             pattern,
-            base_path,
+            dir,
             recursive,
             show_missing,
         } => {
-            if let Err(e) = glob_ok(&pattern, base_path, recursive, |entry| {
+            if let Err(e) = glob_ok(&pattern, dir, recursive, |entry| {
                 match list_tags(entry.path()) {
                     Ok(tags) => {
                         if tags.is_empty() && !show_missing {
@@ -35,12 +35,12 @@ fn main() {
         }
         WutagCmd::Set {
             pattern,
-            base_path,
+            dir,
             recursive,
             tags,
         } => {
             let tags = tags.into_iter().map(Tag::new).collect::<Vec<_>>();
-            if let Err(e) = glob_ok(&pattern, base_path, recursive, |entry| {
+            if let Err(e) = glob_ok(&pattern, dir, recursive, |entry| {
                 let path = entry.path();
                 println!("{}:", fmt_path(path));
                 tags.iter().for_each(|tag| {
@@ -56,12 +56,12 @@ fn main() {
         }
         WutagCmd::Rm {
             pattern,
-            base_path,
+            dir,
             recursive,
             tags,
         } => {
             let tags = tags.into_iter().map(Tag::new).collect::<Vec<_>>();
-            if let Err(e) = glob_ok(&pattern, base_path, recursive, |entry| {
+            if let Err(e) = glob_ok(&pattern, dir, recursive, |entry| {
                 let path = entry.path();
                 println!("{}:", fmt_path(&path));
                 tags.iter().for_each(|tag| {
@@ -77,10 +77,10 @@ fn main() {
         }
         WutagCmd::Clear {
             pattern,
-            base_path,
+            dir,
             recursive,
         } => {
-            if let Err(e) = glob_ok(&pattern, base_path, recursive, |entry| {
+            if let Err(e) = glob_ok(&pattern, dir, recursive, |entry| {
                 let path = entry.path();
                 println!("{}:", fmt_path(&path));
                 if let Err(e) = clear_tags(path) {
@@ -93,10 +93,10 @@ fn main() {
             }
         }
         WutagCmd::Search {
-            base_path,
+            dir,
             recursive,
             tags,
-        } => match search_files_with_tags(tags.clone(), recursive, base_path) {
+        } => match search_files_with_tags(tags.clone(), recursive, dir) {
             Ok(files) => {
                 let tags = tags.into_iter().map(Tag::new).collect::<Vec<_>>();
                 if files.is_empty() {

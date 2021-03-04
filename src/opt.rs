@@ -19,8 +19,8 @@ pub enum WutagCmd {
         pattern: String,
         #[clap(long)]
         /// When this parameter is specified the program will match files against provided pattern
-        /// at the location specified by `base_path`.
-        base_path: Option<PathBuf>,
+        /// at the location specified by `dir`.
+        dir: Option<PathBuf>,
         #[clap(long)]
         /// Whether to show files with no tags
         show_missing: bool,
@@ -35,8 +35,8 @@ pub enum WutagCmd {
         pattern: String,
         #[clap(long)]
         /// When this parameter is specified the program will match files against provided pattern
-        /// at the location specified by `base_path`.
-        base_path: Option<PathBuf>,
+        /// at the location specified by `dir`.
+        dir: Option<PathBuf>,
         #[clap(long, short)]
         /// If this parameter is specified that path will be treated as a glob and will recursively
         /// iterate over all files.
@@ -51,8 +51,8 @@ pub enum WutagCmd {
         pattern: String,
         #[clap(long)]
         /// When this parameter is specified the program will match files against provided pattern
-        /// at the location specified by `base_path`.
-        base_path: Option<PathBuf>,
+        /// at the location specified by `dir`.
+        dir: Option<PathBuf>,
         #[clap(long, short)]
         /// If this parameter is specified that path will be treated as a glob and will recursively
         /// iterate over all files.
@@ -66,8 +66,8 @@ pub enum WutagCmd {
         pattern: String,
         #[clap(long)]
         /// When this parameter is specified the program will match files against provided pattern
-        /// at the location specified by `base_path`.
-        base_path: Option<PathBuf>,
+        /// at the location specified by `dir`.
+        dir: Option<PathBuf>,
         #[clap(long, short)]
         /// If this parameter is specified that path will be treated as a glob and will recursively
         /// iterate over all files.
@@ -80,7 +80,7 @@ pub enum WutagCmd {
         #[clap(short, long)]
         /// When this parameter is specified the program will look for files in the location
         /// specified by this parameter instead of the current working directory.
-        base_path: Option<PathBuf>,
+        dir: Option<PathBuf>,
         #[clap(long, short)]
         /// If this parameter is specified recursively look for files in all subdirectories.
         recursive: bool,
