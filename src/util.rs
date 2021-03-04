@@ -37,7 +37,7 @@ where
     let mut builder = GlobWalkerBuilder::new(base_path.as_ref(), pattern.as_ref());
 
     if !recursive {
-        builder = builder.max_depth(1);
+        builder = builder.max_depth(2);
     } else {
         builder = builder.max_depth(DEFAULT_MAX_DEPTH);
     }
