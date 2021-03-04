@@ -4,6 +4,7 @@ use globwalk::{DirEntry, GlobWalker, GlobWalkerBuilder};
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
 
+use crate::tags::Tag;
 use crate::{Error, DEFAULT_MAX_DEPTH};
 
 pub fn fmt_err<E: Display>(err: E) -> String {
@@ -22,8 +23,8 @@ pub fn fmt_path<P: AsRef<Path>>(path: P) -> String {
     format!("`{}`", path.as_ref().display().to_string().bold().blue())
 }
 
-pub fn fmt_tag<T: AsRef<str>>(tag: T) -> ColoredString {
-    tag.as_ref().bold().yellow()
+pub fn fmt_tag(tag: &Tag) -> ColoredString {
+    tag.name().bold().yellow()
 }
 
 /// Returns a GlobWalker instance with base path set to `base_path` and pattern to `pattern`. If

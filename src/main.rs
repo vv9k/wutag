@@ -2,7 +2,7 @@ use clap::Clap;
 use colored::Colorize;
 
 use wutag::opt::{WutagCmd, WutagOpts};
-use wutag::tags::{clear_tags, list_tags, remove_tag, search_files_with_tags, tag_file};
+use wutag::tags::{clear_tags, list_tags, search_files_with_tags, Tag};
 use wutag::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
 
 fn main() {
@@ -23,7 +23,7 @@ fn main() {
                         }
                         print!("{}:\t", fmt_path(entry.path()));
                         for tag in tags {
-                            print!("{}\t", fmt_tag(tag));
+                            print!("{}\t", fmt_tag(&tag));
                         }
                         print!("\n");
                     }
@@ -39,14 +39,15 @@ fn main() {
             recursive,
             tags,
         } => {
+            let tags = tags.into_iter().map(Tag::new).collect::<Vec<_>>();
             if let Err(e) = glob_ok(&pattern, base_path, recursive, |entry| {
                 let path = entry.path();
                 println!("{}:", fmt_path(path));
                 tags.iter().for_each(|tag| {
-                    if let Err(e) = tag_file(&path, &tag) {
+                    if let Err(e) = tag.save_to(&path) {
                         eprintln!("\t{}", fmt_err(e));
                     } else {
-                        println!("\t{} {}", "+".bold().green(), fmt_tag(tag));
+                        println!("\t{} {}", "+".bold().green(), fmt_tag(&tag));
                     }
                 });
             }) {
@@ -59,11 +60,12 @@ fn main() {
             recursive,
             tags,
         } => {
+            let tags = tags.into_iter().map(Tag::new).collect::<Vec<_>>();
             if let Err(e) = glob_ok(&pattern, base_path, recursive, |entry| {
                 let path = entry.path();
                 println!("{}:", fmt_path(&path));
                 tags.iter().for_each(|tag| {
-                    if let Err(e) = remove_tag(path, &tag) {
+                    if let Err(e) = tag.remove_from(&path) {
                         eprintln!("\t{}", fmt_err(e));
                     } else {
                         println!("\t{} {}", "X".bold().red(), fmt_tag(tag));
@@ -96,6 +98,7 @@ fn main() {
             tags,
         } => match search_files_with_tags(tags.clone(), recursive, base_path) {
             Ok(files) => {
+                let tags = tags.into_iter().map(Tag::new).collect::<Vec<_>>();
                 if files.is_empty() {
                     print!("No files with tags ");
                     for tag in &tags {
@@ -105,11 +108,11 @@ fn main() {
                     println!("were found.");
                 } else {
                     print!("Files with tags ");
-                    for tag in tags {
+                    for tag in &tags {
                         print!("{} ", fmt_tag(tag));
                     }
                     println!(":");
-                    for file in files {
+                    for file in &files {
                         println!("\t{}", fmt_path(file));
                     }
                 }

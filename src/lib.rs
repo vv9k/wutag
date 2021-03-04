@@ -18,6 +18,8 @@ pub enum Error {
     TagExists,
     #[error("tag doesn't exist")]
     TagNotFound,
+    #[error("tag key was invalid - {0}")]
+    InvalidTagKey(String),
     #[error("provided file doesn't exists")]
     FileNotFound,
     #[error("error: {0}")]
