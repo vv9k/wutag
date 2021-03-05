@@ -239,6 +239,9 @@ where
     Ok(files)
 }
 
+/// Checks whether the given path has any tags.
+///
+/// Returns an Error if the list of tags couldn't be aquired.
 pub fn has_tags<P>(path: P) -> Result<bool, Error>
 where
     P: AsRef<Path>,
