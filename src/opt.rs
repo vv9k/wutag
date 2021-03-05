@@ -85,4 +85,19 @@ pub enum WutagCmd {
         /// If this parameter is specified recursively look for files in all subdirectories.
         recursive: bool,
     },
+    /// Copies tags from the specified file to files that match a pattern
+    Cp {
+        /// Path to the file from which to copy tags from
+        input_path: PathBuf,
+        /// A glob pattern like '*.png'.
+        pattern: String,
+        #[clap(short, long)]
+        /// When this parameter is specified the program will match files against provided pattern
+        /// at the location specified by `dir`.
+        dir: Option<PathBuf>,
+        #[clap(long, short)]
+        /// If this parameter is specified that path will be treated as a glob and will recursively
+        /// iterate over all files.
+        recursive: bool,
+    },
 }

@@ -126,5 +126,34 @@ fn main() {
             }
             Err(e) => eprintln!("{}", fmt_err(e)),
         },
+        WutagCmd::Cp {
+            input_path,
+            pattern,
+            dir,
+            recursive,
+        } => {
+            let path = input_path.as_path();
+            match list_tags(path) {
+                Ok(tags) => {
+                    if let Err(e) = glob_ok(&pattern, dir, recursive, |entry| {
+                        println!("{}:", fmt_path(entry.path()));
+                        for tag in &tags {
+                            if let Err(e) = tag.save_to(entry.path()) {
+                                eprintln!("\t{}", fmt_err(e));
+                            } else {
+                                println!("\t{} {}", "+".bold().green(), fmt_tag(&tag));
+                            }
+                        }
+                    }) {
+                        eprintln!("{}", fmt_err(e));
+                    }
+                }
+                Err(e) => eprintln!(
+                    "failed to get source tags from `{}` - {}",
+                    path.display(),
+                    e
+                ),
+            }
+        }
     }
 }
