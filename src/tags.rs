@@ -238,3 +238,10 @@ where
 
     Ok(files)
 }
+
+pub fn has_tags<P>(path: P) -> Result<bool, Error>
+where
+    P: AsRef<Path>,
+{
+    list_tags(path).map(|tags| tags.len() > 0)
+}

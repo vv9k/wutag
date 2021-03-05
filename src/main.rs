@@ -2,7 +2,7 @@ use clap::Clap;
 use colored::Colorize;
 
 use wutag::opt::{WutagCmd, WutagOpts};
-use wutag::tags::{clear_tags, list_tags, search_files_with_tags, Tag};
+use wutag::tags::{clear_tags, has_tags, list_tags, search_files_with_tags, Tag};
 use wutag::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
 
 fn main() {
@@ -82,11 +82,18 @@ fn main() {
         } => {
             if let Err(e) = glob_ok(&pattern, dir, recursive, |entry| {
                 let path = entry.path();
-                println!("{}:", fmt_path(&path));
-                if let Err(e) = clear_tags(path) {
-                    eprintln!("\t{}", fmt_err(e));
-                } else {
-                    println!("\t{}", fmt_ok("cleared."));
+                match has_tags(path) {
+                    Ok(has_tags) => {
+                        if has_tags {
+                            println!("{}:", fmt_path(&path));
+                            if let Err(e) = clear_tags(path) {
+                                eprintln!("\t{}", fmt_err(e));
+                            } else {
+                                println!("\t{}", fmt_ok("cleared."));
+                            }
+                        }
+                    }
+                    Err(e) => eprintln!("{}:\n\t{}", path.display(), fmt_err(e)),
                 }
             }) {
                 eprintln!("{}", fmt_err(e));
