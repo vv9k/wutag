@@ -178,7 +178,7 @@ unsafe fn __listxattr(path: *const i8, list: *mut i8, size: usize, symlink: bool
 unsafe fn __listxattr(path: *const i8, list: *mut i8, size: usize, symlink: bool) -> isize {
     let opts = if symlink { XATTR_NOFOLLOW } else { 0 };
 
-    listxattrs(path, list, size, opts | XATTR_CREATE) as isize
+    listxattr(path, list, size, opts | XATTR_CREATE) as isize
 }
 
 //################################################################################
