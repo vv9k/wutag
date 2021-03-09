@@ -84,6 +84,9 @@ pub enum WutagCmd {
         #[clap(long, short)]
         /// If this parameter is specified recursively look for files in all subdirectories.
         recursive: bool,
+        #[clap(long)]
+        /// If provided output will be raw so that it can be easily piped to other commands
+        raw: bool,
     },
     /// Copies tags from the specified file to files that match a pattern
     Cp {

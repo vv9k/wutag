@@ -103,24 +103,33 @@ fn main() {
             dir,
             recursive,
             tags,
+            raw,
         } => match search_files_with_tags(tags.clone(), recursive, dir) {
             Ok(files) => {
                 let tags = tags.into_iter().map(Tag::new).collect::<Vec<_>>();
                 if files.is_empty() {
-                    print!("No files with tags ");
-                    for tag in &tags {
-                        print!("{} ", fmt_tag(tag));
-                    }
+                    if !raw {
+                        print!("No files with tags ");
+                        for tag in &tags {
+                            print!("{} ", fmt_tag(tag));
+                        }
 
-                    println!("were found.");
-                } else {
-                    print!("Files with tags ");
-                    for tag in &tags {
-                        print!("{} ", fmt_tag(tag));
+                        println!("were found.");
                     }
-                    println!(":");
+                } else {
+                    if !raw {
+                        print!("Files with tags ");
+                        for tag in &tags {
+                            print!("{} ", fmt_tag(tag));
+                        }
+                        println!(":");
+                    }
                     for file in &files {
-                        println!("\t{}", fmt_path(file));
+                        if raw {
+                            println!("{}", file.display());
+                        } else {
+                            println!("\t{}", fmt_path(file));
+                        }
                     }
                 }
             }
