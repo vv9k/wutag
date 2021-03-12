@@ -74,19 +74,16 @@ pub struct CpOpts {
 
 #[derive(Clap)]
 pub enum WutagCmd {
-    /// Lists all tags of the files that match the provided pattern in the current working
-    /// directory. By default only first level of the directory is scanned.
+    /// Lists all tags of the files that match the provided pattern.
     List(ListOpts),
-    /// Tags the files located at the given `path` with the set of `tags`. By default only first level of the directory is processed.
+    /// Tags the files that match the given pattern with specified tags.
     Set(SetOpts),
-    /// Removes the specified tags of the files that match the provided pattern in the current
-    /// working directory. By default only first level of the directory is processed.
+    /// Removes the specified tags of the files that match the provided pattern.
     Rm(RmOpts),
-    /// Clears all tags of the files that match the provided pattern in the current working directory.
-    /// By default only first level of the directory is processed.
+    /// Clears all tags of the files that match the provided pattern.
     Clear(ClearOpts),
-    /// Searches for files that have all of the provided `tags` in the current directory.
+    /// Searches for files that have all of the provided `tags`.
     Search(SearchOpts),
-    /// Copies tags from the specified file to files that match a pattern
+    /// Copies tags from the specified file to files that match a pattern.
     Cp(CpOpts),
 }
