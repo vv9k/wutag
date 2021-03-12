@@ -15,8 +15,8 @@ pub const DEFAULT_MAX_DEPTH: usize = 512;
 pub enum Error {
     #[error("tag already exists")]
     TagExists,
-    #[error("tag doesn't exist")]
-    TagNotFound,
+    #[error("tag `{0}` doesn't exist")]
+    TagNotFound(String),
     #[error("tag key was invalid - {0}")]
     InvalidTagKey(String),
     #[error("provided file doesn't exists")]
@@ -41,7 +41,7 @@ impl From<io::Error> for Error {
             io::ErrorKind::NotFound => Error::FileNotFound,
             io::ErrorKind::AlreadyExists => Error::TagExists,
             _ => match err.raw_os_error() {
-                Some(61) => Error::TagNotFound,
+                Some(61) => Error::TagNotFound("".to_string()),
                 _ => Error::Other(err.to_string()),
             },
         }

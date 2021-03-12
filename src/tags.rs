@@ -134,7 +134,7 @@ impl Tag {
             }
         }
 
-        Err(Error::TagNotFound)
+        Err(Error::TagNotFound(self.name.clone()))
     }
 }
 
