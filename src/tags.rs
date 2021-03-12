@@ -1,5 +1,5 @@
 //! Functions for manipulating tags on files.
-use chrono::{offset::Utc, DateTime, NaiveDateTime};
+use chrono::{offset::Utc, DateTime, NaiveDateTime, TimeZone};
 use colored::Color;
 use globwalk::DirEntry;
 use rand::prelude::*;
@@ -86,7 +86,18 @@ impl Tag {
             color: COLORS
                 .choose(&mut rng)
                 .map(|c| *c)
-                .unwrap_or_else(|| Color::BrightWhite),
+                .unwrap_or_else(|| Color::Yellow),
+        }
+    }
+
+    pub fn dummy<S>(name: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Tag {
+            timestamp: chrono::Utc.ymd(1970, 1, 1).and_hms(0, 1, 1),
+            name: name.into(),
+            color: Color::BrightWhite,
         }
     }
 
