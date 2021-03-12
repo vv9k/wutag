@@ -6,7 +6,7 @@ use globwalk::DirEntry;
 use std::path::PathBuf;
 
 use opt::{ClearOpts, CpOpts, ListOpts, RmOpts, SearchOpts, SetOpts, WutagCmd, WutagOpts};
-use wutag::tags::{get_tag, list_tags, search_files_with_tags, DirEntryExt, Tag};
+use wutag::tags::{list_tags, search_files_with_tags, DirEntryExt, Tag};
 use wutag::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
 use wutag::Error;
 
@@ -149,7 +149,11 @@ impl WutagRunner {
                         if opts.raw {
                             println!("{}", file.display());
                         } else {
-                            println!("\t{}", fmt_path(file));
+                            print!("\t{}", fmt_path(file));
+                            if let Ok(tags) = list_tags(file) {
+                                tags.iter().for_each(|tag| print!(" {}", fmt_tag(tag)));
+                            }
+                            println!("");
                         }
                     }
                 }
