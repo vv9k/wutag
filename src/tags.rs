@@ -162,6 +162,13 @@ impl PartialOrd for Tag {
     }
 }
 
+macro_rules! next_or_else {
+    ($it:ident, $msg:expr) => {
+        $it.next()
+            .ok_or_else(|| Error::InvalidTagKey($msg.to_string()))
+    };
+}
+
 impl TryFrom<(String, String)> for Tag {
     type Error = Error;
     fn try_from(value: (String, String)) -> Result<Self> {
@@ -169,29 +176,23 @@ impl TryFrom<(String, String)> for Tag {
 
         let mut elems = key.split('.');
 
-        let ns = elems
-            .next()
-            .ok_or_else(|| Error::InvalidTagKey("missing namespace `user`".into()))?;
+        let mut ns = next_or_else!(elems, "missing namespace `user`")?;
         if ns != "user" {
             return Err(Error::InvalidTagKey(format!(
                 "invalid namespace `{}`, valid namespace is `user`",
                 ns
             )));
         }
-        let _wutag = elems
-            .next()
-            .ok_or_else(|| Error::InvalidTagKey("missing namespace `wutag`".into()))?;
-        if ns != "user" {
+
+        ns = next_or_else!(elems, "missing namespace `wutag`")?;
+        if ns != "wutag" {
             return Err(Error::InvalidTagKey(format!(
                 "invalid namespace `{}`, valid namespace is `wutag`",
                 ns
             )));
         }
 
-        let timestamp = elems
-            .next()
-            .ok_or_else(|| Error::InvalidTagKey("missing timestamp".into()))?;
-
+        let timestamp = next_or_else!(elems, "missing timestamp")?;
         let timestamp = NaiveDateTime::from_timestamp(
             timestamp
                 .parse()
@@ -199,16 +200,11 @@ impl TryFrom<(String, String)> for Tag {
             0,
         );
 
-        let _hash = elems
-            .next()
-            .ok_or_else(|| Error::InvalidTagKey("missing hash".into()))?
+        let _hash = next_or_else!(elems, "missing hash")?
             .parse::<u64>()
             .map_err(|e| Error::InvalidTagKey(e.to_string()))?;
 
-        let _color = elems
-            .next()
-            .ok_or_else(|| Error::InvalidTagKey("missing color".into()))?;
-
+        let _color = next_or_else!(elems, "missing color")?;
         let color = util::color_from_fg_str(_color)
             .ok_or_else(|| Error::InvalidTagKey(format!("invalid color {}", _color)))?;
 
