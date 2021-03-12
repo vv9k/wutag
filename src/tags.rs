@@ -1,5 +1,6 @@
 //! Functions for manipulating tags on files.
 use chrono::{offset::Utc, DateTime, NaiveDateTime};
+use globwalk::DirEntry;
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::convert::TryFrom;
@@ -14,6 +15,40 @@ use crate::{Error, Result, WUTAG_NAMESPACE};
 pub struct Tag {
     timestamp: DateTime<Utc>,
     name: String,
+}
+
+pub trait DirEntryExt {
+    fn tag(&self, tag: &Tag) -> Result<()>;
+    fn untag(&self, tag: &Tag) -> Result<()>;
+    fn list_tags(&self) -> Result<Vec<Tag>>;
+    fn list_tags_btree(&self) -> Result<BTreeSet<Tag>>;
+    fn clear_tags(&self) -> Result<()>;
+    fn has_tags(&self) -> Result<bool>;
+    fn fmt_path(&self) -> String;
+}
+
+impl DirEntryExt for DirEntry {
+    fn tag(&self, tag: &Tag) -> Result<()> {
+        tag.save_to(self.path())
+    }
+    fn untag(&self, tag: &Tag) -> Result<()> {
+        tag.remove_from(self.path())
+    }
+    fn list_tags(&self) -> Result<Vec<Tag>> {
+        list_tags(self.path())
+    }
+    fn list_tags_btree(&self) -> Result<BTreeSet<Tag>> {
+        list_tags_btree(self.path())
+    }
+    fn clear_tags(&self) -> Result<()> {
+        clear_tags(self.path())
+    }
+    fn has_tags(&self) -> Result<bool> {
+        has_tags(self.path())
+    }
+    fn fmt_path(&self) -> String {
+        util::fmt_path(self.path())
+    }
 }
 
 impl Tag {
