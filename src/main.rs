@@ -5,7 +5,7 @@ use colored::Colorize;
 use std::path::PathBuf;
 
 use opt::{ClearOpts, CpOpts, ListOpts, RmOpts, SearchOpts, SetOpts, WutagCmd, WutagOpts};
-use wutag::tags::{clear_tags, has_tags, list_tags, search_files_with_tags, Tag};
+use wutag::tags::{list_tags, search_files_with_tags, DirEntryExt, Tag};
 use wutag::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
 use wutag::Error;
 
@@ -42,26 +42,24 @@ impl WutagRunner {
     }
 
     fn list(&self, opts: &ListOpts) {
-        if let Err(e) =
-            glob_ok(
-                &opts.pattern,
-                &self.base_dir,
-                self.recursive,
-                |entry| match list_tags(entry.path()) {
-                    Ok(tags) => {
-                        if tags.is_empty() && !opts.show_missing {
-                            return;
-                        }
-                        print!("{}:\t", fmt_path(entry.path()));
-                        for tag in tags {
-                            print!("{}\t", fmt_tag(&tag));
-                        }
-                        print!("\n");
+        if let Err(e) = glob_ok(
+            &opts.pattern,
+            &self.base_dir,
+            self.recursive,
+            |entry| match entry.list_tags() {
+                Ok(tags) => {
+                    if tags.is_empty() && !opts.show_missing {
+                        return;
                     }
-                    Err(e) => eprintln!("{}", fmt_err(e)),
-                },
-            )
-        {
+                    print!("{}:", entry.fmt_path());
+                    for tag in tags {
+                        print!("\t{}", fmt_tag(&tag));
+                    }
+                    print!("\n");
+                }
+                Err(e) => eprintln!("{}", fmt_err(e)),
+            },
+        ) {
             eprintln!("{}", fmt_err(e));
         }
     }
@@ -69,10 +67,9 @@ impl WutagRunner {
     fn set(&self, opts: &SetOpts) {
         let tags = opts.tags.iter().map(Tag::new).collect::<Vec<_>>();
         if let Err(e) = glob_ok(&opts.pattern, &self.base_dir, self.recursive, |entry| {
-            let path = entry.path();
-            println!("{}:", fmt_path(path));
+            println!("{}:", entry.fmt_path());
             tags.iter().for_each(|tag| {
-                if let Err(e) = tag.save_to(&path) {
+                if let Err(e) = entry.tag(&tag) {
                     eprintln!("\t{}", fmt_err(e));
                 } else {
                     println!("\t{} {}", "+".bold().green(), fmt_tag(&tag));
@@ -86,10 +83,9 @@ impl WutagRunner {
     fn rm(&self, opts: &RmOpts) {
         let tags = opts.tags.iter().map(Tag::new).collect::<Vec<_>>();
         if let Err(e) = glob_ok(&opts.pattern, &self.base_dir, self.recursive, |entry| {
-            let path = entry.path();
-            println!("{}:", fmt_path(&path));
+            println!("{}:", entry.fmt_path());
             tags.iter().for_each(|tag| {
-                if let Err(e) = tag.remove_from(&path) {
+                if let Err(e) = entry.untag(&tag) {
                     eprintln!("\t{}", fmt_err(e));
                 } else {
                     println!("\t{} {}", "X".bold().red(), fmt_tag(tag));
@@ -101,22 +97,24 @@ impl WutagRunner {
     }
 
     fn clear(&self, opts: &ClearOpts) {
-        if let Err(e) = glob_ok(&opts.pattern, &self.base_dir, self.recursive, |entry| {
-            let path = entry.path();
-            match has_tags(path) {
+        if let Err(e) = glob_ok(
+            &opts.pattern,
+            &self.base_dir,
+            self.recursive,
+            |entry| match entry.has_tags() {
                 Ok(has_tags) => {
                     if has_tags {
-                        println!("{}:", fmt_path(&path));
-                        if let Err(e) = clear_tags(path) {
+                        println!("{}:", entry.fmt_path());
+                        if let Err(e) = entry.clear_tags() {
                             eprintln!("\t{}", fmt_err(e));
                         } else {
                             println!("\t{}", fmt_ok("cleared."));
                         }
                     }
                 }
-                Err(e) => eprintln!("{}:\n\t{}", path.display(), fmt_err(e)),
-            }
-        }) {
+                Err(e) => eprintln!("{}:\n\t{}", entry.fmt_path(), fmt_err(e)),
+            },
+        ) {
             eprintln!("{}", fmt_err(e));
         }
     }
@@ -160,9 +158,9 @@ impl WutagRunner {
         match list_tags(path) {
             Ok(tags) => {
                 if let Err(e) = glob_ok(&opts.pattern, &self.base_dir, self.recursive, |entry| {
-                    println!("{}:", fmt_path(entry.path()));
+                    println!("{}:", entry.fmt_path());
                     for tag in &tags {
-                        if let Err(e) = tag.save_to(entry.path()) {
+                        if let Err(e) = entry.tag(&tag) {
                             eprintln!("\t{}", fmt_err(e));
                         } else {
                             println!("\t{} {}", "+".bold().green(), fmt_tag(&tag));

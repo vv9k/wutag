@@ -250,7 +250,7 @@ where
 
     for entry in util::glob_walker(dir.as_str(), "**/*", recursive)? {
         if let Ok(entry) = entry {
-            if let Ok(_tags) = list_tags_btree(entry.path()) {
+            if let Ok(_tags) = entry.list_tags_btree() {
                 if !tags.is_subset(&_tags) {
                     // File doesn't have all tags
                     continue;
