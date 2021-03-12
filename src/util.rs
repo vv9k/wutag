@@ -1,5 +1,5 @@
 //! Utility functions used through this crate and by the main executable
-use colored::{ColoredString, Colorize};
+use colored::{Color, ColoredString, Colorize};
 use globwalk::{DirEntry, GlobWalker, GlobWalkerBuilder};
 use std::collections::hash_map::DefaultHasher;
 use std::fmt::Display;
@@ -26,7 +26,7 @@ pub fn fmt_path<P: AsRef<Path>>(path: P) -> String {
 }
 
 pub fn fmt_tag(tag: &Tag) -> ColoredString {
-    tag.name().bold().yellow()
+    tag.name().color(*tag.color())
 }
 
 /// Returns a GlobWalker instance with base path set to `base_path` and pattern to `pattern`. If
@@ -64,6 +64,7 @@ where
     Ok(())
 }
 
+/// Calculates a hash of an item that implements [Hash](std::hash::Hash)
 pub fn calculate_hash<T>(item: &T) -> u64
 where
     T: Hash,
@@ -71,4 +72,40 @@ where
     let mut hasher = DefaultHasher::new();
     item.hash(&mut hasher);
     hasher.finish()
+}
+
+/// Parses a [Color](colored::Color) from a foreground color string
+pub fn color_from_fg_str(s: &str) -> Option<Color> {
+    match s {
+        "30" => Some(Color::Black),
+        "31" => Some(Color::Red),
+        "32" => Some(Color::Green),
+        "33" => Some(Color::Yellow),
+        "34" => Some(Color::Blue),
+        "35" => Some(Color::Magenta),
+        "36" => Some(Color::Cyan),
+        "37" => Some(Color::White),
+        "90" => Some(Color::BrightBlack),
+        "91" => Some(Color::BrightRed),
+        "92" => Some(Color::BrightGreen),
+        "93" => Some(Color::BrightYellow),
+        "94" => Some(Color::BrightBlue),
+        "95" => Some(Color::BrightMagenta),
+        "96" => Some(Color::BrightCyan),
+        "97" => Some(Color::BrightWhite),
+        color => {
+            if color.starts_with("38;2;") {
+                let mut it = s.split(';');
+                it.next()?;
+                it.next()?;
+                Some(Color::TrueColor {
+                    r: it.next()?.parse().ok()?,
+                    g: it.next()?.parse().ok()?,
+                    b: it.next()?.parse().ok()?,
+                })
+            } else {
+                None
+            }
+        }
+    }
 }

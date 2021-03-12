@@ -1,6 +1,8 @@
 //! Functions for manipulating tags on files.
 use chrono::{offset::Utc, DateTime, NaiveDateTime};
+use colored::Color;
 use globwalk::DirEntry;
+use rand::prelude::*;
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::convert::TryFrom;
@@ -15,7 +17,24 @@ use crate::{Error, Result, WUTAG_NAMESPACE};
 pub struct Tag {
     timestamp: DateTime<Utc>,
     name: String,
+    color: Color,
 }
+
+const COLORS: &[Color] = &[
+    Color::Red,
+    Color::Green,
+    Color::Blue,
+    Color::Yellow,
+    Color::Cyan,
+    Color::White,
+    Color::Magenta,
+    Color::BrightRed,
+    Color::BrightGreen,
+    Color::BrightYellow,
+    Color::BrightBlue,
+    Color::BrightMagenta,
+    Color::BrightCyan,
+];
 
 pub trait DirEntryExt {
     fn tag(&self, tag: &Tag) -> Result<()>;
@@ -56,9 +75,14 @@ impl Tag {
     where
         S: Into<String>,
     {
+        let mut rng = thread_rng();
         Tag {
             timestamp: chrono::Utc::now(),
             name: name.into(),
+            color: COLORS
+                .choose(&mut rng)
+                .map(|c| *c)
+                .unwrap_or_else(|| Color::BrightWhite),
         }
     }
 
@@ -70,12 +94,17 @@ impl Tag {
         &self.timestamp
     }
 
+    pub fn color(&self) -> &Color {
+        &self.color
+    }
+
     fn xattr_name(&self) -> String {
         format!(
-            "{}.{}.{}",
+            "{}.{}.{}.{}",
             WUTAG_NAMESPACE,
             self.timestamp.timestamp(),
-            util::calculate_hash(&self.name)
+            util::calculate_hash(&self.name),
+            self.color.to_fg_str(),
         )
     }
 
@@ -170,9 +199,23 @@ impl TryFrom<(String, String)> for Tag {
             0,
         );
 
+        let _hash = elems
+            .next()
+            .ok_or_else(|| Error::InvalidTagKey("missing hash".into()))?
+            .parse::<u64>()
+            .map_err(|e| Error::InvalidTagKey(e.to_string()))?;
+
+        let _color = elems
+            .next()
+            .ok_or_else(|| Error::InvalidTagKey("missing color".into()))?;
+
+        let color = util::color_from_fg_str(_color)
+            .ok_or_else(|| Error::InvalidTagKey(format!("invalid color {}", _color)))?;
+
         Ok(Tag {
             timestamp: chrono::DateTime::<Utc>::from_utc(timestamp, Utc),
             name: value,
+            color,
         })
     }
 }
