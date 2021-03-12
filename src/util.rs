@@ -26,7 +26,7 @@ pub fn fmt_path<P: AsRef<Path>>(path: P) -> String {
 }
 
 pub fn fmt_tag(tag: &Tag) -> ColoredString {
-    tag.name().color(*tag.color())
+    tag.name().color(*tag.color()).bold()
 }
 
 /// Returns a GlobWalker instance with base path set to `base_path` and pattern to `pattern`. If
