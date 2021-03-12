@@ -10,15 +10,11 @@ use crate::tags::Tag;
 use crate::{Error, DEFAULT_MAX_DEPTH};
 
 pub fn fmt_err<E: Display>(err: E) -> String {
-    format!(
-        "{} {}",
-        "ERROR".red().bold(),
-        format!("{}", err).white().bold()
-    )
+    format!("{} {}", "ERROR".red().bold(), format!("{}", err).white())
 }
 
 pub fn fmt_ok<S: AsRef<str>>(msg: S) -> String {
-    format!("{} {}", "OK".green().bold(), msg.as_ref().white().bold())
+    format!("{} {}", "OK".green().bold(), msg.as_ref().white())
 }
 
 pub fn fmt_path<P: AsRef<Path>>(path: P) -> String {
