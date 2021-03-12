@@ -22,7 +22,7 @@ pub fn fmt_ok<S: AsRef<str>>(msg: S) -> String {
 }
 
 pub fn fmt_path<P: AsRef<Path>>(path: P) -> String {
-    format!("`{}`", path.as_ref().display().to_string().bold().blue())
+    format!("{}", path.as_ref().display().to_string().bold().blue())
 }
 
 pub fn fmt_tag(tag: &Tag) -> ColoredString {
