@@ -11,14 +11,14 @@ use crate::{Error, DEFAULT_MAX_DEPTH};
 
 pub fn fmt_err<E: Display>(err: E) -> String {
     format!(
-        "{}:\t{}",
+        "{} {}",
         "ERROR".red().bold(),
         format!("{}", err).white().bold()
     )
 }
 
 pub fn fmt_ok<S: AsRef<str>>(msg: S) -> String {
-    format!("{}:\t{}", "OK".green().bold(), msg.as_ref().white().bold())
+    format!("{} {}", "OK".green().bold(), msg.as_ref().white().bold())
 }
 
 pub fn fmt_path<P: AsRef<Path>>(path: P) -> String {
