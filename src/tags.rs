@@ -39,6 +39,7 @@ const COLORS: &[Color] = &[
 pub trait DirEntryExt {
     fn tag(&self, tag: &Tag) -> Result<()>;
     fn untag(&self, tag: &Tag) -> Result<()>;
+    fn get_tag<T: AsRef<str>>(&self, tag: T) -> Result<Tag>;
     fn list_tags(&self) -> Result<Vec<Tag>>;
     fn list_tags_btree(&self) -> Result<BTreeSet<Tag>>;
     fn clear_tags(&self) -> Result<()>;
@@ -52,6 +53,9 @@ impl DirEntryExt for DirEntry {
     }
     fn untag(&self, tag: &Tag) -> Result<()> {
         tag.remove_from(self.path())
+    }
+    fn get_tag<T: AsRef<str>>(&self, tag: T) -> Result<Tag> {
+        get_tag(self.path(), tag)
     }
     fn list_tags(&self) -> Result<Vec<Tag>> {
         list_tags(self.path())
@@ -214,6 +218,22 @@ impl TryFrom<(String, String)> for Tag {
             color,
         })
     }
+}
+
+pub fn get_tag<P, T>(path: P, tag: T) -> Result<Tag>
+where
+    P: AsRef<Path>,
+    T: AsRef<str>,
+{
+    let path = path.as_ref();
+    let tag = tag.as_ref();
+    for (k, v) in list_xattrs(path)? {
+        if &v == tag {
+            return Tag::try_from((k, v));
+        }
+    }
+
+    Err(Error::TagNotFound(tag.to_string()))
 }
 
 /// Lists tags of the file at the given `path`.
