@@ -65,7 +65,7 @@ impl WutagRunner {
                 }
                 print!("{}:", entry.fmt_path());
                 for tag in tags {
-                    print!("\t{}", fmt_tag(&tag));
+                    print!(" {}", fmt_tag(&tag));
                 }
                 print!("\n");
             }
@@ -112,15 +112,20 @@ impl WutagRunner {
         glob! {self, opts, |entry: &DirEntry| match entry.has_tags() {
             Ok(has_tags) => {
                 if has_tags {
-                    println!("{}:", entry.fmt_path());
-                    if let Err(e) = entry.clear_tags() {
-                        eprintln!("\t{}", fmt_err(e));
+                    if opts.verbose {
+                        println!("{}:", entry.fmt_path());
+                    }
+                    let res = entry.clear_tags();
+                    if opts.verbose {
+                        if let Err(e) = res {
+                            eprintln!("\t{}", fmt_err(e));
+                        }
                     } else {
                         println!("\t{}", fmt_ok("cleared."));
                     }
                 }
             }
-            Err(e) => eprintln!("{}:\n\t{}", entry.fmt_path(), fmt_err(e)),
+            Err(e) => if opts.verbose { eprintln!("{}:\n\t{}", entry.fmt_path(), fmt_err(e)) },
         }};
     }
 
