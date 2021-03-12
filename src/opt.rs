@@ -16,6 +16,9 @@ pub struct WutagOpts {
     /// levels deep starting from the base directory which is current working directory if `dir` is
     /// not specified.
     pub recursive: bool,
+    /// If passed the output won't be colored
+    #[clap(long, short)]
+    pub no_color: bool,
     #[clap(subcommand)]
     pub cmd: WutagCmd,
 }

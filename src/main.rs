@@ -11,9 +11,10 @@ use wutag::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
 use wutag::Error;
 
 struct WutagRunner {
+    pub cmd: WutagCmd,
     pub base_dir: PathBuf,
     pub recursive: bool,
-    pub cmd: WutagCmd,
+    pub no_color: bool,
 }
 
 macro_rules! glob {
@@ -38,10 +39,14 @@ impl WutagRunner {
             base_dir,
             recursive: opts.recursive,
             cmd: opts.cmd,
+            no_color: opts.no_color,
         })
     }
 
     pub fn run(&self) {
+        if self.no_color {
+            colored::control::SHOULD_COLORIZE.set_override(false);
+        }
         match &self.cmd {
             WutagCmd::List(opts) => self.list(opts),
             WutagCmd::Set(opts) => self.set(opts),
