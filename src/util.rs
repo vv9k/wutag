@@ -4,7 +4,7 @@ use globwalk::{DirEntry, GlobWalker, GlobWalkerBuilder};
 use std::collections::hash_map::DefaultHasher;
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::tags::Tag;
 use crate::{Error, DEFAULT_MAX_DEPTH};
@@ -48,15 +48,12 @@ where
 
 /// Utility function that executes the function `f` on all directory entries that are Ok, by
 /// default ignores all errors.
-pub fn glob_ok<F>(pattern: &str, dir: Option<PathBuf>, recursive: bool, f: F) -> Result<(), Error>
+pub fn glob_ok<P, F>(pattern: &str, base_path: P, recursive: bool, f: F) -> Result<(), Error>
 where
+    P: AsRef<Path>,
     F: Fn(&DirEntry),
 {
-    let base_path = if let Some(base_path) = dir {
-        base_path.to_string_lossy().to_string()
-    } else {
-        ".".to_string()
-    };
+    let base_path = base_path.as_ref().to_string_lossy().to_string();
 
     for entry in glob_walker(base_path.as_str(), pattern, recursive)? {
         if let Ok(entry) = entry {

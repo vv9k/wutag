@@ -3,7 +3,6 @@ use chrono::{offset::Utc, DateTime, NaiveDateTime};
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::convert::TryFrom;
-use std::env;
 use std::fmt;
 use std::path::{Path, PathBuf};
 
@@ -200,15 +199,14 @@ where
     Ok(())
 }
 
-/// Searches for files with the specified tags in the current directory. If `recursive` is set to
-/// `true` recursively follows all subdirectories. If `path` is provided the search will start at
-/// the location that it points to.
+/// Searches for files with the specified tags in the location specified by `path`. If `recursive` is set to
+/// `true` recursively follows all subdirectories.
 ///
 /// Returns a list of paths of files that contain the provided set of tags.
 pub fn search_files_with_tags<Ts, P>(
     tags: Ts,
+    path: P,
     recursive: bool,
-    path: Option<P>,
 ) -> Result<Vec<PathBuf>, Error>
 where
     Ts: IntoIterator<Item = String>,
@@ -217,11 +215,7 @@ where
     let tags = tags.into_iter().map(Tag::new).collect::<BTreeSet<_>>();
     let mut files = Vec::new();
 
-    let dir = if let Some(path) = path {
-        path.as_ref().to_string_lossy().to_string()
-    } else {
-        env::current_dir()?.as_path().to_string_lossy().to_string()
-    };
+    let dir = path.as_ref().to_string_lossy().to_string();
 
     for entry in util::glob_walker(dir.as_str(), "**/*", recursive)? {
         if let Ok(entry) = entry {

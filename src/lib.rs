@@ -1,4 +1,3 @@
-pub mod opt;
 pub mod tags;
 pub mod util;
 pub mod xattr;
