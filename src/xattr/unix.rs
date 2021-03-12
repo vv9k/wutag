@@ -12,11 +12,11 @@ use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 use std::ptr;
 
-use crate::Error;
+use crate::{Error, Result};
 
 /// Sets the value of the extended attribute identified by `name` and associated with the given `path` in the
 /// filesystem.
-pub fn set_xattr<P, S>(path: P, name: S, value: S) -> Result<(), Error>
+pub fn set_xattr<P, S>(path: P, name: S, value: S) -> Result<()>
 where
     P: AsRef<Path>,
     S: AsRef<str>,
@@ -28,7 +28,7 @@ where
 
 /// Retrieves the value of the extended attribute identified by `name` and associated with the given
 /// `path` in the filesystem.
-pub fn get_xattr<P, S>(path: P, name: S) -> Result<String, Error>
+pub fn get_xattr<P, S>(path: P, name: S) -> Result<String>
 where
     P: AsRef<Path>,
     S: AsRef<str>,
@@ -38,7 +38,7 @@ where
 
 /// Retrieves a list of all extended attributes with their values associated with the given `path`
 /// in the filesystem.
-pub fn list_xattrs<P>(path: P) -> Result<Vec<(String, String)>, Error>
+pub fn list_xattrs<P>(path: P) -> Result<Vec<(String, String)>>
 where
     P: AsRef<Path>,
 {
@@ -47,7 +47,7 @@ where
 
 /// Removes the extended attribute identified by `name` and associated with the given `path` in the
 /// filesystem.
-pub fn remove_xattr<P, S>(path: P, name: S) -> Result<(), Error>
+pub fn remove_xattr<P, S>(path: P, name: S) -> Result<()>
 where
     P: AsRef<Path>,
     S: AsRef<str>,
@@ -57,7 +57,7 @@ where
 
 /// Provides identical functionality to [`set_xattr`](set_xattr) except in the case of a symbolic
 /// link where the extended attribute is set on the link itself, not the file that it refers to.
-pub fn set_link_xattr<P, S>(path: P, name: S, value: S) -> Result<(), Error>
+pub fn set_link_xattr<P, S>(path: P, name: S, value: S) -> Result<()>
 where
     P: AsRef<Path>,
     S: AsRef<str>,
@@ -69,7 +69,7 @@ where
 
 /// Provides identical functionality to [`get_xattr`](get_xattr) except in the case of a symbolic
 /// link where the extended attribute is retrieved from the link not the file that it refers to.
-pub fn get_link_xattr<P, S>(path: P, name: S) -> Result<String, Error>
+pub fn get_link_xattr<P, S>(path: P, name: S) -> Result<String>
 where
     P: AsRef<Path>,
     S: AsRef<str>,
@@ -79,7 +79,7 @@ where
 
 /// Provides identical functionality to [`list_xattrs`](list_xattrs) except in the case of a symbolic
 /// link where the list of extended attributes is retrieved from the link no the file it refers to.
-pub fn list_link_xattrs<P>(path: P) -> Result<Vec<(String, String)>, Error>
+pub fn list_link_xattrs<P>(path: P) -> Result<Vec<(String, String)>>
 where
     P: AsRef<Path>,
 {
@@ -89,7 +89,7 @@ where
 /// Provides identical functionality to [`remove_xattr`](remove_xattr) except in the case of a symbolic
 /// link where the value of the extended attribute is removed from the link not the file that it
 /// refers to.
-pub fn remove_link_xattr<P, S>(path: P, name: S) -> Result<(), Error>
+pub fn remove_link_xattr<P, S>(path: P, name: S) -> Result<()>
 where
     P: AsRef<Path>,
     S: AsRef<str>,
@@ -185,7 +185,7 @@ unsafe fn __listxattr(path: *const i8, list: *mut i8, size: usize, symlink: bool
 // Impl
 //################################################################################
 
-fn _remove_xattr(path: &Path, name: &str, symlink: bool) -> Result<(), Error> {
+fn _remove_xattr(path: &Path, name: &str, symlink: bool) -> Result<()> {
     let path = CString::new(path.to_string_lossy().as_bytes())?;
     let name = CString::new(name.as_bytes())?;
 
@@ -205,7 +205,7 @@ fn _set_xattr(
     value: &str,
     size: usize,
     symlink: bool, // if provided path is a symlink set the attribute on the symlink not the file/directory it points to
-) -> Result<(), Error> {
+) -> Result<()> {
     let path = CString::new(path.to_string_lossy().as_bytes())?;
     let name = CString::new(name.as_bytes())?;
     let value = CString::new(value.as_bytes())?;
@@ -227,7 +227,7 @@ fn _set_xattr(
     Ok(())
 }
 
-fn _get_xattr(path: &Path, name: &str, symlink: bool) -> Result<String, Error> {
+fn _get_xattr(path: &Path, name: &str, symlink: bool) -> Result<String> {
     let path = CString::new(path.to_string_lossy().as_bytes())?;
     let name = CString::new(name.as_bytes())?;
     let size = get_xattr_size(path.as_c_str(), name.as_c_str(), symlink)?;
@@ -263,7 +263,7 @@ fn _get_xattr(path: &Path, name: &str, symlink: bool) -> Result<String, Error> {
         .to_string())
 }
 
-fn _list_xattrs(path: &Path, symlink: bool) -> Result<Vec<(String, String)>, Error> {
+fn _list_xattrs(path: &Path, symlink: bool) -> Result<Vec<(String, String)>> {
     let cpath = CString::new(path.to_string_lossy().as_bytes())?;
     let raw = list_xattrs_raw(cpath.as_c_str(), symlink)?;
     let keys = parse_xattrs(&raw)?;
@@ -281,7 +281,7 @@ fn _list_xattrs(path: &Path, symlink: bool) -> Result<Vec<(String, String)>, Err
 // Other
 //################################################################################
 
-fn get_xattr_size(path: &CStr, name: &CStr, symlink: bool) -> Result<usize, Error> {
+fn get_xattr_size(path: &CStr, name: &CStr, symlink: bool) -> Result<usize> {
     let ret = unsafe { __getxattr(path.as_ptr(), name.as_ptr(), ptr::null_mut(), 0, symlink) };
 
     if ret == -1 {
@@ -291,7 +291,7 @@ fn get_xattr_size(path: &CStr, name: &CStr, symlink: bool) -> Result<usize, Erro
     Ok(ret as usize)
 }
 
-fn get_xattrs_list_size(path: &CStr, symlink: bool) -> Result<usize, Error> {
+fn get_xattrs_list_size(path: &CStr, symlink: bool) -> Result<usize> {
     let path = path.as_ref();
 
     let ret = unsafe { __listxattr(path.as_ptr(), ptr::null_mut(), 0, symlink) };
@@ -303,7 +303,7 @@ fn get_xattrs_list_size(path: &CStr, symlink: bool) -> Result<usize, Error> {
     Ok(ret as usize)
 }
 
-fn list_xattrs_raw(path: &CStr, symlink: bool) -> Result<Vec<u8>, Error> {
+fn list_xattrs_raw(path: &CStr, symlink: bool) -> Result<Vec<u8>> {
     let size = get_xattrs_list_size(path, symlink)?;
     let mut buf = Vec::<u8>::with_capacity(size);
     let buf_ptr = buf.as_mut_ptr();
@@ -327,7 +327,7 @@ fn list_xattrs_raw(path: &CStr, symlink: bool) -> Result<Vec<u8>, Error> {
     unsafe { Ok(Vec::from_raw_parts(buf_ptr, ret, size)) }
 }
 
-fn parse_xattrs(input: &[u8]) -> Result<Vec<String>, Error> {
+fn parse_xattrs(input: &[u8]) -> Result<Vec<String>> {
     let mut it = input.iter().enumerate();
     let mut keys = Vec::new();
     let mut start = 0;

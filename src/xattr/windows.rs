@@ -2,9 +2,9 @@
 #![allow(unused_variables)]
 use std::path::Path;
 
-use crate::Error;
+use crate::Result;
 
-pub fn set_xattr<P, S>(path: P, name: S, value: S) -> Result<(), Error>
+pub fn set_xattr<P, S>(path: P, name: S, value: S) -> Result<()>
 where
     P: AsRef<Path>,
     S: AsRef<str>,
@@ -12,7 +12,7 @@ where
     Ok(())
 }
 
-pub fn get_xattr<P, S>(path: P, name: S) -> Result<String, Error>
+pub fn get_xattr<P, S>(path: P, name: S) -> Result<String>
 where
     P: AsRef<Path>,
     S: AsRef<str>,
@@ -20,14 +20,14 @@ where
     Ok(String::new())
 }
 
-pub fn list_xattrs<P>(path: P) -> Result<Vec<(String, String)>, Error>
+pub fn list_xattrs<P>(path: P) -> Result<Vec<(String, String)>>
 where
     P: AsRef<Path>,
 {
     Ok(Vec::new())
 }
 
-pub fn remove_xattr<P, S>(path: P, name: S) -> Result<(), Error>
+pub fn remove_xattr<P, S>(path: P, name: S) -> Result<()>
 where
     P: AsRef<Path>,
     S: AsRef<str>,
@@ -39,6 +39,6 @@ where
 // Impl
 //################################################################################
 
-
 // Blocked by `windows-rs` `bindings::windows::win32::system_services::WIN32_STREAM_ID` type having unsupported field
 // type.
+

@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use crate::util;
 use crate::xattr::{list_xattrs, remove_xattr, set_xattr};
-use crate::{Error, WUTAG_NAMESPACE};
+use crate::{Error, Result, WUTAG_NAMESPACE};
 
 #[derive(Debug, Eq)]
 pub struct Tag {
@@ -45,7 +45,7 @@ impl Tag {
     }
 
     /// Tags the file at the given `path` with this tag. If the tag exists returns an error.
-    pub fn save_to<P>(&self, path: P) -> Result<(), Error>
+    pub fn save_to<P>(&self, path: P) -> Result<()>
     where
         P: AsRef<Path>,
     {
@@ -59,7 +59,7 @@ impl Tag {
 
     /// Removes this tag from the file at the given `path`. If the tag doesn't exists returns
     /// [Error::TagNotFound](wutag::Error::TagNotFound)
-    pub fn remove_from<P>(&self, path: P) -> Result<(), Error>
+    pub fn remove_from<P>(&self, path: P) -> Result<()>
     where
         P: AsRef<Path>,
     {
@@ -100,7 +100,7 @@ impl PartialOrd for Tag {
 
 impl TryFrom<(String, String)> for Tag {
     type Error = Error;
-    fn try_from(value: (String, String)) -> Result<Self, Self::Error> {
+    fn try_from(value: (String, String)) -> Result<Self> {
         let (key, value) = value;
 
         let mut elems = key.split('.');
@@ -143,7 +143,7 @@ impl TryFrom<(String, String)> for Tag {
 }
 
 /// Lists tags of the file at the given `path`.
-pub fn list_tags<P>(path: P) -> Result<Vec<Tag>, Error>
+pub fn list_tags<P>(path: P) -> Result<Vec<Tag>>
 where
     P: AsRef<Path>,
 {
@@ -164,7 +164,7 @@ where
 }
 
 /// Lists tags of the file at the given `path` as a [BTreeSet](BTreeSet).
-pub fn list_tags_btree<P>(path: P) -> Result<BTreeSet<Tag>, Error>
+pub fn list_tags_btree<P>(path: P) -> Result<BTreeSet<Tag>>
 where
     P: AsRef<Path>,
 {
@@ -185,7 +185,7 @@ where
 }
 
 /// Clears all tags of the file at the given `path`.
-pub fn clear_tags<P>(path: P) -> Result<(), Error>
+pub fn clear_tags<P>(path: P) -> Result<()>
 where
     P: AsRef<Path>,
 {
@@ -203,11 +203,7 @@ where
 /// `true` recursively follows all subdirectories.
 ///
 /// Returns a list of paths of files that contain the provided set of tags.
-pub fn search_files_with_tags<Ts, P>(
-    tags: Ts,
-    path: P,
-    recursive: bool,
-) -> Result<Vec<PathBuf>, Error>
+pub fn search_files_with_tags<Ts, P>(tags: Ts, path: P, recursive: bool) -> Result<Vec<PathBuf>>
 where
     Ts: IntoIterator<Item = String>,
     P: AsRef<Path>,
@@ -236,7 +232,7 @@ where
 /// Checks whether the given path has any tags.
 ///
 /// Returns an Error if the list of tags couldn't be aquired.
-pub fn has_tags<P>(path: P) -> Result<bool, Error>
+pub fn has_tags<P>(path: P) -> Result<bool>
 where
     P: AsRef<Path>,
 {
