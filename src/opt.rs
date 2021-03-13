@@ -80,7 +80,8 @@ pub struct EditOpts {
     pub tag: String,
     #[clap(long, short)]
     /// Set the color of the tag to the specified color. Accepted values are hex colors like
-    /// `000000` or `1f1f1f`.
+    /// `0x000000` or `#1F1F1F` or just plain `ff000a`. The colors are case insensitive meaning
+    /// `1f1f1f` is equivalent to `1F1F1F`.
     pub color: String,
 }
 
