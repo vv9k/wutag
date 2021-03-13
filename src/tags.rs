@@ -116,7 +116,7 @@ impl Tag {
 
     pub fn set_color(&mut self, color: &Color) {
         self.update_timestamp();
-        self.color = color.clone();
+        self.color = *color;
     }
 
     fn xattr_name(&self) -> String {
