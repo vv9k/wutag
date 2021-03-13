@@ -115,7 +115,7 @@ const fn hex_val(ch: u8) -> u8 {
     }
 }
 
-fn hex_chars_to_u8(ch: (u8, u8)) -> u8 {
+const fn hex_chars_to_u8(ch: (u8, u8)) -> u8 {
     let mut result = 0;
     result |= hex_val(ch.0);
     result <<= 4;
