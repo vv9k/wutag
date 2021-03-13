@@ -106,8 +106,17 @@ impl Tag {
         &self.timestamp
     }
 
+    fn update_timestamp(&mut self) {
+        self.timestamp = chrono::Utc::now();
+    }
+
     pub fn color(&self) -> &Color {
         &self.color
+    }
+
+    pub fn set_color(&mut self, color: &Color) {
+        self.update_timestamp();
+        self.color = color.clone();
     }
 
     fn xattr_name(&self) -> String {
