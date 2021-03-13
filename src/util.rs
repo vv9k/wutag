@@ -138,20 +138,24 @@ fn parse_hex(color: &str) -> Option<(u8, u8, u8)> {
 /// `#ABBA12` or `121212` are valid.
 pub fn parse_color<S: AsRef<str>>(color: S) -> Result<Color> {
     let color = color.as_ref();
-    let result = if let Some(c) = color.strip_prefix("0x") {
-        Some(c)
-    } else {
-        if let Some(c) = color.strip_prefix("#") {
-            Some(c)
-        } else {
-            if color.len() == 6 {
-                // treat as hex string
-                Some(color)
+    macro_rules! if_6 {
+        ($c:ident) => {
+            if $c.len() == 6 {
+                Some($c)
             } else {
                 None
             }
-        }
+        };
+    }
+
+    let result = if let Some(c) = color.strip_prefix("0x") {
+        if_6!(c)
+    } else if let Some(c) = color.strip_prefix("#") {
+        if_6!(c)
+    } else {
+        if_6!(color)
     };
+
     if let Some(color) = result {
         // hex
         if let Some((r, g, b)) = parse_hex(color) {
@@ -159,4 +163,46 @@ pub fn parse_color<S: AsRef<str>>(color: S) -> Result<Color> {
         }
     }
     Err(Error::InvalidColor(color.to_string()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_color;
+    use colored::Color::*;
+    #[test]
+    fn parses_colors() {
+        assert_eq!(
+            parse_color("0xffffff").unwrap(),
+            TrueColor {
+                r: 255,
+                g: 255,
+                b: 255
+            }
+        );
+        assert_eq!(
+            parse_color("#ffffff").unwrap(),
+            TrueColor {
+                r: 255,
+                g: 255,
+                b: 255
+            }
+        );
+        assert_eq!(
+            parse_color("0ff00f").unwrap(),
+            TrueColor {
+                r: 15,
+                g: 240,
+                b: 15
+            }
+        );
+    }
+    #[test]
+    fn errors_on_invalid_colors() {
+        assert!(parse_color("0ff00").is_err());
+        assert!(parse_color("0x12345").is_err());
+        assert!(parse_color("#53241").is_err());
+        assert!(parse_color("1234567").is_err());
+        assert!(parse_color("#1234567").is_err());
+        assert!(parse_color("0x1234567").is_err());
+    }
 }
