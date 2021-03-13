@@ -67,6 +67,7 @@ jobs:
       - name: Test
         run: cargo test
 
+
   build_release:
     needs: [test]
     strategy:
