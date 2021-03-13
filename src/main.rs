@@ -120,11 +120,12 @@ impl WutagRunner {
                         if let Err(e) = res {
                             eprintln!("\t{}", fmt_err(e));
                         }
-                    } else {
-                        println!("\t{}", fmt_ok("cleared."));
+                        else {
+                            println!("\t{}", fmt_ok("cleared."));
+                        }
                     }
                 }
-            }
+            },
             Err(e) => if opts.verbose { eprintln!("{}:\n\t{}", entry.fmt_path(), fmt_err(e)) },
         }};
     }
