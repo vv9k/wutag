@@ -6,8 +6,6 @@ on:
       - "!*"
     tags:
       - "**"
-
-
 jobs:
   codestyle:
     strategy:
@@ -75,25 +73,51 @@ jobs:
   build_and_upload_artifacts:
     name: Upload Artifacts
     needs: [test]
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build: [linux, macos]
+        include:
+        - build: linux
+          os: ubuntu-latest
+          target: x86_64-unknown-linux
+        - build: macos
+          os: macos-latest
+          target: x86_64-apple-darwin
 
     steps:
       - name: Set up Rust
         uses: hecrj/setup-rust-action@v1
       - uses: actions/checkout@master
       - run: cargo build --release
+      - run: |
+          mkdir release
+          mv target/release/wutag release/
+      - working-directory: ./release
+        run: |
+          tar -zcvf wutag-${{ matrix.target }}.tar.gz .
+          tar -Jcvf wutag-${{ matrix.target }}.tar.xz .
+
       - name: Get the version
         id: get_version
         run: echo ::set-output name=WUTAG_VERSION::${GITHUB_REF/refs\/tags\//}
-      - name: Upload binary
+      - name: Set archive name
+        id: set_name
+        run: echo ::set-output name=WUTAG_ARCHIVE::wutag-${{steps.get_version.outputs.WUTAG_VERSION}}-${{ matrix.target}}
+      - name: Upload gz
         uses: svenstaro/upload-release-action@v2
         with:
           repo_name: wojciechkepka/wutag
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/wutag
-          asset_name: wutag-${{ steps.get_version.outputs.WUTAG_VERSION }}
+          file: release/${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.gz
+          asset_name: ${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.gz
           tag: ${{ steps.get_version.outputs.WUTAG_VERSION }}
           overwrite: true
-
-
-
+      - name: Upload xz
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_name: wojciechkepka/wutag
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: release/${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.xz
+          asset_name: ${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.xz
+          tag: ${{ steps.get_version.outputs.WUTAG_VERSION }}
+          overwrite: true
