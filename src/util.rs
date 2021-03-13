@@ -7,7 +7,7 @@ use std::hash::{Hash, Hasher};
 use std::path::Path;
 
 use crate::tags::Tag;
-use crate::{Error, DEFAULT_MAX_DEPTH};
+use crate::{Error, Result, DEFAULT_MAX_DEPTH};
 
 pub fn fmt_err<E: Display>(err: E) -> String {
     format!("{} {}", "ERROR".red().bold(), format!("{}", err).white())
@@ -28,7 +28,7 @@ pub fn fmt_tag(tag: &Tag) -> ColoredString {
 /// Returns a GlobWalker instance with base path set to `base_path` and pattern to `pattern`. If
 /// `recursive` is true the maximum depth is going to be [DEFAULT_MAX_DEPTH](DEFAULT_MAX_DEPTH)
 /// otherwise `1` (only top level files).
-pub fn glob_walker<S>(dir: S, pattern: S, recursive: bool) -> Result<GlobWalker, Error>
+pub fn glob_walker<S>(dir: S, pattern: S, recursive: bool) -> Result<GlobWalker>
 where
     S: AsRef<str>,
 {
@@ -44,7 +44,7 @@ where
 
 /// Utility function that executes the function `f` on all directory entries that are Ok, by
 /// default ignores all errors.
-pub fn glob_ok<P, F>(pattern: &str, base_path: P, recursive: bool, f: F) -> Result<(), Error>
+pub fn glob_ok<P, F>(pattern: &str, base_path: P, recursive: bool, f: F) -> Result<()>
 where
     P: AsRef<Path>,
     F: Fn(&DirEntry),
@@ -104,4 +104,59 @@ pub fn color_from_fg_str(s: &str) -> Option<Color> {
             }
         }
     }
+}
+
+const fn hex_val(ch: u8) -> u8 {
+    match ch {
+        b'0'..=b'9' => ch - 48,
+        b'A'..=b'F' => ch - 55,
+        b'a'..=b'f' => ch - 87,
+        _ => 0,
+    }
+}
+
+fn hex_chars_to_u8(ch: (u8, u8)) -> u8 {
+    let mut result = 0;
+    result |= hex_val(ch.0);
+    result <<= 4;
+    result |= hex_val(ch.1);
+    result
+}
+
+fn parse_hex(color: &str) -> Option<(u8, u8, u8)> {
+    let mut bytes = color.as_bytes().chunks(2);
+
+    Some((
+        bytes.next().map(|arr| hex_chars_to_u8((arr[0], arr[1])))?,
+        bytes.next().map(|arr| hex_chars_to_u8((arr[0], arr[1])))?,
+        bytes.next().map(|arr| hex_chars_to_u8((arr[0], arr[1])))?,
+    ))
+}
+
+/// Parses a [Color](colored::Color) from a String. If the provided string starts with
+/// `0x` or `#` or without any prefix the color will be treated as hex color notation so any colors like `0x1f1f1f` or
+/// `#ABBA12` or `121212` are valid.
+pub fn parse_color<S: AsRef<str>>(color: S) -> Result<Color> {
+    let color = color.as_ref();
+    let result = if let Some(c) = color.strip_prefix("0x") {
+        Some(c)
+    } else {
+        if let Some(c) = color.strip_prefix("#") {
+            Some(c)
+        } else {
+            if color.len() == 6 {
+                // treat as hex string
+                Some(color)
+            } else {
+                None
+            }
+        }
+    };
+    if let Some(color) = result {
+        // hex
+        if let Some((r, g, b)) = parse_hex(color) {
+            return Ok(Color::TrueColor { r, g, b });
+        }
+    }
+    Err(Error::InvalidColor(color.to_string()))
 }
