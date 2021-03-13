@@ -5,9 +5,11 @@ use colored::Colorize;
 use globwalk::DirEntry;
 use std::path::PathBuf;
 
-use opt::{ClearOpts, CpOpts, ListOpts, RmOpts, SearchOpts, SetOpts, WutagCmd, WutagOpts};
-use wutag::tags::{list_tags, search_files_with_tags, DirEntryExt, Tag};
-use wutag::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
+use opt::{
+    ClearOpts, CpOpts, EditOpts, ListOpts, RmOpts, SearchOpts, SetOpts, WutagCmd, WutagOpts,
+};
+use wutag::tags::{get_tag, list_tags, search_files_with_tags, DirEntryExt, Tag};
+use wutag::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok, parse_color};
 use wutag::Error;
 
 struct WutagRunner {
@@ -54,6 +56,7 @@ impl WutagRunner {
             WutagCmd::Clear(opts) => self.clear(opts),
             WutagCmd::Search(opts) => self.search(opts),
             WutagCmd::Cp(opts) => self.cp(opts),
+            WutagCmd::Edit(opts) => self.edit(opts),
         }
     }
 
@@ -189,6 +192,32 @@ impl WutagRunner {
                 e
             ),
         }
+    }
+
+    fn edit(&self, opts: &EditOpts) {
+        let color = match parse_color(&opts.color) {
+            Ok(color) => color,
+            Err(e) => {
+                eprintln!("{}", fmt_err(e));
+                return;
+            }
+        };
+        glob! {self, opts, |entry: &DirEntry| {
+            if let Ok(mut tag) = get_tag(entry.path(), &opts.tag) {
+                print!("{}: ", entry.fmt_path());
+                if let Err(e) = entry.untag(&tag) {
+                    println!("{}", fmt_err(e));
+                    return;
+                }
+                print!("{} {} ", fmt_tag(&tag), "-->".bold().white());
+                tag.set_color(&color);
+                if let Err(e) = entry.tag(&tag) {
+                    println!("{}", fmt_err(e));
+                    return;
+                }
+                println!("{}", fmt_tag(&tag));
+            }
+        }};
     }
 }
 
