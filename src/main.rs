@@ -158,7 +158,7 @@ impl WutagRunner {
                             if let Ok(tags) = list_tags(file) {
                                 tags.iter().for_each(|tag| print!(" {}", fmt_tag(tag)));
                             }
-                            println!("");
+                            println!();
                         }
                     }
                 }

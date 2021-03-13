@@ -83,10 +83,7 @@ impl Tag {
         Tag {
             timestamp: chrono::Utc::now(),
             name: name.into(),
-            color: COLORS
-                .choose(&mut rng)
-                .map(|c| *c)
-                .unwrap_or_else(|| Color::Yellow),
+            color: COLORS.choose(&mut rng).cloned().unwrap_or(Color::Yellow),
         }
     }
 
@@ -144,7 +141,7 @@ impl Tag {
     {
         for (key, val) in list_xattrs(path.as_ref())? {
             // make sure to only remove attributes corresponding to this namespace
-            if &val == &self.name && key.starts_with(WUTAG_NAMESPACE) {
+            if val == self.name && key.starts_with(WUTAG_NAMESPACE) {
                 return remove_xattr(path, key);
             }
         }
@@ -167,7 +164,7 @@ impl Ord for Tag {
 
 impl PartialEq for Tag {
     fn eq(&self, other: &Self) -> bool {
-        &self.name == &other.name
+        self.name == other.name
     }
 }
 
@@ -239,7 +236,7 @@ where
     let path = path.as_ref();
     let tag = tag.as_ref();
     for (k, v) in list_xattrs(path)? {
-        if &v == tag {
+        if v == tag {
             return Tag::try_from((k, v));
         }
     }
@@ -254,12 +251,12 @@ where
 {
     list_xattrs(path).map(|attrs| {
         let mut tags = Vec::new();
-        let mut it = attrs
+        let it = attrs
             .into_iter()
             .filter(|(key, _)| key.starts_with(WUTAG_NAMESPACE))
             .map(Tag::try_from);
 
-        while let Some(item) = it.next() {
+        for item in it {
             if let Ok(tag) = item {
                 tags.push(tag);
             }
@@ -275,12 +272,12 @@ where
 {
     list_xattrs(path).map(|attrs| {
         let mut tags = BTreeSet::new();
-        let mut it = attrs
+        let it = attrs
             .into_iter()
             .filter(|(key, _)| key.starts_with(WUTAG_NAMESPACE))
             .map(Tag::try_from);
 
-        while let Some(item) = it.next() {
+        for item in it {
             if let Ok(tag) = item {
                 tags.insert(tag);
             }
@@ -341,5 +338,5 @@ pub fn has_tags<P>(path: P) -> Result<bool>
 where
     P: AsRef<Path>,
 {
-    list_tags(path).map(|tags| tags.len() > 0)
+    list_tags(path).map(|tags| !tags.is_empty())
 }

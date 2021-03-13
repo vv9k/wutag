@@ -1,4 +1,5 @@
 # wutag 🔱🏷️ 
+[![master](https://github.com/wojciechkepka/wutag/actions/workflows/master.yml/badge.svg)](https://github.com/wojciechkepka/wutag/actions/workflows/master.yml)
 
 CLI tool for tagging and organizing files by tags.
 
