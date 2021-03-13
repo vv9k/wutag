@@ -266,7 +266,7 @@ fn _get_xattr(path: &Path, name: &str, symlink: bool) -> Result<String> {
 fn _list_xattrs(path: &Path, symlink: bool) -> Result<Vec<(String, String)>> {
     let cpath = CString::new(path.to_string_lossy().as_bytes())?;
     let raw = list_xattrs_raw(cpath.as_c_str(), symlink)?;
-    let keys = parse_xattrs(&raw)?;
+    let keys = parse_xattrs(&raw);
 
     let mut attrs = Vec::new();
 
@@ -292,8 +292,6 @@ fn get_xattr_size(path: &CStr, name: &CStr, symlink: bool) -> Result<usize> {
 }
 
 fn get_xattrs_list_size(path: &CStr, symlink: bool) -> Result<usize> {
-    let path = path.as_ref();
-
     let ret = unsafe { __listxattr(path.as_ptr(), ptr::null_mut(), 0, symlink) };
 
     if ret == -1 {
@@ -327,12 +325,11 @@ fn list_xattrs_raw(path: &CStr, symlink: bool) -> Result<Vec<u8>> {
     unsafe { Ok(Vec::from_raw_parts(buf_ptr, ret, size)) }
 }
 
-fn parse_xattrs(input: &[u8]) -> Result<Vec<String>> {
-    let mut it = input.iter().enumerate();
+fn parse_xattrs(input: &[u8]) -> Vec<String> {
     let mut keys = Vec::new();
     let mut start = 0;
 
-    while let Some((i, ch)) = it.next() {
+    for (i, ch) in input.iter().enumerate() {
         if *ch == b'\0' {
             keys.push(
                 OsStr::from_bytes(&input[start..i])
@@ -343,7 +340,7 @@ fn parse_xattrs(input: &[u8]) -> Result<Vec<String>> {
         }
     }
 
-    Ok(keys)
+    keys
 }
 
 #[test]
@@ -354,7 +351,7 @@ fn parses_xattrs_from_raw() {
         116, 101, 115, 116, 105, 110, 103, 0,
     ];
 
-    let attrs = parse_xattrs(raw).unwrap();
+    let attrs = parse_xattrs(raw);
     let mut it = attrs.iter();
 
     assert_eq!(it.next(), Some(&"user.key1".to_string()));
