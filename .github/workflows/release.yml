@@ -75,22 +75,26 @@ jobs:
   build_and_upload_artifacts:
     name: Upload Artifacts
     needs: [test]
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Set up Rust
         uses: hecrj/setup-rust-action@v1
       - uses: actions/checkout@master
       - run: cargo build --release
-      - name: Upload the artifacts
-        uses: skx/github-action-publish-binaries@release-1.3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get version
+        run: |
+          echo "WUTAG_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "version is: ${{ env.WUTAG_VERSION }}"
+      - name: Upload binary
+        uses: svenstaro/upload-release-action@v2
         with:
-          args: 'target/release/wutag'
+          repo_name: wojciechkepka/wutag
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/relese/wutag
+          asset_name: wutag-${{ env.WUTAG_VERSION }}
+          tag: ${{ env.WUTAG_VERSION }}
+          overwrite: true
+
+
 
