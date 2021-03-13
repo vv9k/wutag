@@ -16,6 +16,7 @@ on:
       - "LICENSE"
     branches:
       - master
+      - ci
 
 env:
   CARGO_TERM_COLOR: always
