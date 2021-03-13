@@ -31,6 +31,8 @@ pub enum Error {
     Utf8ConversionFailed(#[from] string::FromUtf8Error),
     #[error("xattrs changed while getting their size")]
     AttrsChanged,
+    #[error("provided color `{0}` is not a valid hex color")]
+    InvalidColor(String),
 }
 
 pub(crate) type Result<T> = std::result::Result<T, Error>;

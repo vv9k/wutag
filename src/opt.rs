@@ -73,6 +73,19 @@ pub struct CpOpts {
 }
 
 #[derive(Clap)]
+pub struct EditOpts {
+    /// A glob pattern like '*.png'.
+    pub pattern: String,
+    /// The tag to edit
+    pub tag: String,
+    #[clap(long, short)]
+    /// Set the color of the tag to the specified color. Accepted values are hex colors like
+    /// `0x000000` or `#1F1F1F` or just plain `ff000a`. The colors are case insensitive meaning
+    /// `1f1f1f` is equivalent to `1F1F1F`.
+    pub color: String,
+}
+
+#[derive(Clap)]
 pub enum WutagCmd {
     /// Lists all tags of the files that match the provided pattern.
     List(ListOpts),
@@ -86,4 +99,6 @@ pub enum WutagCmd {
     Search(SearchOpts),
     /// Copies tags from the specified file to files that match a pattern.
     Cp(CpOpts),
+    /// Edits the tag of files that match the provided pattern.
+    Edit(EditOpts),
 }
