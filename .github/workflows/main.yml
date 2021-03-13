@@ -55,8 +55,10 @@ jobs:
     needs: [codestyle, lint, compile]
     strategy:
       matrix:
-        rust: [stable]
-    runs-on: ubuntu-latest
+        os:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Setup Rust
