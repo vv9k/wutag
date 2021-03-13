@@ -58,6 +58,7 @@ jobs:
         run: cargo test
 
   build_release:
+    needs: [test]
     strategy:
       matrix:
         os:
