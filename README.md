@@ -59,14 +59,15 @@ OPTIONS:
                        from provided path, otherwise defaults to current directory
 
 SUBCOMMANDS:
-    clear     Clears all tags of the files that match the provided pattern
-    cp        Copies tags from the specified file to files that match a pattern
-    edit      Edits the tag of files that match the provided pattern
-    help      Prints this message or the help of the given subcommand(s)
-    list      Lists all tags of the files that match the provided pattern
-    rm        Removes the specified tags of the files that match the provided pattern
-    search    Searches for files that have all of the provided `tags`
-    set       Tags the files that match the given pattern with specified tags
+    clear                Clears all tags of the files that match the provided pattern
+    cp                   Copies tags from the specified file to files that match a pattern
+    edit                 Edits the tag of files that match the provided pattern
+    help                 Prints this message or the help of the given subcommand(s)
+    list                 Lists all tags of the files that match the provided pattern
+    print-completions    Prints completions for the specified shell to stdout
+    rm                   Removes the specified tags of the files that match the provided pattern
+    search               Searches for files that have all of the provided `tags`
+    set                  Tags the files that match the given pattern with specified tags
 ```
 
 ## License
