@@ -5,7 +5,7 @@ use clap::Clap;
 use wutag::Error;
 
 pub const APP_NAME: &str = "wutag";
-pub const APP_VERSION: &str = "0.1.2";
+pub const APP_VERSION: &str = "0.2.0";
 pub const APP_AUTHOR: &str = "Wojciech Kępka <wojciech@wkepka.dev>";
 pub const APP_ABOUT: &str = "Tool to tag and mange tags of files.";
 
