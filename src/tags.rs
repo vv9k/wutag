@@ -1,8 +1,9 @@
 //! Functions for manipulating tags on files.
-use chrono::{offset::Utc, DateTime, NaiveDateTime, TimeZone};
+use chrono::{offset::Utc, DateTime, TimeZone};
 use colored::Color;
 use globwalk::DirEntry;
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::convert::TryFrom;
@@ -13,7 +14,7 @@ use crate::util;
 use crate::xattr::{list_xattrs, remove_xattr, set_xattr};
 use crate::{Error, Result, WUTAG_NAMESPACE};
 
-#[derive(Debug, Eq)]
+#[derive(Debug, Deserialize, Eq, Serialize)]
 pub struct Tag {
     timestamp: DateTime<Utc>,
     name: String,
@@ -119,14 +120,10 @@ impl Tag {
         self.color = *color;
     }
 
-    fn xattr_name(&self) -> String {
-        format!(
-            "{}.{}.{}.{}",
-            WUTAG_NAMESPACE,
-            self.timestamp.timestamp(),
-            util::calculate_hash(&self.name),
-            self.color.to_fg_str(),
-        )
+    fn digest(&self) -> Result<String> {
+        serde_cbor::to_vec(&self)
+            .map(|tag| format!("{}.{}", WUTAG_NAMESPACE, base64::encode(tag)))
+            .map_err(Error::from)
     }
 
     /// Tags the file at the given `path` with this tag. If the tag exists returns an error.
@@ -139,7 +136,7 @@ impl Tag {
                 return Err(Error::TagExists);
             }
         }
-        set_xattr(path, &self.xattr_name(), &self.name)
+        set_xattr(path, self.digest()?.as_str(), "")
     }
 
     /// Removes this tag from the file at the given `path`. If the tag doesn't exists returns
@@ -193,47 +190,22 @@ macro_rules! next_or_else {
 impl TryFrom<(String, String)> for Tag {
     type Error = Error;
     fn try_from(value: (String, String)) -> Result<Self> {
-        let (key, value) = value;
+        let (key, _) = value;
 
-        let mut elems = key.split('.');
+        let mut elems = key.split("wutag.");
 
-        let mut ns = next_or_else!(elems, "missing namespace `user`")?;
-        if ns != "user" {
+        let ns = next_or_else!(elems, "missing namespace `user`")?;
+        if ns != "user." {
             return Err(Error::InvalidTagKey(format!(
                 "invalid namespace `{}`, valid namespace is `user`",
                 ns
             )));
         }
 
-        ns = next_or_else!(elems, "missing namespace `wutag`")?;
-        if ns != "wutag" {
-            return Err(Error::InvalidTagKey(format!(
-                "invalid namespace `{}`, valid namespace is `wutag`",
-                ns
-            )));
-        }
+        let tag_bytes = next_or_else!(elems, "missing tag")?;
+        let tag = serde_cbor::from_slice(&base64::decode(tag_bytes.as_bytes())?)?;
 
-        let timestamp = next_or_else!(elems, "missing timestamp")?;
-        let timestamp = NaiveDateTime::from_timestamp(
-            timestamp
-                .parse()
-                .map_err(|e| Error::InvalidTagKey(format!("invalid timestamp - {}", e)))?,
-            0,
-        );
-
-        let _hash = next_or_else!(elems, "missing hash")?
-            .parse::<u64>()
-            .map_err(|e| Error::InvalidTagKey(e.to_string()))?;
-
-        let _color = next_or_else!(elems, "missing color")?;
-        let color = util::color_from_fg_str(_color)
-            .ok_or_else(|| Error::InvalidTagKey(format!("invalid color {}", _color)))?;
-
-        Ok(Tag {
-            timestamp: chrono::DateTime::<Utc>::from_utc(timestamp, Utc),
-            name: value,
-            color,
-        })
+        Ok(tag)
     }
 }
 

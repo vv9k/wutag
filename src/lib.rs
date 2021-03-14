@@ -35,6 +35,10 @@ pub enum Error {
     InvalidColor(String),
     #[error("provided shell name `{0}` is not a valid shell")]
     InvalidShell(String),
+    #[error("failed to serialize or deserialize tag - `{0}`")]
+    TagSerDeError(#[from] serde_cbor::Error),
+    #[error("failed to decode data with base64 - `{0}`")]
+    Base64DecodeError(#[from] base64::DecodeError),
 }
 
 pub(crate) type Result<T> = std::result::Result<T, Error>;
