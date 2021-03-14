@@ -11,7 +11,7 @@ This tool uses extra attributes also known as *xattrs* to store metadata so it m
 
 Adding aliases in your `.bashrc` like `alias cp="cp --preserve=xattr"` might help avoiding accidental removal of tags.
 
-GUI file managers seem to support them by default, only tested with `nautilus` and `Thunar` though so mileage may vary.
+GUI file managers seem to support them by default, only tested with `nautilus`, `Thunar` and `Dolphin` though so mileage may vary.
 
 Support for Windows will be added through NTFS data streams which offer access to extended attributes. I haven't yet tested if they can be preserved while transfering to other filesystems.
 
