@@ -33,7 +33,8 @@ Default recursion depth is set to *2*. To increase it to *512* pass a global fla
 ## Install
 
 If you use arch Linux and have AUR repositories set up you can use your favourite AUR manager to download `wutag`. For example with `paru`:
- - `paru -S wutag-git`
+ - `paru -S wutag`
+ - or latest master branch with `paru -S wutag-git`
 
 If you're on another Linux distribution or MacOS you can download one of the prebuilt binaries from [here](https://github.com/wojciechkepka/wutag/releases).
 
