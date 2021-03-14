@@ -1,3 +1,7 @@
+# 0.3.0
+
+* Internal representation of tags changed meaning all previous tags won't work with this version
+
 # 0.2.0
 
 * Add `--details` flag to `list` subcommand [#18](https://github.com/wojciechkepka/wutag/pull/18)
