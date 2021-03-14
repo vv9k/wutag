@@ -36,6 +36,9 @@ pub struct ListOpts {
     #[clap(long)]
     /// Whether to show files with no tags
     pub show_missing: bool,
+    /// Whether to print details like tag timestamp
+    #[clap(long)]
+    pub details: bool,
 }
 
 #[derive(Clap)]
