@@ -96,14 +96,29 @@ jobs:
         id: set_name
         run: echo ::set-output name=WUTAG_ARCHIVE::wutag-${{steps.set_version.outputs.WUTAG_VERSION}}-${{ matrix.target}}
       - run: cargo build --release
-      - run: |
-          mkdir release
-          mv target/release/wutag release/
-      - working-directory: ./release
-        name: Create archives
+        name: Release build
+      - name: Install help2man mac
+        if: matrix.os == 'macos-latest'
+        run: brew install help2man
+      - name: Install help2man ubuntu
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          tar -zcvf ../${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.gz .
-          tar -Jcvf ../${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.xz .
+          apt -y update
+          apt -y install help2man
+      - name: Prepare archive directory
+        run: mkdir wutag
+      - name: Generate manual
+        run: |
+          help2man target/release/wutag wutag/wutag.1
+      - name: Move release files
+        run: |
+          mv target/release/wutag wutag/
+          mv README.md wutag/
+          mv LICENSE wutag/
+      - name: Create archives
+        run: |
+          tar -zcvf ../${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.gz wutag
+          tar -Jcvf ../${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.xz wutag
       - name: Upload gz
         uses: svenstaro/upload-release-action@v2
         with:
