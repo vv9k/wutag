@@ -103,13 +103,13 @@ jobs:
       - name: Install help2man ubuntu
         if: matrix.os == 'ubuntu-latest'
         run: |
-          apt -y update
-          apt -y install help2man
+          sudo apt -y update
+          sudo apt -y install help2man
       - name: Prepare archive directory
         run: mkdir wutag
       - name: Generate manual
         run: |
-          help2man target/release/wutag wutag/wutag.1
+          help2man target/release/wutag > wutag/wutag.1
       - name: Move release files
         run: |
           mv target/release/wutag wutag/
@@ -117,8 +117,8 @@ jobs:
           mv LICENSE wutag/
       - name: Create archives
         run: |
-          tar -zcvf ../${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.gz wutag
-          tar -Jcvf ../${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.xz wutag
+          tar -zcvf ${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.gz wutag
+          tar -Jcvf ${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.xz wutag
       - name: Upload gz
         uses: svenstaro/upload-release-action@v2
         with:
