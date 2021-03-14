@@ -1,5 +1,6 @@
 mod opt;
 
+use chrono::SecondsFormat;
 use clap::{Clap, IntoApp};
 use colored::Colorize;
 use globwalk::DirEntry;
@@ -70,10 +71,19 @@ impl WutagRunner {
                     return;
                 }
                 print!("{}:", entry.fmt_path());
-                for tag in tags {
-                    print!(" {}", fmt_tag(&tag));
+                if opts.details {
+                    println!();
                 }
-                print!("\n");
+                for tag in tags {
+                    if opts.details {
+                        println!("{} {}", tag.timestamp().to_rfc3339_opts(SecondsFormat::Secs, true), fmt_tag(&tag));
+                    } else {
+                        print!(" {}", fmt_tag(&tag));
+                    }
+                }
+                if !opts.details {
+                    println!();
+                }
             }
             Err(e) => eprintln!("{}", fmt_err(e)),
         }};
