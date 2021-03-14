@@ -1,10 +1,16 @@
 //! Options used by the main executable
-use std::path::PathBuf;
+use std::{path::PathBuf, str::FromStr};
 
 use clap::Clap;
+use wutag::Error;
+
+pub const APP_NAME: &str = "wutag";
+pub const APP_VERSION: &str = "0.1.2";
+pub const APP_AUTHOR: &str = "Wojciech Kępka <wojciech@wkepka.dev>";
+pub const APP_ABOUT: &str = "Tool to tag and mange tags of files.";
 
 #[derive(Clap)]
-#[clap(version = "0.1.0", author = "Wojciech Kępka <wojciech@wkepka.dev>")]
+#[clap(version = APP_VERSION, author = APP_AUTHOR, about = APP_ABOUT)]
 pub struct WutagOpts {
     #[clap(short, long)]
     /// When this parameter is specified the program will look for files starting from provided
@@ -86,6 +92,36 @@ pub struct EditOpts {
 }
 
 #[derive(Clap)]
+pub enum Shell {
+    Bash,
+    Elvish,
+    Fish,
+    PowerShell,
+    Zsh,
+}
+
+impl FromStr for Shell {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match &s.to_lowercase()[..] {
+            "bash" => Ok(Shell::Bash),
+            "elvish" => Ok(Shell::Elvish),
+            "fish" => Ok(Shell::Fish),
+            "powershell" => Ok(Shell::PowerShell),
+            "zsh" => Ok(Shell::Zsh),
+            _ => Err(Error::InvalidShell(s.to_string())),
+        }
+    }
+}
+
+#[derive(Clap)]
+pub struct CompletionsOpts {
+    /// A shell for which to print completions. Available shells are: bash, elvish, fish,
+    /// powershell, zsh
+    pub shell: Shell,
+}
+
+#[derive(Clap)]
 pub enum WutagCmd {
     /// Lists all tags of the files that match the provided pattern.
     List(ListOpts),
@@ -101,4 +137,6 @@ pub enum WutagCmd {
     Cp(CpOpts),
     /// Edits the tag of files that match the provided pattern.
     Edit(EditOpts),
+    /// Prints completions for the specified shell to stdout.
+    PrintCompletions(CompletionsOpts),
 }

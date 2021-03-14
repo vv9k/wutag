@@ -1,12 +1,14 @@
 mod opt;
 
-use clap::Clap;
+use clap::{Clap, IntoApp};
 use colored::Colorize;
 use globwalk::DirEntry;
+use std::io;
 use std::path::PathBuf;
 
 use opt::{
-    ClearOpts, CpOpts, EditOpts, ListOpts, RmOpts, SearchOpts, SetOpts, WutagCmd, WutagOpts,
+    ClearOpts, CompletionsOpts, CpOpts, EditOpts, ListOpts, RmOpts, SearchOpts, SetOpts, Shell,
+    WutagCmd, WutagOpts, APP_NAME,
 };
 use wutag::tags::{get_tag, list_tags, search_files_with_tags, DirEntryExt, Tag};
 use wutag::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok, parse_color};
@@ -49,14 +51,15 @@ impl WutagRunner {
         if self.no_color {
             colored::control::SHOULD_COLORIZE.set_override(false);
         }
-        match &self.cmd {
-            WutagCmd::List(opts) => self.list(opts),
-            WutagCmd::Set(opts) => self.set(opts),
-            WutagCmd::Rm(opts) => self.rm(opts),
-            WutagCmd::Clear(opts) => self.clear(opts),
-            WutagCmd::Search(opts) => self.search(opts),
-            WutagCmd::Cp(opts) => self.cp(opts),
-            WutagCmd::Edit(opts) => self.edit(opts),
+        match self.cmd {
+            WutagCmd::List(ref opts) => self.list(opts),
+            WutagCmd::Set(ref opts) => self.set(opts),
+            WutagCmd::Rm(ref opts) => self.rm(opts),
+            WutagCmd::Clear(ref opts) => self.clear(opts),
+            WutagCmd::Search(ref opts) => self.search(opts),
+            WutagCmd::Cp(ref opts) => self.cp(opts),
+            WutagCmd::Edit(ref opts) => self.edit(opts),
+            WutagCmd::PrintCompletions(ref opts) => self.print_completions(opts),
         }
     }
 
@@ -218,6 +221,23 @@ impl WutagRunner {
                 println!("{}", fmt_tag(&tag));
             }
         }};
+    }
+
+    fn print_completions(&self, opts: &CompletionsOpts) {
+        use clap_generate::{
+            generate,
+            generators::{Bash, Elvish, Fish, PowerShell, Zsh},
+        };
+
+        let mut app = WutagOpts::into_app();
+
+        match opts.shell {
+            Shell::Bash => generate::<Bash, _>(&mut app, APP_NAME, &mut io::stdout()),
+            Shell::Elvish => generate::<Elvish, _>(&mut app, APP_NAME, &mut io::stdout()),
+            Shell::Fish => generate::<Fish, _>(&mut app, APP_NAME, &mut io::stdout()),
+            Shell::PowerShell => generate::<PowerShell, _>(&mut app, APP_NAME, &mut io::stdout()),
+            Shell::Zsh => generate::<Zsh, _>(&mut app, APP_NAME, &mut io::stdout()),
+        }
     }
 }
 
