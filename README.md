@@ -52,6 +52,9 @@ Available shells are:
  - `powershell`
  - `zsh`
 
+ To enable completions on the fly use:
+ - `. <(wutag print-completions bash)`
+
 ## User interface
 ```
 USAGE:
