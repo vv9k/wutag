@@ -28,7 +28,7 @@ By default each tag will be assigned with a random color from 8 base colors (eit
 Each command by default starts filesystem traversal from current working directory. To override this behaviour specify a global parameter `--dir` or `-d` like this:
  - `wutag -d ~/photos search dog`
 
- Default recursion depth is set to *2*. To increase it to *512* pass a global flag `-r` or `--recursive`.
+Default recursion depth is set to *2*. To increase it to *512* pass a global flag `-r` or `--recursive`.
 
 ## Install
 
@@ -39,6 +39,17 @@ If you're on another Linux distribution or MacOS you can download one of the pre
 
 To build manually you'll need latest `rust` and `cargo`. Build with:
  - `cargo build --release`
+
+## Tab completion
+
+To get tab completion use `wutag print-completions <shell> > /path/to/completions/dir/...` to enable it in your favourite shell.  
+
+Available shells are:
+ - `bash`
+ - `elvish`
+ - `fish`
+ - `powershell`
+ - `zsh`
 
 ## User interface
 ```
