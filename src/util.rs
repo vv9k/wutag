@@ -26,16 +26,16 @@ pub fn fmt_tag(tag: &Tag) -> ColoredString {
 }
 
 /// Returns a GlobWalker instance with base path set to `base_path` and pattern to `pattern`. If
-/// `recursive` is true the maximum depth is going to be [DEFAULT_MAX_DEPTH](DEFAULT_MAX_DEPTH)
-/// otherwise `1` (only top level files).
-pub fn glob_walker<S>(dir: S, pattern: S, recursive: bool) -> Result<GlobWalker>
+/// max_depth is specified the GlobWalker will have it's max depth set to its value, otherwise max
+/// depth will be [DEFAULT_MAX_DEPTH](DEFAULT_MAX_DEPTH).
+pub fn glob_walker<S>(dir: S, pattern: S, max_depth: Option<usize>) -> Result<GlobWalker>
 where
     S: AsRef<str>,
 {
     let mut builder = GlobWalkerBuilder::new(dir.as_ref(), pattern.as_ref());
 
-    if !recursive {
-        builder = builder.max_depth(2);
+    if let Some(max_depth) = max_depth {
+        builder = builder.max_depth(max_depth);
     } else {
         builder = builder.max_depth(DEFAULT_MAX_DEPTH);
     }
@@ -44,14 +44,14 @@ where
 
 /// Utility function that executes the function `f` on all directory entries that are Ok, by
 /// default ignores all errors.
-pub fn glob_ok<P, F>(pattern: &str, base_path: P, recursive: bool, f: F) -> Result<()>
+pub fn glob_ok<P, F>(pattern: &str, base_path: P, max_depth: Option<usize>, f: F) -> Result<()>
 where
     P: AsRef<Path>,
     F: Fn(&DirEntry),
 {
     let base_path = base_path.as_ref().to_string_lossy().to_string();
 
-    for entry in glob_walker(base_path.as_str(), pattern, recursive)? {
+    for entry in glob_walker(base_path.as_str(), pattern, max_depth)? {
         if let Ok(entry) = entry {
             f(&entry);
         }

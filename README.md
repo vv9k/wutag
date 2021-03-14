@@ -28,7 +28,7 @@ By default each tag will be assigned with a random color from 8 base colors (eit
 Each command by default starts filesystem traversal from current working directory. To override this behaviour specify a global parameter `--dir` or `-d` like this:
  - `wutag -d ~/photos search dog`
 
-Default recursion depth is set to *2*. To increase it to *512* pass a global flag `-r` or `--recursive`.
+Default recursion depth is set to *2*. To increase it use `--max-depth` or `-m` global parameter.
 
 ## Install
 
@@ -61,17 +61,16 @@ USAGE:
     wutag [FLAGS] [OPTIONS] <SUBCOMMAND>
 
 FLAGS:
-    -h, --help         Prints help information
-    -n, --no-color     If passed the output won't be colored
-    -r, --recursive    Increase maximum recursion depth of filesystem traversal to 512. Default is
-                       2. What this means is by deafult all subcommands that take a pattern as input
-                       will match files only 2 levels deep starting from the base directory which is
-                       current working directory if `dir` is not specified
-    -V, --version      Prints version information
+    -h, --help        Prints help information
+    -n, --no-color    If passed the output won't be colored
+    -V, --version     Prints version information
 
 OPTIONS:
-    -d, --dir <dir>    When this parameter is specified the program will look for files starting
-                       from provided path, otherwise defaults to current directory
+    -d, --dir <dir>                When this parameter is specified the program will look for files
+                                   starting from provided path, otherwise defaults to current
+                                   directory
+    -m, --max-depth <max-depth>    If provided increase maximum recursion depth of filesystem
+                                   traversal to specified value, otherwise default depth is 2
 
 SUBCOMMANDS:
     clear                Clears all tags of the files that match the provided pattern

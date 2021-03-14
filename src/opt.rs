@@ -17,11 +17,9 @@ pub struct WutagOpts {
     /// path, otherwise defaults to current directory.
     pub dir: Option<PathBuf>,
     #[clap(long, short)]
-    /// Increase maximum recursion depth of filesystem traversal to 512. Default is 2. What this
-    /// means is by deafult all subcommands that take a pattern as input will match files only 2
-    /// levels deep starting from the base directory which is current working directory if `dir` is
-    /// not specified.
-    pub recursive: bool,
+    /// If provided increase maximum recursion depth of filesystem traversal to specified value,
+    /// otherwise default depth is 2.
+    pub max_depth: Option<usize>,
     /// If passed the output won't be colored
     #[clap(long, short)]
     pub no_color: bool,
