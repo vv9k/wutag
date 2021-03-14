@@ -33,6 +33,8 @@ pub enum Error {
     AttrsChanged,
     #[error("provided color `{0}` is not a valid hex color")]
     InvalidColor(String),
+    #[error("provided shell name `{0}` is not a valid shell")]
+    InvalidShell(String),
 }
 
 pub(crate) type Result<T> = std::result::Result<T, Error>;
