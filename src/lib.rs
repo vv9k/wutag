@@ -8,7 +8,7 @@ use thiserror::Error;
 /// Prefix used to identify extra attributes added by wutag on files
 pub const WUTAG_NAMESPACE: &str = "user.wutag";
 /// Default max depth passed to [GlobWalker](globwalker::GlobWalker)
-pub const DEFAULT_MAX_DEPTH: usize = 512;
+pub const DEFAULT_MAX_DEPTH: usize = 2;
 
 #[derive(Debug, Error)]
 /// Default error used throughout this crate

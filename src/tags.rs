@@ -282,11 +282,15 @@ where
     Ok(())
 }
 
-/// Searches for files with the specified tags in the location specified by `path`. If `recursive` is set to
-/// `true` recursively follows all subdirectories.
+/// Searches for files with the specified tags in the location specified by `path`. If `max_depth`
+/// is provided overrides [DEFAULT_MAX_DEPTH](crate::DEFAULT_MAX_DEPTH) to `max_depth` value.
 ///
 /// Returns a list of paths of files that contain the provided set of tags.
-pub fn search_files_with_tags<Ts, P>(tags: Ts, path: P, recursive: bool) -> Result<Vec<PathBuf>>
+pub fn search_files_with_tags<Ts, P>(
+    tags: Ts,
+    path: P,
+    max_depth: Option<usize>,
+) -> Result<Vec<PathBuf>>
 where
     Ts: IntoIterator<Item = String>,
     P: AsRef<Path>,
@@ -296,7 +300,7 @@ where
 
     let dir = path.as_ref().to_string_lossy().to_string();
 
-    for entry in util::glob_walker(dir.as_str(), "**/*", recursive)? {
+    for entry in util::glob_walker(dir.as_str(), "**/*", max_depth)? {
         if let Ok(entry) = entry {
             if let Ok(_tags) = entry.list_tags_btree() {
                 if !tags.is_subset(&_tags) {

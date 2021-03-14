@@ -18,7 +18,7 @@ use wutag::Error;
 struct WutagRunner {
     pub cmd: WutagCmd,
     pub base_dir: PathBuf,
-    pub recursive: bool,
+    pub max_depth: Option<usize>,
     pub no_color: bool,
 }
 
@@ -26,7 +26,7 @@ macro_rules! glob {
     ($self:ident, $opts:ident, $($tokens:tt)*) => {
         let f = $($tokens)*;
 
-        if let Err(e) = glob_ok(&$opts.pattern, &$self.base_dir, $self.recursive, f) {
+        if let Err(e) = glob_ok(&$opts.pattern, &$self.base_dir, $self.max_depth, f) {
             eprintln!("{}", fmt_err(e));
         }
     };
@@ -42,7 +42,7 @@ impl WutagRunner {
 
         Ok(WutagRunner {
             base_dir,
-            recursive: opts.recursive,
+            max_depth: opts.max_depth,
             cmd: opts.cmd,
             no_color: opts.no_color,
         })
@@ -147,7 +147,7 @@ impl WutagRunner {
     }
 
     fn search(&self, opts: &SearchOpts) {
-        match search_files_with_tags(opts.tags.clone(), &self.base_dir, self.recursive) {
+        match search_files_with_tags(opts.tags.clone(), &self.base_dir, self.max_depth) {
             Ok(files) => {
                 let tags = opts.tags.iter().map(Tag::dummy).collect::<Vec<_>>();
                 if files.is_empty() {
