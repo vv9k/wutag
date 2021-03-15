@@ -66,7 +66,7 @@ pub struct ClearOpts {
 pub struct SearchOpts {
     #[clap(required = true)]
     pub tags: Vec<String>,
-    #[clap(long)]
+    #[clap(long, short)]
     /// If provided output will be raw so that it can be easily piped to other commands
     pub raw: bool,
 }
