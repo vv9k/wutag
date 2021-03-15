@@ -4,6 +4,7 @@
 * Change `--recursive` global parameter to `--max-depth` [#19](https://github.com/wojciechkepka/wutag/pull/19)
 * Add shorthand `-r` for `--raw` flag [#22](https://github.com/wojciechkepka/wutag/pull/22)
 * Unify output in subcommands [#24](https://github.com/wojciechkepka/wutag/pull/24)
+* Add `--any` flag to `search` subcommand [#25](https://github.com/wojciechkepka/wutag/pull/25)
 
 # 0.2.0
 
