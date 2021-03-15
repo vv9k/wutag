@@ -120,7 +120,7 @@ impl Tag {
         self.color = *color;
     }
 
-    fn digest(&self) -> Result<String> {
+    fn hash(&self) -> Result<String> {
         serde_cbor::to_vec(&self)
             .map(|tag| format!("{}.{}", WUTAG_NAMESPACE, base64::encode(tag)))
             .map_err(Error::from)
@@ -136,7 +136,7 @@ impl Tag {
                 return Err(Error::TagExists);
             }
         }
-        set_xattr(path, self.digest()?.as_str(), "")
+        set_xattr(path, self.hash()?.as_str(), "")
     }
 
     /// Removes this tag from the file at the given `path`. If the tag doesn't exists returns
@@ -145,7 +145,7 @@ impl Tag {
     where
         P: AsRef<Path>,
     {
-        let hash = self.digest()?;
+        let hash = self.hash()?;
 
         for (key, _) in list_xattrs(path.as_ref())? {
             // make sure to only remove attributes corresponding to this namespace
