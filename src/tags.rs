@@ -145,9 +145,11 @@ impl Tag {
     where
         P: AsRef<Path>,
     {
-        for (key, val) in list_xattrs(path.as_ref())? {
+        let hash = self.digest()?;
+
+        for (key, _) in list_xattrs(path.as_ref())? {
             // make sure to only remove attributes corresponding to this namespace
-            if val == self.name && key.starts_with(WUTAG_NAMESPACE) {
+            if key == hash {
                 return remove_xattr(path, key);
             }
         }
@@ -216,9 +218,11 @@ where
 {
     let path = path.as_ref();
     let tag = tag.as_ref();
-    for (k, v) in list_xattrs(path)? {
-        if v == tag {
-            return Tag::try_from((k, v));
+    for _tag in list_xattrs(path)?.into_iter().map(Tag::try_from) {
+        if let Ok(_tag) = _tag {
+            if _tag.name == tag {
+                return Ok(_tag);
+            }
         }
     }
 
