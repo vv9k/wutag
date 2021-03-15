@@ -171,9 +171,9 @@ impl WutagRunner {
                         if opts.raw {
                             println!("{}", file.display());
                         } else {
-                            print!("\t{}", fmt_path(file));
+                            println!("{}:", fmt_path(file));
                             if let Ok(tags) = list_tags(file) {
-                                tags.iter().for_each(|tag| print!(" {}", fmt_tag(tag)));
+                                tags.iter().for_each(|tag| print!("\t{}", fmt_tag(tag)));
                             }
                             println!();
                         }
