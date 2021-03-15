@@ -30,7 +30,7 @@ Each command by default starts filesystem traversal from current working directo
 
 Default recursion depth is set to *2*. To increase it use `--max-depth` or `-m` global parameter.
 
-After tagging your files with `set` like `wutag set '*.jpg' photos`, `wutag set 'DCIM_12*' doge` you can later easily get the list of files with specified tags by doing `wutag search photos doge`. To later utilize the list by other programs pass the `--raw` or `-r` flag to `search` subcommand like `wutag search -r photos doge | xargs rm -rf  # please don't do this :(`.
+After tagging your files with `set` like `wutag set '*.jpg' photos`, `wutag set 'DCIM_12*' doge` you can later easily get the list of files with specified tags by doing `wutag search photos doge`. To later utilize the list by other programs pass the `--raw` or `-r` flag to `search` subcommand like `wutag search -r --any cat doge | xargs rm -rf  # please don't do this :(`. When `--any` flag is provided as in the example `wutag` will match files containing any of the provided tags rather than all of them.
 
 If you are into emojis then surely you can use emojis to tag files 🙂 ```wutag set '*.doc' 📋```
 
