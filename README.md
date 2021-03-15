@@ -5,17 +5,16 @@ CLI tool for tagging and organizing files by tags.
 
 ![Example usage](https://github.com/wojciechkepka/wutag/blob/master/static/usage.svg)
 
-## Persistance
+## Install
 
-This tool uses extra attributes also known as *xattrs* to store metadata so it might not work on certain filesystems. A thing to keep in mind is that most transfer tools require opt-in flag to transfer xattrs like `rsync` with option `-X`, `--xattrs` or `cp` with `--preserve=xattr` while `mv` preserves xattrs by default.
+If you use arch Linux and have AUR repositories set up you can use your favourite AUR manager to download `wutag`. For example with `paru`:
+ - `paru -S wutag`
+ - or latest master branch with `paru -S wutag-git`
 
-Adding aliases in your `.bashrc` like `alias cp="cp --preserve=xattr"` might help avoiding accidental removal of tags.
+If you're on another Linux distribution or MacOS you can download one of the prebuilt binaries from [here](https://github.com/wojciechkepka/wutag/releases).
 
-GUI file managers seem to support them by default, only tested with `nautilus`, `Thunar` and `Dolphin` though so mileage may vary.
-
-Support for Windows will be added through NTFS data streams which offer access to extended attributes. I haven't yet tested if they can be preserved while transfering to other filesystems.
-
-MacOS and Linux should work out of the box.
+To build manually you'll need latest `rust` and `cargo`. Build with:
+ - `cargo build --release`
 
 ## Usage
 
@@ -30,20 +29,29 @@ Each command by default starts filesystem traversal from current working directo
 
 Default recursion depth is set to *2*. To increase it use `--max-depth` or `-m` global parameter.
 
-After tagging your files with `set` like `wutag set '*.jpg' photos`, `wutag set 'DCIM_12*' doge` you can later easily get the list of files with specified tags by doing `wutag search photos doge`. To later utilize the list by other programs pass the `--raw` or `-r` flag to `search` subcommand like `wutag search -r --any cat doge | xargs rm -rf  # please don't do this :(`. When `--any` flag is provided as in the example `wutag` will match files containing any of the provided tags rather than all of them.
+After tagging your files with `set` like:
+ - `wutag set '*.jpg' photos`
+ - `wutag set 'DCIM_12*' doge`  
+you can easily get the list of files with specified tags by doing `wutag search photos doge`. 
+
+To utilize the list by other programs pass the `--raw` or `-r` flag to `search` subcommand like:
+ - `wutag search -r --any cat doge | xargs rm -rf  # please don't do this :(`. 
+
+When `--any` flag is provided as in the example `wutag` will match files containing any of the provided tags rather than all of them.
 
 If you are into emojis then surely you can use emojis to tag files 🙂 ```wutag set '*.doc' 📋```
 
-## Install
+## Persistance
 
-If you use arch Linux and have AUR repositories set up you can use your favourite AUR manager to download `wutag`. For example with `paru`:
- - `paru -S wutag`
- - or latest master branch with `paru -S wutag-git`
+This tool uses extra attributes also known as *xattrs* to store metadata so it might not work on certain filesystems. A thing to keep in mind is that most transfer tools require opt-in flag to transfer xattrs like `rsync` with option `-X`, `--xattrs` or `cp` with `--preserve=xattr` while `mv` preserves xattrs by default.
 
-If you're on another Linux distribution or MacOS you can download one of the prebuilt binaries from [here](https://github.com/wojciechkepka/wutag/releases).
+Adding aliases in your `.bashrc` like `alias cp="cp --preserve=xattr"` might help avoiding accidental removal of tags.
 
-To build manually you'll need latest `rust` and `cargo`. Build with:
- - `cargo build --release`
+GUI file managers seem to support them by default, only tested with `nautilus`, `Thunar` and `Dolphin` though so mileage may vary.
+
+Support for Windows will be added through NTFS data streams which offer access to extended attributes. I haven't yet tested if they can be preserved while transfering to other filesystems.
+
+MacOS and Linux should work out of the box.
 
 ## Tab completion
 
@@ -58,6 +66,7 @@ Available shells are:
 
  To enable completions on the fly use:
  - `. <(wutag print-completions bash)`
+
 
 ## User interface
 ```
