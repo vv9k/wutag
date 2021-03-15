@@ -70,15 +70,12 @@ impl WutagRunner {
                 if tags.is_empty() && !opts.show_missing {
                     return;
                 }
-                print!("{}:", entry.fmt_path());
-                if opts.details {
-                    println!();
-                }
+                println!("{}:", entry.fmt_path());
                 for tag in tags {
                     if opts.details {
-                        println!("{} {}", tag.timestamp().to_rfc3339_opts(SecondsFormat::Secs, true), fmt_tag(&tag));
+                        println!("\t{} {}", tag.timestamp().to_rfc3339_opts(SecondsFormat::Secs, true), fmt_tag(&tag));
                     } else {
-                        print!(" {}", fmt_tag(&tag));
+                        print!("\t{}", fmt_tag(&tag));
                     }
                 }
                 if !opts.details {
@@ -97,9 +94,10 @@ impl WutagRunner {
                 if let Err(e) = entry.tag(&tag) {
                     eprintln!("\t{}", fmt_err(e));
                 } else {
-                    println!("\t{} {}", "+".bold().green(), fmt_tag(&tag));
+                    print!("\t{} {}", "+".bold().green(), fmt_tag(&tag));
                 }
             });
+            println!();
         }};
     }
 
@@ -118,9 +116,11 @@ impl WutagRunner {
                 if let Err(e) = entry.untag(&tag) {
                     eprintln!("\t{}", fmt_err(e));
                 } else {
-                    println!("\t{} {}", "X".bold().red(), fmt_tag(tag));
+                    print!("\t{} {}", "X".bold().red(), fmt_tag(tag));
                 }
-            })
+            });
+
+            println!();
         }};
     }
 
@@ -217,12 +217,12 @@ impl WutagRunner {
         };
         glob! {self, opts, |entry: &DirEntry| {
             if let Ok(mut tag) = get_tag(entry.path(), &opts.tag) {
-                print!("{}: ", entry.fmt_path());
+                println!("{}: ", entry.fmt_path());
                 if let Err(e) = entry.untag(&tag) {
                     println!("{}", fmt_err(e));
                     return;
                 }
-                print!("{} {} ", fmt_tag(&tag), "-->".bold().white());
+                print!("\t{} {} ", fmt_tag(&tag), "-->".bold().white());
                 tag.set_color(&color);
                 if let Err(e) = entry.tag(&tag) {
                     println!("{}", fmt_err(e));
