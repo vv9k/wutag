@@ -147,7 +147,7 @@ impl WutagRunner {
     }
 
     fn search(&self, opts: &SearchOpts) {
-        match search_files_with_tags(opts.tags.clone(), &self.base_dir, self.max_depth) {
+        match search_files_with_tags(opts.tags.clone(), &self.base_dir, self.max_depth, opts.any) {
             Ok(files) => {
                 let tags = opts.tags.iter().map(Tag::dummy).collect::<Vec<_>>();
                 if files.is_empty() {

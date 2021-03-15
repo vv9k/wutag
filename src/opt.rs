@@ -69,6 +69,9 @@ pub struct SearchOpts {
     #[clap(long, short)]
     /// If provided output will be raw so that it can be easily piped to other commands
     pub raw: bool,
+    #[clap(long, short)]
+    /// If set to `true` all entries containing any of provided tags will be returned
+    pub any: bool,
 }
 
 #[derive(Clap)]
