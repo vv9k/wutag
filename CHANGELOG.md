@@ -2,6 +2,7 @@
 
 * Internal representation of tags changed meaning all previous tags won't work with this version
 * Change `--recursive` global parameter to `--max-depth` [#19](https://github.com/wojciechkepka/wutag/pull/19)
+* Add shorthand `-r` for `--raw` flag [#22](https://github.com/wojciechkepka/wutag/pull/22)
 
 # 0.2.0
 
