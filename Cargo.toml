@@ -18,7 +18,7 @@ serde_cbor = "0.11"
 chrono = { version = "0.4", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 walkdir = "2"
-colored = { git = "https://github.com/wojciechkepka/colored", branch = "master", features = ["serde_derive"] }
+colored = { git = "https://github.com/wojciechkepka/colored", branch = "master", features = ["serde"] }
 globwalk = "0.8"
 rand = "0.8"
 base64 = "0.13.0"
