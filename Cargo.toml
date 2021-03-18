@@ -4,9 +4,9 @@ version = "0.4.0"
 authors = ["wojciechkepka <wojtek.kepka@protonmail.com>"]
 edition = "2018"
 
-[[bin]]
-name = "wutag"
-path = "src/main.rs"
+[lib]
+name = "wutag_core"
+path = "wutag_core/lib.rs"
 
 [dependencies]
 libc = "0.2"

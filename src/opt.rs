@@ -2,7 +2,7 @@
 use std::{path::PathBuf, str::FromStr};
 
 use clap::Clap;
-use wutag::Error;
+use wutag_core::Error;
 
 pub const APP_NAME: &str = "wutag";
 pub const APP_VERSION: &str = "0.4.0";

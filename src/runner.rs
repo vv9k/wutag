@@ -9,9 +9,9 @@ use crate::opt::{
     ClearOpts, CompletionsOpts, CpOpts, EditOpts, ListOpts, RmOpts, SearchOpts, SetOpts, Shell,
     WutagCmd, WutagOpts, APP_NAME,
 };
-use wutag::tags::{get_tag, list_tags, search_files_with_tags, DirEntryExt, Tag};
-use wutag::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok, parse_color};
-use wutag::Error;
+use wutag_core::tags::{get_tag, list_tags, search_files_with_tags, DirEntryExt, Tag};
+use wutag_core::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok, parse_color};
+use wutag_core::Error;
 
 pub struct WutagRunner {
     pub cmd: WutagCmd,
