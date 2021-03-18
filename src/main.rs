@@ -70,15 +70,21 @@ impl WutagRunner {
                 if tags.is_empty() && !opts.show_missing {
                     return;
                 }
-                println!("{}:", entry.fmt_path());
+                if opts.raw {
+                    print!("{}", entry.path().display());
+                } else {
+                    println!("{}:", entry.fmt_path());
+                }
                 for tag in tags {
-                    if opts.details {
+                    if opts.raw {
+                        print!("\t{}", tag.name());
+                    } else if opts.details {
                         println!("\t{} {}", tag.timestamp().to_rfc3339_opts(SecondsFormat::Secs, true), fmt_tag(&tag));
                     } else {
                         print!("\t{}", fmt_tag(&tag));
                     }
                 }
-                if !opts.details {
+                if opts.raw || !opts.details {
                     println!();
                 }
             }

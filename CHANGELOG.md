@@ -1,3 +1,8 @@
+# 
+
+* Add `--raw` `-r` flag to list for easier passing to other programs [#26](https://github.com/wojciechkepka/wutag/pull/26)
+
+
 # 0.3.0
 
 * Internal representation of tags changed meaning all previous tags won't work with this version
@@ -5,6 +10,7 @@
 * Add shorthand `-r` for `--raw` flag [#22](https://github.com/wojciechkepka/wutag/pull/22)
 * Unify output in subcommands [#24](https://github.com/wojciechkepka/wutag/pull/24)
 * Add `--any` flag to `search` subcommand [#25](https://github.com/wojciechkepka/wutag/pull/25)
+
 
 # 0.2.0
 

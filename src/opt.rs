@@ -34,9 +34,13 @@ pub struct ListOpts {
     #[clap(long)]
     /// Whether to show files with no tags
     pub show_missing: bool,
-    /// Whether to print details like tag timestamp
     #[clap(long)]
+    /// Whether to print details like tag timestamp. If `--raw` is provided this flag is ignored
     pub details: bool,
+    #[clap(long, short)]
+    /// If provided output will be raw so that it can be easily piped to other commands.
+    /// `--details` won't work with this flag.
+    pub raw: bool,
 }
 
 #[derive(Clap)]
