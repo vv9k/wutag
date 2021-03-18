@@ -7,7 +7,7 @@ use wutag::Error;
 pub const APP_NAME: &str = "wutag";
 pub const APP_VERSION: &str = "0.4.0";
 pub const APP_AUTHOR: &str = "Wojciech Kępka <wojciech@wkepka.dev>";
-pub const APP_ABOUT: &str = "Tool to tag and mange tags of files.";
+pub const APP_ABOUT: &str = "Tool to tag and manage tags of files.";
 
 #[derive(Clap)]
 #[clap(version = APP_VERSION, author = APP_AUTHOR, about = APP_ABOUT)]
