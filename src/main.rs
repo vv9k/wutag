@@ -258,6 +258,8 @@ impl WutagRunner {
 }
 
 fn main() {
-    let wutag = WutagRunner::new(WutagOpts::parse()).unwrap();
-    wutag.run();
+    match WutagRunner::new(WutagOpts::parse()) {
+        Ok(wutag) => wutag.run(),
+        Err(e) => eprintln!("{}", e.to_string()),
+    }
 }
