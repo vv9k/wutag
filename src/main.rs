@@ -78,12 +78,10 @@ impl WutagRunner {
                 for tag in tags {
                     if opts.raw {
                         print!("\t{}", tag.name());
+                    } else if opts.details {
+                        println!("\t{} {}", tag.timestamp().to_rfc3339_opts(SecondsFormat::Secs, true), fmt_tag(&tag));
                     } else {
-                        if opts.details {
-                            println!("\t{} {}", tag.timestamp().to_rfc3339_opts(SecondsFormat::Secs, true), fmt_tag(&tag));
-                        } else {
-                            print!("\t{}", fmt_tag(&tag));
-                        }
+                        print!("\t{}", fmt_tag(&tag));
                     }
                 }
                 if opts.raw || !opts.details {
