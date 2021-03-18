@@ -1,5 +1,5 @@
+pub mod color;
 pub mod tags;
-pub mod util;
 pub mod xattr;
 
 use std::{ffi, io, string};
@@ -7,8 +7,6 @@ use thiserror::Error;
 
 /// Prefix used to identify extra attributes added by wutag on files
 pub const WUTAG_NAMESPACE: &str = "user.wutag";
-/// Default max depth passed to [GlobWalker](globwalker::GlobWalker)
-pub const DEFAULT_MAX_DEPTH: usize = 2;
 
 #[derive(Debug, Error)]
 /// Default error used throughout this crate
@@ -41,7 +39,7 @@ pub enum Error {
     Base64DecodeError(#[from] base64::DecodeError),
 }
 
-pub(crate) type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {

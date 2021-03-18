@@ -1,74 +1,7 @@
 //! Utility functions used through this crate and by the main executable
-use colored::{Color, ColoredString, Colorize};
-use globwalk::{DirEntry, GlobWalker, GlobWalkerBuilder};
-use std::collections::hash_map::DefaultHasher;
-use std::fmt::Display;
-use std::hash::{Hash, Hasher};
-use std::path::Path;
+use colored::Color;
 
-use crate::tags::Tag;
-use crate::{Error, Result, DEFAULT_MAX_DEPTH};
-
-pub fn fmt_err<E: Display>(err: E) -> String {
-    format!("{} {}", "ERROR".red().bold(), format!("{}", err).white())
-}
-
-pub fn fmt_ok<S: AsRef<str>>(msg: S) -> String {
-    format!("{} {}", "OK".green().bold(), msg.as_ref().white())
-}
-
-pub fn fmt_path<P: AsRef<Path>>(path: P) -> String {
-    format!("{}", path.as_ref().display().to_string().bold().blue())
-}
-
-pub fn fmt_tag(tag: &Tag) -> ColoredString {
-    tag.name().color(*tag.color()).bold()
-}
-
-/// Returns a GlobWalker instance with base path set to `base_path` and pattern to `pattern`. If
-/// max_depth is specified the GlobWalker will have it's max depth set to its value, otherwise max
-/// depth will be [DEFAULT_MAX_DEPTH](DEFAULT_MAX_DEPTH).
-pub fn glob_walker<S>(dir: S, pattern: S, max_depth: Option<usize>) -> Result<GlobWalker>
-where
-    S: AsRef<str>,
-{
-    let mut builder = GlobWalkerBuilder::new(dir.as_ref(), pattern.as_ref());
-
-    if let Some(max_depth) = max_depth {
-        builder = builder.max_depth(max_depth);
-    } else {
-        builder = builder.max_depth(DEFAULT_MAX_DEPTH);
-    }
-    builder.build().map_err(Error::from)
-}
-
-/// Utility function that executes the function `f` on all directory entries that are Ok, by
-/// default ignores all errors.
-pub fn glob_ok<P, F>(pattern: &str, base_path: P, max_depth: Option<usize>, f: F) -> Result<()>
-where
-    P: AsRef<Path>,
-    F: Fn(&DirEntry),
-{
-    let base_path = base_path.as_ref().to_string_lossy().to_string();
-
-    for entry in glob_walker(base_path.as_str(), pattern, max_depth)? {
-        if let Ok(entry) = entry {
-            f(&entry);
-        }
-    }
-
-    Ok(())
-}
-
-/// Calculates a hash of an item that implements [Hash](std::hash::Hash)
-pub fn calculate_hash<T>(item: &T) -> u64
-where
-    T: Hash,
-{
-    let mut hasher = DefaultHasher::new();
-    item.hash(&mut hasher);
-    hasher.finish()
-}
+use crate::{Error, Result};
 
 /// Parses a [Color](colored::Color) from a foreground color string
 pub fn color_from_fg_str(s: &str) -> Option<Color> {

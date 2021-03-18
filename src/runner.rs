@@ -9,8 +9,10 @@ use crate::opt::{
     ClearOpts, CompletionsOpts, CpOpts, EditOpts, ListOpts, RmOpts, SearchOpts, SetOpts, Shell,
     WutagCmd, WutagOpts, APP_NAME,
 };
-use wutag_core::tags::{get_tag, list_tags, search_files_with_tags, DirEntryExt, Tag};
-use wutag_core::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok, parse_color};
+use crate::tags::search_files_with_tags;
+use crate::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
+use wutag_core::color::parse_color;
+use wutag_core::tags::{get_tag, list_tags, DirEntryExt, Tag};
 use wutag_core::Error;
 
 pub struct WutagRunner {
@@ -71,7 +73,7 @@ impl WutagRunner {
                 if opts.raw {
                     print!("{}", entry.path().display());
                 } else {
-                    println!("{}:", entry.fmt_path());
+                    println!("{}:", fmt_path(entry.path()));
                 }
                 for tag in tags {
                     if opts.raw {
@@ -93,7 +95,7 @@ impl WutagRunner {
     fn set(&self, opts: &SetOpts) {
         let tags = opts.tags.iter().map(Tag::new).collect::<Vec<_>>();
         glob! { self, opts, |entry: &DirEntry| {
-            println!("{}:", entry.fmt_path());
+            println!("{}:", fmt_path(entry.path()));
             tags.iter().for_each(|tag| {
                 if let Err(e) = entry.tag(&tag) {
                     eprintln!("\t{}", fmt_err(e));
@@ -107,7 +109,7 @@ impl WutagRunner {
 
     fn rm(&self, opts: &RmOpts) {
         glob! { self, opts, |entry: &DirEntry| {
-            println!("{}:", entry.fmt_path());
+            println!("{}:", fmt_path(entry.path()));
             let tags = opts.tags.iter().map(|tag| entry.get_tag(tag)).collect::<Vec<_>>();
             tags.iter().for_each(|tag| {
                 let tag = match tag {
@@ -133,7 +135,7 @@ impl WutagRunner {
             Ok(has_tags) => {
                 if has_tags {
                     if opts.verbose {
-                        println!("{}:", entry.fmt_path());
+            println!("{}:", fmt_path(entry.path()));
                     }
                     let res = entry.clear_tags();
                     if opts.verbose {
@@ -146,7 +148,7 @@ impl WutagRunner {
                     }
                 }
             },
-            Err(e) => if opts.verbose { eprintln!("{}:\n\t{}", entry.fmt_path(), fmt_err(e)) },
+            Err(e) => if opts.verbose { eprintln!("{}:\n\t{}", fmt_path(entry.path()), fmt_err(e)) },
         }};
     }
 
@@ -193,7 +195,7 @@ impl WutagRunner {
         match list_tags(path) {
             Ok(tags) => {
                 glob! { self, opts, |entry: &DirEntry| {
-                    println!("{}:", entry.fmt_path());
+                    println!("{}:", fmt_path(entry.path()));
                     for tag in &tags {
                         if let Err(e) = entry.tag(&tag) {
                             eprintln!("\t{}", fmt_err(e));
@@ -221,7 +223,7 @@ impl WutagRunner {
         };
         glob! {self, opts, |entry: &DirEntry| {
             if let Ok(mut tag) = get_tag(entry.path(), &opts.tag) {
-                println!("{}: ", entry.fmt_path());
+                    println!("{}:", fmt_path(entry.path()));
                 if let Err(e) = entry.untag(&tag) {
                     println!("{}", fmt_err(e));
                     return;
