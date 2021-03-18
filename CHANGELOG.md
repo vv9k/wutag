@@ -1,4 +1,4 @@
-# 
+# 0.4.0
 
 * Add `--raw` `-r` flag to list for easier passing to other programs [#26](https://github.com/wojciechkepka/wutag/pull/26)
 
