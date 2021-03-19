@@ -1,6 +1,7 @@
 # 0.4.0
 
 * Add `--raw` `-r` flag to list for easier passing to other programs [#26](https://github.com/wojciechkepka/wutag/pull/26)
+* Add ability to modify base colors and other settings from a configuration file [#27](https://github.com/wojciechkepka/wutag/pull/27)
 
 
 # 0.3.0
