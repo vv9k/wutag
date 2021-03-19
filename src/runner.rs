@@ -7,8 +7,8 @@ use std::path::PathBuf;
 
 use crate::config::Config;
 use crate::opt::{
-    ClearOpts, CompletionsOpts, CpOpts, EditOpts, ListOpts, Opts, RmOpts, SearchOpts, SetOpts,
-    Shell, WutagCmd, APP_NAME,
+    ClearOpts, Command, CompletionsOpts, CpOpts, EditOpts, ListOpts, Opts, RmOpts, SearchOpts,
+    SetOpts, Shell, APP_NAME,
 };
 use crate::tags::search_files_with_tags;
 use crate::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
@@ -17,8 +17,8 @@ use wutag_core::color::parse_color;
 use wutag_core::tags::{get_tag, list_tags, DirEntryExt, Tag};
 use wutag_core::Error;
 
-pub struct CmdRunner {
-    pub cmd: WutagCmd,
+pub struct CommandRunner {
+    pub cmd: Command,
     pub base_dir: PathBuf,
     pub max_depth: Option<usize>,
     pub no_color: bool,
@@ -34,15 +34,15 @@ macro_rules! glob {
     };
 }
 
-impl CmdRunner {
-    pub fn new(opts: Opts, config: Config) -> Result<CmdRunner, Error> {
+impl CommandRunner {
+    pub fn new(opts: Opts, config: Config) -> Result<CommandRunner, Error> {
         let base_dir = if let Some(base_dir) = opts.dir {
             base_dir
         } else {
             std::env::current_dir()?
         };
 
-        Ok(CmdRunner {
+        Ok(CommandRunner {
             base_dir,
             max_depth: opts.max_depth,
             cmd: opts.cmd,
@@ -55,14 +55,14 @@ impl CmdRunner {
             colored::control::SHOULD_COLORIZE.set_override(false);
         }
         match self.cmd {
-            WutagCmd::List(ref opts) => self.list(opts),
-            WutagCmd::Set(ref opts) => self.set(opts),
-            WutagCmd::Rm(ref opts) => self.rm(opts),
-            WutagCmd::Clear(ref opts) => self.clear(opts),
-            WutagCmd::Search(ref opts) => self.search(opts),
-            WutagCmd::Cp(ref opts) => self.cp(opts),
-            WutagCmd::Edit(ref opts) => self.edit(opts),
-            WutagCmd::PrintCompletions(ref opts) => self.print_completions(opts),
+            Command::List(ref opts) => self.list(opts),
+            Command::Set(ref opts) => self.set(opts),
+            Command::Rm(ref opts) => self.rm(opts),
+            Command::Clear(ref opts) => self.clear(opts),
+            Command::Search(ref opts) => self.search(opts),
+            Command::Cp(ref opts) => self.cp(opts),
+            Command::Edit(ref opts) => self.edit(opts),
+            Command::PrintCompletions(ref opts) => self.print_completions(opts),
         }
     }
 

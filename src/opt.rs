@@ -24,7 +24,7 @@ pub struct Opts {
     #[clap(long, short)]
     pub no_color: bool,
     #[clap(subcommand)]
-    pub cmd: WutagCmd,
+    pub cmd: Command,
 }
 
 #[derive(Clap)]
@@ -130,7 +130,7 @@ pub struct CompletionsOpts {
 }
 
 #[derive(Clap)]
-pub enum WutagCmd {
+pub enum Command {
     /// Lists all tags of the files that match the provided pattern.
     List(ListOpts),
     /// Tags the files that match the given pattern with specified tags.
