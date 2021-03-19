@@ -8,7 +8,7 @@ use clap::Clap;
 use colored::Color::{self, *};
 
 use config::Config;
-use opt::WutagOpts;
+use opt::Opts;
 use runner::WutagRunner;
 
 /// Default max depth passed to [GlobWalker](globwalker::GlobWalker)
@@ -33,7 +33,7 @@ pub const DEFAULT_COLORS: &[Color] = &[
 fn main() {
     let config = Config::load_default_location().unwrap_or(Config::default());
 
-    match WutagRunner::new(WutagOpts::parse(), config) {
+    match WutagRunner::new(Opts::parse(), config) {
         Ok(wutag) => wutag.run(),
         Err(e) => eprintln!("{}", e.to_string()),
     }

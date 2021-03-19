@@ -11,7 +11,7 @@ pub const APP_ABOUT: &str = "Tool to tag and manage tags of files.";
 
 #[derive(Clap)]
 #[clap(version = APP_VERSION, author = APP_AUTHOR, about = APP_ABOUT)]
-pub struct WutagOpts {
+pub struct Opts {
     #[clap(short, long)]
     /// When this parameter is specified the program will look for files starting from provided
     /// path, otherwise defaults to current directory.

@@ -7,8 +7,8 @@ use std::path::PathBuf;
 
 use crate::config::Config;
 use crate::opt::{
-    ClearOpts, CompletionsOpts, CpOpts, EditOpts, ListOpts, RmOpts, SearchOpts, SetOpts, Shell,
-    WutagCmd, WutagOpts, APP_NAME,
+    ClearOpts, CompletionsOpts, CpOpts, EditOpts, ListOpts, Opts, RmOpts, SearchOpts, SetOpts,
+    Shell, WutagCmd, APP_NAME,
 };
 use crate::tags::search_files_with_tags;
 use crate::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
@@ -35,7 +35,7 @@ macro_rules! glob {
 }
 
 impl WutagRunner {
-    pub fn new(opts: WutagOpts, config: Config) -> Result<WutagRunner, Error> {
+    pub fn new(opts: Opts, config: Config) -> Result<WutagRunner, Error> {
         let base_dir = if let Some(base_dir) = opts.dir {
             base_dir
         } else {
@@ -251,7 +251,7 @@ impl WutagRunner {
             generators::{Bash, Elvish, Fish, PowerShell, Zsh},
         };
 
-        let mut app = WutagOpts::into_app();
+        let mut app = Opts::into_app();
 
         match opts.shell {
             Shell::Bash => generate::<Bash, _>(&mut app, APP_NAME, &mut io::stdout()),
