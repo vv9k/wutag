@@ -1,6 +1,6 @@
 use chrono::SecondsFormat;
 use clap::IntoApp;
-use colored::Colorize;
+use colored::{Color, Colorize};
 use globwalk::DirEntry;
 use std::io;
 use std::path::PathBuf;
@@ -21,6 +21,7 @@ pub struct CommandRunner {
     pub cmd: Command,
     pub base_dir: PathBuf,
     pub max_depth: Option<usize>,
+    pub colors: Vec<Color>,
     pub no_color: bool,
 }
 
@@ -42,9 +43,24 @@ impl CommandRunner {
             std::env::current_dir()?
         };
 
+        let colors = if let Some(_colors) = config.colors {
+            let mut colors = Vec::new();
+            for color in _colors.iter().map(parse_color) {
+                colors.push(color?);
+            }
+            colors
+        } else {
+            DEFAULT_COLORS.to_vec()
+        };
+
         Ok(CommandRunner {
             base_dir,
-            max_depth: opts.max_depth,
+            max_depth: if opts.max_depth.is_some() {
+                opts.max_depth
+            } else {
+                config.max_depth
+            },
+            colors,
             cmd: opts.cmd,
             no_color: opts.no_color,
         })
@@ -98,7 +114,7 @@ impl CommandRunner {
         let tags = opts
             .tags
             .iter()
-            .map(|t| Tag::random(t, &DEFAULT_COLORS))
+            .map(|t| Tag::random(t, &self.colors))
             .collect::<Vec<_>>();
         glob! { self, opts, |entry: &DirEntry| {
             println!("{}:", fmt_path(entry.path()));
