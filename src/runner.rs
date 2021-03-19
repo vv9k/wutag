@@ -17,7 +17,7 @@ use wutag_core::color::parse_color;
 use wutag_core::tags::{get_tag, list_tags, DirEntryExt, Tag};
 use wutag_core::Error;
 
-pub struct WutagRunner {
+pub struct CmdRunner {
     pub cmd: WutagCmd,
     pub base_dir: PathBuf,
     pub max_depth: Option<usize>,
@@ -34,15 +34,15 @@ macro_rules! glob {
     };
 }
 
-impl WutagRunner {
-    pub fn new(opts: Opts, config: Config) -> Result<WutagRunner, Error> {
+impl CmdRunner {
+    pub fn new(opts: Opts, config: Config) -> Result<CmdRunner, Error> {
         let base_dir = if let Some(base_dir) = opts.dir {
             base_dir
         } else {
             std::env::current_dir()?
         };
 
-        Ok(WutagRunner {
+        Ok(CmdRunner {
             base_dir,
             max_depth: opts.max_depth,
             cmd: opts.cmd,
