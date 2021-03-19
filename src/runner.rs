@@ -5,6 +5,7 @@ use globwalk::DirEntry;
 use std::io;
 use std::path::PathBuf;
 
+use crate::config::Config;
 use crate::opt::{
     ClearOpts, CompletionsOpts, CpOpts, EditOpts, ListOpts, RmOpts, SearchOpts, SetOpts, Shell,
     WutagCmd, WutagOpts, APP_NAME,
@@ -34,7 +35,7 @@ macro_rules! glob {
 }
 
 impl WutagRunner {
-    pub fn new(opts: WutagOpts) -> Result<WutagRunner, Error> {
+    pub fn new(opts: WutagOpts, config: Config) -> Result<WutagRunner, Error> {
         let base_dir = if let Some(base_dir) = opts.dir {
             base_dir
         } else {

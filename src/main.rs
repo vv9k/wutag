@@ -1,3 +1,4 @@
+mod config;
 mod opt;
 mod runner;
 mod tags;
@@ -6,6 +7,7 @@ mod util;
 use clap::Clap;
 use colored::Color::{self, *};
 
+use config::Config;
 use opt::WutagOpts;
 use runner::WutagRunner;
 
@@ -29,7 +31,9 @@ pub const DEFAULT_COLORS: &[Color] = &[
 ];
 
 fn main() {
-    match WutagRunner::new(WutagOpts::parse()) {
+    let config = Config::load_default_location().unwrap_or(Config::default());
+
+    match WutagRunner::new(WutagOpts::parse(), config) {
         Ok(wutag) => wutag.run(),
         Err(e) => eprintln!("{}", e.to_string()),
     }
