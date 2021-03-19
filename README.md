@@ -41,6 +41,20 @@ When `--any` flag is provided as in the example `wutag` will match files contain
 
 If you are into emojis then surely you can use emojis to tag files 🙂 ```wutag set '*.doc' 📋```
 
+## Configuration
+
+`wutag` lets you configure base colors used when creating tags or modify other settings globally. To do this create a file `.wutag.yml` in your home directory like `~/.wutag.yml`.
+
+Example configuration:
+```yaml
+---
+max_depth: 100
+colors:
+- '0xabba0f'
+- '#121212'
+- '0x111111'
+```
+
 ## Persistance
 
 This tool uses extra attributes also known as *xattrs* to store metadata so it might not work on certain filesystems. A thing to keep in mind is that most transfer tools require opt-in flag to transfer xattrs like `rsync` with option `-X`, `--xattrs` or `cp` with `--preserve=xattr` while `mv` preserves xattrs by default.

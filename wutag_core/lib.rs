@@ -35,6 +35,8 @@ pub enum Error {
     InvalidShell(String),
     #[error("failed to serialize or deserialize tag - `{0}`")]
     TagSerDeError(#[from] serde_cbor::Error),
+    #[error("failed to serialize or deserialize yaml - `{0}`")]
+    YamlSerDeError(#[from] serde_yaml::Error),
     #[error("failed to decode data with base64 - `{0}`")]
     Base64DecodeError(#[from] base64::DecodeError),
 }
