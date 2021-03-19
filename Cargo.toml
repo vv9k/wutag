@@ -22,3 +22,4 @@ colored = { git = "https://github.com/wojciechkepka/colored", branch = "master",
 globwalk = "0.8"
 rand = "0.8"
 base64 = "0.13.0"
+dirs = "3"

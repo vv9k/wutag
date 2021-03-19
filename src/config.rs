@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::path::Path;
-use std::{env, fs};
 
-use wutag_core::Result;
+use wutag_core::{Error, Result};
 
 const CONFIG_FILE: &str = ".wutag.yml";
 
@@ -22,6 +22,6 @@ impl Config {
 
     /// Loads config file from home directory of user executing the program
     pub fn load_default_location() -> Result<Self> {
-        Self::load(env::current_dir()?)
+        Self::load(dirs::home_dir().ok_or_else(|| Error::FileNotFound)?)
     }
 }
