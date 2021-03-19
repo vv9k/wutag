@@ -11,6 +11,7 @@ use crate::opt::{
 };
 use crate::tags::search_files_with_tags;
 use crate::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
+use crate::DEFAULT_COLORS;
 use wutag_core::color::parse_color;
 use wutag_core::tags::{get_tag, list_tags, DirEntryExt, Tag};
 use wutag_core::Error;
@@ -93,7 +94,11 @@ impl WutagRunner {
     }
 
     fn set(&self, opts: &SetOpts) {
-        let tags = opts.tags.iter().map(Tag::new).collect::<Vec<_>>();
+        let tags = opts
+            .tags
+            .iter()
+            .map(|t| Tag::random(t, &DEFAULT_COLORS))
+            .collect::<Vec<_>>();
         glob! { self, opts, |entry: &DirEntry| {
             println!("{}:", fmt_path(entry.path()));
             tags.iter().for_each(|tag| {

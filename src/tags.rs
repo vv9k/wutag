@@ -23,7 +23,7 @@ where
     Ts: IntoIterator<Item = String>,
     P: AsRef<Path>,
 {
-    let tags = tags.into_iter().map(Tag::new).collect::<BTreeSet<_>>();
+    let tags = tags.into_iter().map(Tag::dummy).collect::<BTreeSet<_>>();
     let mut files = Vec::new();
 
     let dir = path.as_ref().to_string_lossy().to_string();

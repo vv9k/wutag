@@ -13,28 +13,14 @@ use std::path::Path;
 use crate::xattr::{list_xattrs, remove_xattr, set_xattr};
 use crate::{Error, Result, WUTAG_NAMESPACE};
 
+pub const DEFAULT_COLOR: Color = Color::BrightWhite;
+
 #[derive(Debug, Deserialize, Eq, Serialize)]
 pub struct Tag {
     timestamp: DateTime<Utc>,
     name: String,
     color: Color,
 }
-
-const COLORS: &[Color] = &[
-    Color::Red,
-    Color::Green,
-    Color::Blue,
-    Color::Yellow,
-    Color::Cyan,
-    Color::White,
-    Color::Magenta,
-    Color::BrightRed,
-    Color::BrightGreen,
-    Color::BrightYellow,
-    Color::BrightBlue,
-    Color::BrightMagenta,
-    Color::BrightCyan,
-];
 
 pub trait DirEntryExt {
     fn tag(&self, tag: &Tag) -> Result<()>;
@@ -71,27 +57,38 @@ impl DirEntryExt for DirEntry {
 }
 
 impl Tag {
-    pub fn new<S>(name: S) -> Self
+    pub fn new<S>(timestamp: DateTime<Utc>, name: S, color: Color) -> Self
+    where
+        S: Into<String>,
+    {
+        Tag {
+            timestamp,
+            name: name.into(),
+            color,
+        }
+    }
+
+    pub fn random<S>(name: S, colors: &[Color]) -> Self
     where
         S: Into<String>,
     {
         let mut rng = thread_rng();
-        Tag {
-            timestamp: chrono::Utc::now(),
-            name: name.into(),
-            color: COLORS.choose(&mut rng).cloned().unwrap_or(Color::Yellow),
-        }
+        Tag::new(
+            chrono::Utc::now(),
+            name,
+            colors.choose(&mut rng).cloned().unwrap_or(DEFAULT_COLOR),
+        )
     }
 
     pub fn dummy<S>(name: S) -> Self
     where
         S: Into<String>,
     {
-        Tag {
-            timestamp: chrono::Utc.ymd(1970, 1, 1).and_hms(0, 1, 1),
-            name: name.into(),
-            color: Color::BrightWhite,
-        }
+        Tag::new(
+            chrono::Utc.ymd(1970, 1, 1).and_hms(0, 1, 1),
+            name,
+            Color::BrightWhite,
+        )
     }
 
     pub fn name(&self) -> &str {
