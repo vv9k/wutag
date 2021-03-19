@@ -22,6 +22,6 @@ impl Config {
 
     /// Loads config file from home directory of user executing the program
     pub fn load_default_location() -> Result<Self> {
-        Self::load(dirs::home_dir().ok_or_else(|| Error::FileNotFound)?)
+        Self::load(dirs::home_dir().ok_or(Error::FileNotFound)?)
     }
 }

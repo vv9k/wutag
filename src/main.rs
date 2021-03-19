@@ -31,7 +31,7 @@ pub const DEFAULT_COLORS: &[Color] = &[
 ];
 
 fn main() {
-    let config = Config::load_default_location().unwrap_or(Config::default());
+    let config = Config::load_default_location().unwrap_or_default();
 
     match CommandRunner::new(Opts::parse(), config) {
         Ok(wutag) => wutag.run(),
