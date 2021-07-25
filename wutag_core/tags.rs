@@ -210,11 +210,9 @@ where
 {
     let path = path.as_ref();
     let tag = tag.as_ref();
-    for _tag in list_xattrs(path)?.into_iter().map(Tag::try_from) {
-        if let Ok(_tag) = _tag {
-            if _tag.name == tag {
-                return Ok(_tag);
-            }
+    for _tag in list_xattrs(path)?.into_iter().map(Tag::try_from).flatten() {
+        if _tag.name == tag {
+            return Ok(_tag);
         }
     }
 
@@ -233,10 +231,8 @@ where
             .filter(|(key, _)| key.starts_with(WUTAG_NAMESPACE))
             .map(Tag::try_from);
 
-        for item in it {
-            if let Ok(tag) = item {
-                tags.push(tag);
-            }
+        for tag in it.flatten() {
+            tags.push(tag);
         }
         tags
     })
@@ -254,10 +250,8 @@ where
             .filter(|(key, _)| key.starts_with(WUTAG_NAMESPACE))
             .map(Tag::try_from);
 
-        for item in it {
-            if let Ok(tag) = item {
-                tags.insert(tag);
-            }
+        for tag in it.flatten() {
+            tags.insert(tag);
         }
         tags
     })

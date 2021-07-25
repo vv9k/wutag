@@ -48,10 +48,8 @@ where
 {
     let base_path = base_path.as_ref().to_string_lossy().to_string();
 
-    for entry in glob_walker(base_path.as_str(), pattern, max_depth)? {
-        if let Ok(entry) = entry {
-            f(&entry);
-        }
+    for entry in glob_walker(base_path.as_str(), pattern, max_depth)?.flatten() {
+        f(&entry);
     }
 
     Ok(())
