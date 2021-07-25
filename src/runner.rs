@@ -40,8 +40,13 @@ macro_rules! err {
         err!("", $err, $entry);
     };
     ($prefix:expr, $err:ident, $entry:ident) => {{
-           let err = fmt_err($err);
-            eprintln!("{}{} - {}", $prefix, err, $entry.path().to_string_lossy().bold());
+        let err = fmt_err($err);
+        eprintln!(
+            "{}{} - {}",
+            $prefix,
+            err,
+            $entry.path().to_string_lossy().bold()
+        );
     }};
 }
 

@@ -5,9 +5,9 @@ use libc::{getxattr, listxattr, removexattr, setxattr, XATTR_CREATE};
 #[cfg(target_os = "linux")]
 use libc::{lgetxattr, llistxattr, lremovexattr, lsetxattr};
 use std::ffi::{CStr, CString, OsStr};
+use std::fs;
 use std::io;
 use std::mem;
-use std::fs;
 use std::os::raw::{c_char, c_void};
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
@@ -67,7 +67,6 @@ where
     let path = path.as_ref();
     _remove_xattr(path, name.as_ref(), is_symlink(&path))
 }
-
 
 //################################################################################
 // Wrappers
