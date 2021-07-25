@@ -7,12 +7,21 @@ use libc::{lgetxattr, llistxattr, lremovexattr, lsetxattr};
 use std::ffi::{CStr, CString, OsStr};
 use std::io;
 use std::mem;
+use std::fs;
 use std::os::raw::{c_char, c_void};
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 use std::ptr;
 
 use crate::{Error, Result};
+
+fn is_symlink(path: &Path) -> bool {
+    let mut is_symlink = false;
+    if let Ok(metadata) = fs::metadata(path) {
+        is_symlink = metadata.file_type().is_symlink();
+    }
+    is_symlink
+}
 
 /// Sets the value of the extended attribute identified by `name` and associated with the given `path` in the
 /// filesystem.
@@ -22,8 +31,9 @@ where
     S: AsRef<str>,
 {
     let size = value.as_ref().as_bytes().len();
+    let path = path.as_ref();
 
-    _set_xattr(path.as_ref(), name.as_ref(), value.as_ref(), size, false)
+    _set_xattr(path, name.as_ref(), value.as_ref(), size, is_symlink(&path))
 }
 
 /// Retrieves the value of the extended attribute identified by `name` and associated with the given
@@ -33,7 +43,8 @@ where
     P: AsRef<Path>,
     S: AsRef<str>,
 {
-    _get_xattr(path.as_ref(), name.as_ref(), false)
+    let path = path.as_ref();
+    _get_xattr(path, name.as_ref(), is_symlink(&path))
 }
 
 /// Retrieves a list of all extended attributes with their values associated with the given `path`
@@ -42,7 +53,8 @@ pub fn list_xattrs<P>(path: P) -> Result<Vec<(String, String)>>
 where
     P: AsRef<Path>,
 {
-    _list_xattrs(path.as_ref(), false)
+    let path = path.as_ref();
+    _list_xattrs(path, is_symlink(&path))
 }
 
 /// Removes the extended attribute identified by `name` and associated with the given `path` in the
@@ -52,50 +64,10 @@ where
     P: AsRef<Path>,
     S: AsRef<str>,
 {
-    _remove_xattr(path.as_ref(), name.as_ref(), false)
+    let path = path.as_ref();
+    _remove_xattr(path, name.as_ref(), is_symlink(&path))
 }
 
-/// Provides identical functionality to [`set_xattr`](set_xattr) except in the case of a symbolic
-/// link where the extended attribute is set on the link itself, not the file that it refers to.
-pub fn set_link_xattr<P, S>(path: P, name: S, value: S) -> Result<()>
-where
-    P: AsRef<Path>,
-    S: AsRef<str>,
-{
-    let size = value.as_ref().as_bytes().len();
-
-    _set_xattr(path.as_ref(), name.as_ref(), value.as_ref(), size, true)
-}
-
-/// Provides identical functionality to [`get_xattr`](get_xattr) except in the case of a symbolic
-/// link where the extended attribute is retrieved from the link not the file that it refers to.
-pub fn get_link_xattr<P, S>(path: P, name: S) -> Result<String>
-where
-    P: AsRef<Path>,
-    S: AsRef<str>,
-{
-    _get_xattr(path.as_ref(), name.as_ref(), true)
-}
-
-/// Provides identical functionality to [`list_xattrs`](list_xattrs) except in the case of a symbolic
-/// link where the list of extended attributes is retrieved from the link no the file it refers to.
-pub fn list_link_xattrs<P>(path: P) -> Result<Vec<(String, String)>>
-where
-    P: AsRef<Path>,
-{
-    _list_xattrs(path.as_ref(), true)
-}
-
-/// Provides identical functionality to [`remove_xattr`](remove_xattr) except in the case of a symbolic
-/// link where the value of the extended attribute is removed from the link not the file that it
-/// refers to.
-pub fn remove_link_xattr<P, S>(path: P, name: S) -> Result<()>
-where
-    P: AsRef<Path>,
-    S: AsRef<str>,
-{
-    _remove_xattr(path.as_ref(), name.as_ref(), true)
-}
 
 //################################################################################
 // Wrappers
