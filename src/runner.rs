@@ -35,6 +35,16 @@ macro_rules! glob {
     };
 }
 
+macro_rules! err {
+    ($err:ident, $entry:ident) => {
+        err!("", $err, $entry);
+    };
+    ($prefix:expr, $err:ident, $entry:ident) => {{
+           let err = fmt_err($err);
+            eprintln!("{}{} - {}", $prefix, err, $entry.path().to_string_lossy().bold());
+    }};
+}
+
 impl CommandRunner {
     pub fn new(opts: Opts, config: Config) -> Result<CommandRunner, Error> {
         let base_dir = if let Some(base_dir) = opts.dir {
@@ -106,7 +116,7 @@ impl CommandRunner {
                     println!();
                 }
             }
-            Err(e) => eprintln!("{}", fmt_err(e)),
+            Err(e) => err!(e, entry),
         }};
     }
 
@@ -120,7 +130,7 @@ impl CommandRunner {
             println!("{}:", fmt_path(entry.path()));
             tags.iter().for_each(|tag| {
                 if let Err(e) = entry.tag(&tag) {
-                    eprintln!("\t{}", fmt_err(e));
+                    err!('\t', e, entry);
                 } else {
                     print!("\t{} {}", "+".bold().green(), fmt_tag(&tag));
                 }
@@ -137,17 +147,16 @@ impl CommandRunner {
                 let tag = match tag {
                     Ok(tag) => tag,
                     Err(e) => {
-                        eprintln!("\t{}", fmt_err(e));
+                        err!('\t', e, entry);
                         return
                     }
                 };
                 if let Err(e) = entry.untag(&tag) {
-                    eprintln!("\t{}", fmt_err(e));
+                    err!('\t', e, entry);
                 } else {
                     print!("\t{} {}", "X".bold().red(), fmt_tag(tag));
                 }
             });
-
             println!();
         }};
     }
@@ -162,7 +171,7 @@ impl CommandRunner {
                     let res = entry.clear_tags();
                     if opts.verbose {
                         if let Err(e) = res {
-                            eprintln!("\t{}", fmt_err(e));
+                            err!('\t', e, entry);
                         }
                         else {
                             println!("\t{}", fmt_ok("cleared."));
@@ -170,7 +179,7 @@ impl CommandRunner {
                     }
                 }
             },
-            Err(e) => if opts.verbose { eprintln!("{}:\n\t{}", fmt_path(entry.path()), fmt_err(e)) },
+            Err(e) => if opts.verbose { err!(e, entry); },
         }};
     }
 
@@ -220,7 +229,7 @@ impl CommandRunner {
                     println!("{}:", fmt_path(entry.path()));
                     for tag in &tags {
                         if let Err(e) = entry.tag(&tag) {
-                            eprintln!("\t{}", fmt_err(e));
+                            err!('\t', e, entry)
                         } else {
                             println!("\t{} {}", "+".bold().green(), fmt_tag(&tag));
                         }
