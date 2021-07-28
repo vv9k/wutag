@@ -1,5 +1,4 @@
 //! Functions for manipulating tags on files.
-use chrono::{offset::Utc, DateTime, TimeZone};
 use colored::Color;
 use globwalk::DirEntry;
 use rand::prelude::*;
@@ -8,18 +7,25 @@ use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::convert::TryFrom;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::path::Path;
 
-use crate::xattr::{list_xattrs, remove_xattr, set_xattr};
+use crate::xattr::{list_xattrs, remove_xattr, set_xattr, Xattr};
 use crate::{Error, Result, WUTAG_NAMESPACE};
 
 pub const DEFAULT_COLOR: Color = Color::BrightWhite;
 
-#[derive(Debug, Deserialize, Eq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Serialize)]
 pub struct Tag {
-    timestamp: DateTime<Utc>,
     name: String,
     color: Color,
+}
+
+impl Hash for Tag {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+        self.color.to_fg_str().hash(state);
+    }
 }
 
 pub trait DirEntryExt {
@@ -57,12 +63,11 @@ impl DirEntryExt for DirEntry {
 }
 
 impl Tag {
-    pub fn new<S>(timestamp: DateTime<Utc>, name: S, color: Color) -> Self
+    pub fn new<S>(name: S, color: Color) -> Self
     where
         S: Into<String>,
     {
         Tag {
-            timestamp,
             name: name.into(),
             color,
         }
@@ -74,20 +79,8 @@ impl Tag {
     {
         let mut rng = thread_rng();
         Tag::new(
-            chrono::Utc::now(),
             name,
             colors.choose(&mut rng).cloned().unwrap_or(DEFAULT_COLOR),
-        )
-    }
-
-    pub fn dummy<S>(name: S) -> Self
-    where
-        S: Into<String>,
-    {
-        Tag::new(
-            chrono::Utc.ymd(1970, 1, 1).and_hms(0, 1, 1),
-            name,
-            Color::BrightWhite,
         )
     }
 
@@ -95,20 +88,11 @@ impl Tag {
         &self.name
     }
 
-    pub fn timestamp(&self) -> &DateTime<Utc> {
-        &self.timestamp
-    }
-
-    fn update_timestamp(&mut self) {
-        self.timestamp = chrono::Utc::now();
-    }
-
     pub fn color(&self) -> &Color {
         &self.color
     }
 
     pub fn set_color(&mut self, color: &Color) {
-        self.update_timestamp();
         self.color = *color;
     }
 
@@ -139,7 +123,8 @@ impl Tag {
     {
         let hash = self.hash()?;
 
-        for (key, _) in list_xattrs(path.as_ref())? {
+        for xattr in list_xattrs(path.as_ref())? {
+            let key = xattr.key();
             // make sure to only remove attributes corresponding to this namespace
             if key == hash {
                 return remove_xattr(path, key);
@@ -181,10 +166,10 @@ macro_rules! next_or_else {
     };
 }
 
-impl TryFrom<(String, String)> for Tag {
+impl TryFrom<Xattr> for Tag {
     type Error = Error;
-    fn try_from(value: (String, String)) -> Result<Self> {
-        let (key, _) = value;
+    fn try_from(xattr: Xattr) -> Result<Self> {
+        let key = xattr.key();
 
         let mut elems = key.split("wutag.");
 
@@ -228,7 +213,7 @@ where
         let mut tags = Vec::new();
         let it = attrs
             .into_iter()
-            .filter(|(key, _)| key.starts_with(WUTAG_NAMESPACE))
+            .filter(|xattr| xattr.key().starts_with(WUTAG_NAMESPACE))
             .map(Tag::try_from);
 
         for tag in it.flatten() {
@@ -247,7 +232,7 @@ where
         let mut tags = BTreeSet::new();
         let it = attrs
             .into_iter()
-            .filter(|(key, _)| key.starts_with(WUTAG_NAMESPACE))
+            .filter(|xattr| xattr.key().starts_with(WUTAG_NAMESPACE))
             .map(Tag::try_from);
 
         for tag in it.flatten() {
@@ -262,11 +247,11 @@ pub fn clear_tags<P>(path: P) -> Result<()>
 where
     P: AsRef<Path>,
 {
-    for (key, _) in list_xattrs(path.as_ref())?
+    for xattr in list_xattrs(path.as_ref())?
         .iter()
-        .filter(|(key, _)| key.starts_with(WUTAG_NAMESPACE))
+        .filter(|xattr| xattr.key().starts_with(WUTAG_NAMESPACE))
     {
-        remove_xattr(path.as_ref(), key)?;
+        remove_xattr(path.as_ref(), xattr.key())?;
     }
 
     Ok(())

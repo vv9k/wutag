@@ -18,6 +18,38 @@ pub use windows::{
 use crate::Result;
 use std::path::Path;
 
+pub struct Xattr {
+    key: String,
+    val: String,
+}
+
+impl Xattr {
+    pub fn new<K, V>(key: K, val: V) -> Self
+    where
+        K: Into<String>,
+        V: Into<String>,
+    {
+        Self {
+            key: key.into(),
+            val: val.into(),
+        }
+    }
+
+    pub fn key(&self) -> &str {
+        &self.key
+    }
+
+    pub fn val(&self) -> &str {
+        &self.val
+    }
+}
+
+impl From<(String, String)> for Xattr {
+    fn from(xattr: (String, String)) -> Self {
+        Self::new(xattr.0, xattr.1)
+    }
+}
+
 pub fn set_xattr<P, S>(path: P, name: S, value: S) -> Result<()>
 where
     P: AsRef<Path>,
@@ -34,11 +66,11 @@ where
     _get_xattr(path, name)
 }
 
-pub fn list_xattrs<P>(path: P) -> Result<Vec<(String, String)>>
+pub fn list_xattrs<P>(path: P) -> Result<Vec<Xattr>>
 where
     P: AsRef<Path>,
 {
-    _list_xattrs(path)
+    _list_xattrs(path).map(|attrs| attrs.into_iter().map(From::from).collect())
 }
 
 pub fn remove_xattr<P, S>(path: P, name: S) -> Result<()>
