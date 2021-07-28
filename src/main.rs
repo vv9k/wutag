@@ -1,5 +1,6 @@
 mod config;
 mod opt;
+mod registry;
 mod runner;
 mod tags;
 mod util;
