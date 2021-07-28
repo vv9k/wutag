@@ -24,17 +24,6 @@ pub struct CommandRunner {
     pub registry: TagRegistry,
 }
 
-macro_rules! glob {
-    ($self:ident, $opts:ident, $($tokens:tt)*) => {
-        let f = $($tokens)*;
-        let path = PathBuf::new();
-
-        if let Err(e) = glob_ok(&$opts.pattern, &path, $self.max_depth.clone(), f) {
-            eprintln!("{}", fmt_err(e));
-        }
-    };
-}
-
 macro_rules! err {
     ($err:ident, $entry:ident) => {
         err!("", $err, $entry);
@@ -347,25 +336,32 @@ impl CommandRunner {
                 return;
             }
         };
-        glob! {self, opts, |entry: &DirEntry| {
-            if let Ok(mut tag) = get_tag(entry.path(), &opts.tag) {
+        if let Err(e) = glob_ok(
+            &opts.pattern,
+            &self.base_dir.clone(),
+            self.max_depth,
+            |entry: &DirEntry| {
+                if let Ok(mut tag) = get_tag(entry.path(), &opts.tag) {
                     println!("{}:", fmt_path(entry.path()));
-                if let Err(e) = entry.untag(&tag) {
-                    println!("{}", fmt_err(e));
-                    return;
+                    if let Err(e) = entry.untag(&tag) {
+                        println!("{}", fmt_err(e));
+                        return;
+                    }
+                    print!("\t{} {} ", fmt_tag(&tag), "-->".bold().white());
+                    tag.set_color(&color);
+                    if let Err(e) = entry.tag(&tag) {
+                        println!("{}", fmt_err(e));
+                        return;
+                    }
+                    let entry = EntryData::new(entry.path());
+                    let id = self.registry.add_or_update_entry(entry);
+                    self.registry.tag_entry(&tag, id);
+                    println!("{}", fmt_tag(&tag));
                 }
-                print!("\t{} {} ", fmt_tag(&tag), "-->".bold().white());
-                tag.set_color(&color);
-                if let Err(e) = entry.tag(&tag) {
-                    println!("{}", fmt_err(e));
-                    return;
-                }
-                                let entry = EntryData::new(entry.path());
-                                let id = self.registry.add_or_update_entry(entry);
-                                self.registry.tag_entry(&tag, id);
-                println!("{}", fmt_tag(&tag));
-            }
-        }};
+            },
+        ) {
+            eprintln!("{}", fmt_err(e));
+        }
 
         self.save_registry();
     }
