@@ -28,18 +28,18 @@ pub struct Opts {
 }
 
 #[derive(Clap)]
+pub enum ListObject {
+    Tags,
+    Files,
+}
+
+#[derive(Clap)]
 pub struct ListOpts {
-    /// A glob pattern like '*.png'.
-    pub pattern: String,
-    #[clap(long)]
-    /// Whether to show files with no tags
-    pub show_missing: bool,
-    #[clap(long)]
-    /// Whether to print details like tag timestamp. If `--raw` is provided this flag is ignored
-    pub details: bool,
+    #[clap(subcommand)]
+    /// The object to list. Valid values are: `tags`, `files`.
+    pub object: ListObject,
     #[clap(long, short)]
-    /// If provided output will be raw so that it can be easily piped to other commands.
-    /// `--details` won't work with this flag.
+    /// If provided output will be raw so that it can be easily piped to other commands
     pub raw: bool,
 }
 

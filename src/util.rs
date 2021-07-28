@@ -41,10 +41,10 @@ where
 
 /// Utility function that executes the function `f` on all directory entries that are Ok, by
 /// default ignores all errors.
-pub fn glob_ok<P, F>(pattern: &str, base_path: P, max_depth: Option<usize>, f: F) -> Result<()>
+pub fn glob_ok<P, F>(pattern: &str, base_path: P, max_depth: Option<usize>, mut f: F) -> Result<()>
 where
     P: AsRef<Path>,
-    F: Fn(&DirEntry),
+    F: FnMut(&DirEntry),
 {
     let base_path = base_path.as_ref().to_string_lossy().to_string();
 
