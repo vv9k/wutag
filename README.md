@@ -84,16 +84,19 @@ FLAGS:
 OPTIONS:
     -d, --dir <dir>                When this parameter is specified the program will look for files
                                    starting from provided path, otherwise defaults to current
-                                   directory
+                                   directory. Only applies to subcommands that take a pattern as a
+                                   positional argument
     -m, --max-depth <max-depth>    If provided increase maximum recursion depth of filesystem
-                                   traversal to specified value, otherwise default depth is 2
+                                   traversal to specified value, otherwise default depth is 2. Only
+                                   applies to subcommands that take a pattern as a positional
+                                   argument
 
 SUBCOMMANDS:
     clear                Clears all tags of the files that match the provided pattern
     cp                   Copies tags from the specified file to files that match a pattern
-    edit                 Edits the tag of files that match the provided pattern
+    edit                 Edits a tag
     help                 Prints this message or the help of the given subcommand(s)
-    list                 Lists all tags of the files that match the provided pattern
+    list                 Lists all available tags or files
     print-completions    Prints completions for the specified shell to stdout
     rm                   Removes the specified tags of the files that match the provided pattern
     search               Searches for files that have all of the provided `tags`

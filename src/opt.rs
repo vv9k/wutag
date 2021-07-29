@@ -14,11 +14,13 @@ pub const APP_ABOUT: &str = "Tool to tag and manage tags of files.";
 pub struct Opts {
     #[clap(short, long)]
     /// When this parameter is specified the program will look for files starting from provided
-    /// path, otherwise defaults to current directory.
+    /// path, otherwise defaults to current directory. Only applies to subcommands that take a
+    /// pattern as a positional argument.
     pub dir: Option<PathBuf>,
     #[clap(long, short)]
     /// If provided increase maximum recursion depth of filesystem traversal to specified value,
-    /// otherwise default depth is 2.
+    /// otherwise default depth is 2. Only applies to subcommands that take a pattern as a
+    /// positional argument.
     pub max_depth: Option<usize>,
     /// If passed the output won't be colored
     #[clap(long, short)]
@@ -130,7 +132,7 @@ pub struct CompletionsOpts {
 
 #[derive(Clap)]
 pub enum Command {
-    /// Lists all tags of the files that match the provided pattern.
+    /// Lists all available tags or files.
     List(ListOpts),
     /// Tags the files that match the given pattern with specified tags.
     Set(SetOpts),
@@ -142,7 +144,7 @@ pub enum Command {
     Search(SearchOpts),
     /// Copies tags from the specified file to files that match a pattern.
     Cp(CpOpts),
-    /// Edits the tag of files that match the provided pattern.
+    /// Edits a tag.
     Edit(EditOpts),
     /// Prints completions for the specified shell to stdout.
     PrintCompletions(CompletionsOpts),
