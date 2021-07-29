@@ -3,6 +3,9 @@
 * Add `--raw` `-r` flag to list for easier passing to other programs [#26](https://github.com/wojciechkepka/wutag/pull/26)
 * Add ability to modify base colors and other settings from a configuration file [#27](https://github.com/wojciechkepka/wutag/pull/27)
 * Improved error messages
+* Rewrite core functionality by using cached state instead of relying on the file system.
+  WARNING! this version is completely different functionally from the older one and the tags have to be recreated
+  after updating it. [#30](https://github.com/wojciechkepka/wutag/pull/30)
 
 
 # 0.3.0
