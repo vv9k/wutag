@@ -1,9 +1,9 @@
 # wutag 🔱🏷️ 
-[![master](https://github.com/wojciechkepka/wutag/actions/workflows/master.yml/badge.svg)](https://github.com/wojciechkepka/wutag/actions/workflows/master.yml)
+[![master](https://github.com/vv9k/wutag/actions/workflows/master.yml/badge.svg)](https://github.com/vv9k/wutag/actions/workflows/master.yml)
 
 CLI tool for tagging and organizing files by tags.
 
-![Example usage](https://github.com/wojciechkepka/wutag/blob/master/static/usage.svg)
+![Example usage](https://github.com/vv9k/wutag/blob/master/static/usage.svg)
 
 ## Install
 
@@ -11,7 +11,7 @@ If you use arch Linux and have AUR repositories set up you can use your favourit
  - `paru -S wutag`
  - or latest master branch with `paru -S wutag-git`
 
-If you're on another Linux distribution or MacOS you can download one of the prebuilt binaries from [here](https://github.com/wojciechkepka/wutag/releases).
+If you're on another Linux distribution or MacOS you can download one of the prebuilt binaries from [here](https://github.com/vv9k/wutag/releases).
 
 To build manually you'll need latest `rust` and `cargo`. Build with:
  - `cargo build --release`
@@ -19,13 +19,14 @@ To build manually you'll need latest `rust` and `cargo`. Build with:
 ## Usage
 
 By default each tag will be assigned with a random color from 8 base colors (either bright or normal so 16 colors in total). You can later edit each tag by using `edit` subcommand like this:
- - `wutag edit '**' school --color 0x1f1f1f`
- - or `wutag edit '**' code --color '#ff00aa'`
- - or `wutag edit '**' work --color FF0000`
+ - `wutag edit school --color 0x1f1f1f`
+ - or `wutag edit code --color '#ff00aa'`
+ - or `wutag edit work --color FF0000`
  - The colors are case insensitive
 
-Each command by default starts filesystem traversal from current working directory. To override this behaviour specify a global parameter `--dir` or `-d` like this:
- - `wutag -d ~/photos search doge`
+Each command that takes a pattern starts a filesystem traversal from current working directory. To override this
+behaviour specify a global parameter `--dir` or `-d` like this:
+ - `wutag -d ~ set '**' code`
 
 Default recursion depth is set to *2*. To increase it use `--max-depth` or `-m` global parameter.
 
@@ -54,18 +55,6 @@ colors:
 - '#121212'
 - '0x111111'
 ```
-
-## Persistance
-
-This tool uses extra attributes also known as *xattrs* to store metadata so it might not work on certain filesystems. A thing to keep in mind is that most transfer tools require opt-in flag to transfer xattrs like `rsync` with option `-X`, `--xattrs` or `cp` with `--preserve=xattr` while `mv` preserves xattrs by default.
-
-Adding aliases in your `.bashrc` like `alias cp="cp --preserve=xattr"` might help avoiding accidental removal of tags.
-
-GUI file managers seem to support them by default, only tested with `nautilus`, `Thunar` and `Dolphin` though so mileage may vary.
-
-Support for Windows will be added through NTFS data streams which offer access to extended attributes. I haven't yet tested if they can be preserved while transfering to other filesystems.
-
-MacOS and Linux should work out of the box.
 
 ## Tab completion
 
@@ -112,4 +101,4 @@ SUBCOMMANDS:
 ```
 
 ## License
-[MIT](https://github.com/wojciechkepka/wutag/blob/master/LICENSE)
+[MIT](https://github.com/vv9k/wutag/blob/master/LICENSE)
