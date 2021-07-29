@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use wutag_core::tags::Tag;
 use wutag_core::{Error, Result};
 
+use colored::Color;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Deserialize, Serialize, PartialEq)]
@@ -187,12 +188,24 @@ impl TagRegistry {
     pub fn get_tag<T: AsRef<str>>(&self, tag: T) -> Option<&Tag> {
         self.tags.keys().find(|t| t.name() == tag.as_ref())
     }
+
+    pub fn update_tag_color<T: AsRef<str>>(&mut self, tag: T, color: Color) -> bool {
+        if let Some(mut t) = self.tags.keys().find(|t| t.name() == tag.as_ref()).cloned() {
+            let data = self.tags.remove(&t).unwrap();
+            t.set_color(&color);
+            self.tags.insert(t, data);
+            true
+        } else {
+            false
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::DEFAULT_COLORS;
+    use colored::Color::{Black, Red};
 
     #[test]
     fn adds_and_tags_entry() {
@@ -201,7 +214,6 @@ mod tests {
         let mut registry = TagRegistry::default();
         registry.add_or_update_entry(entry.clone());
         let id = registry.find_entry(&path).unwrap();
-        println!("got indx {}", id);
 
         let _entry = registry.get_entry(id).unwrap();
         assert_eq!(_entry.path, entry.path);
@@ -232,5 +244,22 @@ mod tests {
         registry.add_or_update_entry(entry);
 
         assert_eq!(registry.list_entries().count(), 2);
+    }
+
+    #[test]
+    fn updates_tag_color() {
+        let path = PathBuf::from("/tmp");
+        let entry = EntryData { path: path.clone() };
+
+        let mut registry = TagRegistry::default();
+        registry.add_or_update_entry(entry);
+
+        let id = registry.find_entry(&path).unwrap();
+
+        let tag = Tag::new("test", Black);
+
+        assert!(registry.tag_entry(&tag, id).is_none());
+        assert!(registry.update_tag_color("test", Red));
+        assert_eq!(registry.list_tags().next().unwrap().color(), &Red);
     }
 }

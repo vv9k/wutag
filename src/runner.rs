@@ -14,7 +14,7 @@ use crate::registry::{EntryData, TagRegistry};
 use crate::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
 use crate::DEFAULT_COLORS;
 use wutag_core::color::parse_color;
-use wutag_core::tags::{get_tag, list_tags, DirEntryExt, Tag};
+use wutag_core::tags::{list_tags, DirEntryExt, Tag};
 
 pub struct CommandRunner {
     pub base_dir: PathBuf,
@@ -147,13 +147,13 @@ impl CommandRunner {
             |entry: &DirEntry| {
                 println!("{}:", fmt_path(entry.path()));
                 tags.iter().for_each(|tag| {
-                    if let Err(e) = entry.tag(&tag) {
+                    if let Err(e) = entry.tag(tag) {
                         err!('\t', e, entry);
                     } else {
                         let entry = EntryData::new(entry.path());
                         let id = self.registry.add_or_update_entry(entry);
-                        self.registry.tag_entry(&tag, id);
-                        print!("\t{} {}", "+".bold().green(), fmt_tag(&tag));
+                        self.registry.tag_entry(tag, id);
+                        print!("\t{} {}", "+".bold().green(), fmt_tag(tag));
                     }
                 });
                 println!();
@@ -185,11 +185,11 @@ impl CommandRunner {
                             return;
                         }
                     };
-                    if let Err(e) = entry.untag(&tag) {
+                    if let Err(e) = entry.untag(tag) {
                         err!('\t', e, entry);
                     } else {
                         if let Some(id) = self.registry.find_entry(entry.path()) {
-                            self.registry.untag_entry(&tag, id);
+                            self.registry.untag_entry(tag, id);
                         }
                         print!("\t{} {}", "X".bold().red(), fmt_tag(tag));
                     }
@@ -304,13 +304,13 @@ impl CommandRunner {
                     |entry: &DirEntry| {
                         println!("{}:", fmt_path(entry.path()));
                         for tag in &tags {
-                            if let Err(e) = entry.tag(&tag) {
+                            if let Err(e) = entry.tag(tag) {
                                 err!('\t', e, entry)
                             } else {
                                 let entry = EntryData::new(entry.path());
                                 let id = self.registry.add_or_update_entry(entry);
-                                self.registry.tag_entry(&tag, id);
-                                println!("\t{} {}", "+".bold().green(), fmt_tag(&tag));
+                                self.registry.tag_entry(tag, id);
+                                println!("\t{} {}", "+".bold().green(), fmt_tag(tag));
                             }
                         }
                     },
@@ -336,31 +336,12 @@ impl CommandRunner {
                 return;
             }
         };
-        if let Err(e) = glob_ok(
-            &opts.pattern,
-            &self.base_dir.clone(),
-            self.max_depth,
-            |entry: &DirEntry| {
-                if let Ok(mut tag) = get_tag(entry.path(), &opts.tag) {
-                    println!("{}:", fmt_path(entry.path()));
-                    if let Err(e) = entry.untag(&tag) {
-                        println!("{}", fmt_err(e));
-                        return;
-                    }
-                    print!("\t{} {} ", fmt_tag(&tag), "-->".bold().white());
-                    tag.set_color(&color);
-                    if let Err(e) = entry.tag(&tag) {
-                        println!("{}", fmt_err(e));
-                        return;
-                    }
-                    let entry = EntryData::new(entry.path());
-                    let id = self.registry.add_or_update_entry(entry);
-                    self.registry.tag_entry(&tag, id);
-                    println!("{}", fmt_tag(&tag));
-                }
-            },
-        ) {
-            eprintln!("{}", fmt_err(e));
+        let old_tag = self.registry.get_tag(&opts.tag).cloned();
+        if self.registry.update_tag_color(&opts.tag, color) {
+            if let Some(old_tag) = old_tag {
+                let new_tag = self.registry.get_tag(&opts.tag);
+                println!("{} ==> {}", fmt_tag(&old_tag), fmt_tag(new_tag.unwrap()))
+            }
         }
 
         self.save_registry();

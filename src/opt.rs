@@ -88,8 +88,6 @@ pub struct CpOpts {
 
 #[derive(Clap)]
 pub struct EditOpts {
-    /// A glob pattern like '*.png'.
-    pub pattern: String,
     /// The tag to edit
     pub tag: String,
     #[clap(long, short)]
@@ -100,6 +98,7 @@ pub struct EditOpts {
 }
 
 #[derive(Clap)]
+#[allow(clippy::enum_variant_names)]
 pub enum Shell {
     Bash,
     Elvish,
