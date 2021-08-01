@@ -1,7 +1,7 @@
 //! Options used by the main executable
 use std::{path::PathBuf, str::FromStr};
 
-use clap::Clap;
+use clap::{AppSettings, Clap};
 use wutag_core::Error;
 
 pub const APP_NAME: &str = "wutag";
@@ -10,7 +10,13 @@ pub const APP_AUTHOR: &str = "Wojciech Kępka <wojciech@wkepka.dev>";
 pub const APP_ABOUT: &str = "Tool to tag and manage tags of files.";
 
 #[derive(Clap)]
-#[clap(version = APP_VERSION, author = APP_AUTHOR, about = APP_ABOUT)]
+#[clap(
+    version = APP_VERSION,
+    author = APP_AUTHOR,
+    about = APP_ABOUT,
+    global_setting = AppSettings::ColoredHelp,
+    global_setting = AppSettings::ColorAuto
+)]
 pub struct Opts {
     #[clap(short, long)]
     /// When this parameter is specified the program will look for files starting from provided
