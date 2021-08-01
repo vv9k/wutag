@@ -155,4 +155,6 @@ pub enum Command {
     Edit(EditOpts),
     /// Prints completions for the specified shell to stdout.
     PrintCompletions(CompletionsOpts),
+    /// Clean the cached tag registry.
+    CleanCache,
 }

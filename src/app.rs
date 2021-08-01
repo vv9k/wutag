@@ -101,6 +101,14 @@ impl App {
             Command::Cp(ref opts) => self.cp(opts),
             Command::Edit(ref opts) => self.edit(opts),
             Command::PrintCompletions(ref opts) => self.print_completions(opts),
+            Command::CleanCache => self.clean_cache(),
+        }
+    }
+
+    fn clean_cache(&mut self) {
+        self.registry.clear();
+        if let Err(e) = self.registry.save() {
+            println!("{:?}", e);
         }
     }
 

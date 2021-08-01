@@ -57,6 +57,12 @@ impl TagRegistry {
         fs::write(&self.path, &serialized).context("failed to save registry")
     }
 
+    /// Clears this tag registry by removing all entries and tags.
+    pub fn clear(&mut self) {
+        self.tags.clear();
+        self.entries.clear();
+    }
+
     /// Updates the entry or adds it if it is not present.
     pub fn add_or_update_entry(&mut self, entry: EntryData) -> EntryId {
         let pos = self
