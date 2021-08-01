@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -184,7 +185,6 @@ impl TagRegistry {
         entries
     }
 
-    #[allow(dead_code)]
     pub fn list_entries_ids(&self) -> impl Iterator<Item = &EntryId> {
         self.entries.keys()
     }

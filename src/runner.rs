@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::IntoApp;
-use colored::{Color, ColoredString, Colorize};
+use colored::{Color, Colorize};
 use globwalk::DirEntry;
 use std::io;
 use std::path::PathBuf;
@@ -108,8 +108,14 @@ impl CommandRunner {
         match opts.object {
             ListObject::Files { with_tags } => {
                 for (id, file) in self.registry.list_entries_and_ids() {
-                    let tags = if with_tags {
-                        self.registry
+                    if opts.raw {
+                        print!("{}", file.path().display());
+                    } else {
+                        print!("{}", fmt_path(file.path()));
+                    }
+                    if with_tags {
+                        let tags = self
+                            .registry
                             .list_entry_tags(*id)
                             .unwrap_or_default()
                             .iter()
@@ -121,21 +127,9 @@ impl CommandRunner {
                                 }
                             })
                             .collect::<Vec<_>>()
-                            .join(" ")
-                    } else {
-                        String::new()
-                    };
+                            .join(" ");
 
-                    if opts.raw {
-                        print!("{}", file.path().display());
-                        if with_tags {
-                            println!(": {}", tags);
-                        }
-                    } else {
-                        print!("{}", fmt_path(file.path()));
-                        if with_tags {
-                            println!(": {}", tags);
-                        }
+                        println!(": {}", tags);
                     }
                 }
             }
