@@ -33,7 +33,7 @@ where
     let size = value.as_ref().as_bytes().len();
     let path = path.as_ref();
 
-    _set_xattr(path, name.as_ref(), value.as_ref(), size, is_symlink(&path))
+    _set_xattr(path, name.as_ref(), value.as_ref(), size, is_symlink(path))
 }
 
 /// Retrieves the value of the extended attribute identified by `name` and associated with the given
@@ -44,7 +44,7 @@ where
     S: AsRef<str>,
 {
     let path = path.as_ref();
-    _get_xattr(path, name.as_ref(), is_symlink(&path))
+    _get_xattr(path, name.as_ref(), is_symlink(path))
 }
 
 /// Retrieves a list of all extended attributes with their values associated with the given `path`
@@ -54,7 +54,7 @@ where
     P: AsRef<Path>,
 {
     let path = path.as_ref();
-    _list_xattrs(path, is_symlink(&path))
+    _list_xattrs(path, is_symlink(path))
 }
 
 /// Removes the extended attribute identified by `name` and associated with the given `path` in the
@@ -65,7 +65,7 @@ where
     S: AsRef<str>,
 {
     let path = path.as_ref();
-    _remove_xattr(path, name.as_ref(), is_symlink(&path))
+    _remove_xattr(path, name.as_ref(), is_symlink(path))
 }
 
 //################################################################################

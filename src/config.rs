@@ -1,8 +1,7 @@
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
-
-use wutag_core::{Error, Result};
 
 const CONFIG_FILE: &str = ".wutag.yml";
 
@@ -17,11 +16,12 @@ impl Config {
     /// reading the file.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref().join(CONFIG_FILE);
-        Ok(serde_yaml::from_slice(&fs::read(path)?)?)
+        serde_yaml::from_slice(&fs::read(path).context("failed to read config file")?)
+            .context("failed to deserialize config file")
     }
 
     /// Loads config file from home directory of user executing the program
     pub fn load_default_location() -> Result<Self> {
-        Self::load(dirs::home_dir().ok_or(Error::FileNotFound)?)
+        Self::load(dirs::home_dir().context("home directory not found")?)
     }
 }

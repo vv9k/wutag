@@ -83,7 +83,7 @@ pub fn parse_color<S: AsRef<str>>(color: S) -> Result<Color> {
 
     let result = if let Some(c) = color.strip_prefix("0x") {
         if_6!(c)
-    } else if let Some(c) = color.strip_prefix("#") {
+    } else if let Some(c) = color.strip_prefix('#') {
         if_6!(c)
     } else {
         if_6!(color)

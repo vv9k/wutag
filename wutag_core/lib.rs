@@ -1,5 +1,5 @@
 pub mod color;
-pub mod tags;
+pub mod tag;
 pub mod xattr;
 
 use std::{ffi, io, string};
@@ -17,22 +17,16 @@ pub enum Error {
     TagNotFound(String),
     #[error("tag key was invalid - {0}")]
     InvalidTagKey(String),
-    #[error("provided file doesn't exist")]
-    FileNotFound,
     #[error("error: {0}")]
     Other(String),
     #[error("provided string was invalid - {0}")]
     InvalidString(#[from] ffi::NulError),
-    #[error("provided path was invalid - {0}")]
-    InvalidPath(#[from] globwalk::GlobError),
     #[error("provided string was not valid UTF-8")]
     Utf8ConversionFailed(#[from] string::FromUtf8Error),
     #[error("xattrs changed while getting their size")]
     AttrsChanged,
     #[error("provided color `{0}` is not a valid hex color")]
     InvalidColor(String),
-    #[error("provided shell name `{0}` is not a valid shell")]
-    InvalidShell(String),
     #[error("failed to serialize or deserialize tag - `{0}`")]
     TagSerDeError(#[from] serde_cbor::Error),
     #[error("failed to serialize or deserialize yaml - `{0}`")]
@@ -46,7 +40,6 @@ pub type Result<T> = std::result::Result<T, Error>;
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
         match err.kind() {
-            io::ErrorKind::NotFound => Error::FileNotFound,
             io::ErrorKind::AlreadyExists => Error::TagExists,
             _ => match err.raw_os_error() {
                 Some(61) => Error::TagNotFound("".to_string()),

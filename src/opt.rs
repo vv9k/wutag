@@ -1,8 +1,8 @@
 //! Options used by the main executable
 use std::{path::PathBuf, str::FromStr};
 
-use clap::Clap;
-use wutag_core::Error;
+use anyhow::Error;
+use clap::{AppSettings, Clap};
 
 pub const APP_NAME: &str = "wutag";
 pub const APP_VERSION: &str = "0.4.0";
@@ -10,15 +10,23 @@ pub const APP_AUTHOR: &str = "Wojciech Kępka <wojciech@wkepka.dev>";
 pub const APP_ABOUT: &str = "Tool to tag and manage tags of files.";
 
 #[derive(Clap)]
-#[clap(version = APP_VERSION, author = APP_AUTHOR, about = APP_ABOUT)]
+#[clap(
+    version = APP_VERSION,
+    author = APP_AUTHOR,
+    about = APP_ABOUT,
+    global_setting = AppSettings::ColoredHelp,
+    global_setting = AppSettings::ColorAuto
+)]
 pub struct Opts {
     #[clap(short, long)]
     /// When this parameter is specified the program will look for files starting from provided
-    /// path, otherwise defaults to current directory.
+    /// path, otherwise defaults to current directory. Only applies to subcommands that take a
+    /// pattern as a positional argument.
     pub dir: Option<PathBuf>,
     #[clap(long, short)]
     /// If provided increase maximum recursion depth of filesystem traversal to specified value,
-    /// otherwise default depth is 2.
+    /// otherwise default depth is 2. Only applies to subcommands that take a pattern as a
+    /// positional argument.
     pub max_depth: Option<usize>,
     /// If passed the output won't be colored
     #[clap(long, short)]
@@ -28,18 +36,22 @@ pub struct Opts {
 }
 
 #[derive(Clap)]
+pub enum ListObject {
+    Tags,
+    Files {
+        #[clap(long, short = 't')]
+        /// Should the tags of the entry be display.
+        with_tags: bool,
+    },
+}
+
+#[derive(Clap)]
 pub struct ListOpts {
-    /// A glob pattern like '*.png'.
-    pub pattern: String,
-    #[clap(long)]
-    /// Whether to show files with no tags
-    pub show_missing: bool,
-    #[clap(long)]
-    /// Whether to print details like tag timestamp. If `--raw` is provided this flag is ignored
-    pub details: bool,
+    #[clap(subcommand)]
+    /// The object to list. Valid values are: `tags`, `files`.
+    pub object: ListObject,
     #[clap(long, short)]
-    /// If provided output will be raw so that it can be easily piped to other commands.
-    /// `--details` won't work with this flag.
+    /// If provided output will be raw so that it can be easily piped to other commands
     pub raw: bool,
 }
 
@@ -62,9 +74,6 @@ pub struct RmOpts {
 pub struct ClearOpts {
     /// A glob pattern like '*.png'.
     pub pattern: String,
-    #[clap(short, long)]
-    /// If specified output and errors will be displayed
-    pub verbose: bool,
 }
 #[derive(Clap)]
 pub struct SearchOpts {
@@ -88,8 +97,6 @@ pub struct CpOpts {
 
 #[derive(Clap)]
 pub struct EditOpts {
-    /// A glob pattern like '*.png'.
-    pub pattern: String,
     /// The tag to edit
     pub tag: String,
     #[clap(long, short)]
@@ -100,6 +107,7 @@ pub struct EditOpts {
 }
 
 #[derive(Clap)]
+#[allow(clippy::enum_variant_names)]
 pub enum Shell {
     Bash,
     Elvish,
@@ -117,7 +125,7 @@ impl FromStr for Shell {
             "fish" => Ok(Shell::Fish),
             "powershell" => Ok(Shell::PowerShell),
             "zsh" => Ok(Shell::Zsh),
-            _ => Err(Error::InvalidShell(s.to_string())),
+            _ => Err(Error::msg(format!("invalid shell `{}`", s))),
         }
     }
 }
@@ -131,7 +139,7 @@ pub struct CompletionsOpts {
 
 #[derive(Clap)]
 pub enum Command {
-    /// Lists all tags of the files that match the provided pattern.
+    /// Lists all available tags or files.
     List(ListOpts),
     /// Tags the files that match the given pattern with specified tags.
     Set(SetOpts),
@@ -143,7 +151,7 @@ pub enum Command {
     Search(SearchOpts),
     /// Copies tags from the specified file to files that match a pattern.
     Cp(CpOpts),
-    /// Edits the tag of files that match the provided pattern.
+    /// Edits a tag.
     Edit(EditOpts),
     /// Prints completions for the specified shell to stdout.
     PrintCompletions(CompletionsOpts),
