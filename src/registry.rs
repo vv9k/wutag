@@ -133,7 +133,8 @@ impl TagRegistry {
             if let Some(idx) = entries.iter().copied().position(|e| e == entry) {
                 entries.remove(idx);
             }
-        })
+        });
+        self.entries.remove(&entry);
     }
 
     /// Finds the entry by a `path`. Returns the id of the entry.
