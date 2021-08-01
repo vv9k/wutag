@@ -109,7 +109,11 @@ impl TagRegistry {
         let entries = self.mut_tag_entries(tag);
 
         if let Some(pos) = entries.iter().position(|e| *e == entry) {
-            return Some(entries.remove(pos));
+            let entry = entries.remove(pos);
+            if self.list_entry_tags(entry).is_none() {
+                self.entries.remove(&entry);
+            }
+            return Some(entry);
         }
 
         None
@@ -118,13 +122,7 @@ impl TagRegistry {
     /// Removes the tag with the `name` from the `entry`.
     pub fn untag_by_name(&mut self, tag: &str, entry: EntryId) -> Option<EntryId> {
         let tag = self.get_tag(tag)?.to_owned();
-        let entries = self.mut_tag_entries(&tag);
-
-        if let Some(pos) = entries.iter().position(|e| *e == entry) {
-            return Some(entries.remove(pos));
-        }
-
-        None
+        self.untag_entry(&tag, entry)
     }
 
     /// Clears all tags of the `entry`.
