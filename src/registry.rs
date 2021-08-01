@@ -105,6 +105,18 @@ impl TagRegistry {
         None
     }
 
+    fn clean_tag_if_no_entries(&mut self, tag: &Tag) {
+        let remove = if let Some(entries) = self.tags.get(tag) {
+            entries.is_empty()
+        } else {
+            false
+        };
+
+        if remove {
+            self.tags.remove(tag);
+        }
+    }
+
     /// Removes the `tag` from an entry with `entry` id. Returns the entry data if it has no tags
     /// left or `None` otherwise.
     pub fn untag_entry(&mut self, tag: &Tag, entry: EntryId) -> Option<EntryData> {
@@ -112,6 +124,9 @@ impl TagRegistry {
 
         if let Some(pos) = entries.iter().position(|e| *e == entry) {
             let entry = entries.remove(pos);
+
+            self.clean_tag_if_no_entries(tag);
+
             if self.list_entry_tags(entry).is_none() {
                 return self.entries.remove(&entry);
             }
@@ -129,11 +144,20 @@ impl TagRegistry {
 
     /// Clears all tags of the `entry`.
     pub fn clear_entry(&mut self, entry: EntryId) {
-        self.tags.iter_mut().for_each(|(_, entries)| {
+        let mut to_remove = vec![];
+        self.tags.iter_mut().for_each(|(tag, entries)| {
             if let Some(idx) = entries.iter().copied().position(|e| e == entry) {
                 entries.remove(idx);
             }
+            if entries.is_empty() {
+                to_remove.push(tag.to_owned());
+            }
         });
+
+        for tag in to_remove {
+            self.tags.remove(&tag);
+        }
+
         self.entries.remove(&entry);
     }
 
@@ -300,26 +324,34 @@ mod tests {
         let mut registry = TagRegistry::default();
         let id = registry.add_or_update_entry(entry.clone());
 
-        let tag = Tag::new("test", Black);
+        let tag1 = Tag::new("test", Black);
         let tag2 = Tag::new("test2", Red);
 
-        assert!(registry.tag_entry(&tag, id).is_none());
+        assert!(registry.tag_entry(&tag1, id).is_none());
+        assert_eq!(registry.tags.iter().next(), Some((&tag1, &vec![id])));
         assert_eq!(registry.list_entries().count(), 1);
-        assert_eq!(registry.untag_entry(&tag, id), Some(entry.clone()));
+        assert_eq!(registry.untag_entry(&tag1, id), Some(entry.clone()));
         assert_eq!(registry.list_entries().count(), 0);
+        assert!(registry.tags.is_empty());
 
         let id = registry.add_or_update_entry(entry.clone());
         assert!(registry.tag_entry(&tag2, id).is_none());
+        assert_eq!(registry.tags.iter().next(), Some((&tag2, &vec![id])));
         assert_eq!(registry.list_entries().count(), 1);
         assert_eq!(registry.untag_by_name(tag2.name(), id), Some(entry.clone()));
         assert_eq!(registry.list_entries().count(), 0);
+        assert!(registry.tags.is_empty());
 
         let id = registry.add_or_update_entry(entry);
-        assert!(registry.tag_entry(&tag, id).is_none());
+        assert!(registry.tag_entry(&tag1, id).is_none());
         assert!(registry.tag_entry(&tag2, id).is_none());
+        let tags: Vec<_> = registry.tags.iter().collect();
+        assert!(tags.contains(&(&tag1, &vec![id])));
+        assert!(tags.contains(&(&tag2, &vec![id])));
         assert_eq!(registry.list_entries().count(), 1);
         registry.clear_entry(id);
         assert_eq!(registry.list_entries().count(), 0);
+        assert!(registry.tags.is_empty());
     }
 
     #[test]
