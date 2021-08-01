@@ -188,10 +188,12 @@ impl CommandRunner {
                     if let Err(e) = entry.untag(tag) {
                         err!('\t', e, entry);
                     } else {
-                        if let Some(id) = self.registry.find_entry(entry.path()) {
-                            self.registry.untag_entry(tag, id);
-                        }
                         print!("\t{} {}", "X".bold().red(), fmt_tag(tag));
+                    }
+
+                    // untag the entry in the registry even if it fails to untag on the fs.
+                    if let Some(id) = self.registry.find_entry(entry.path()) {
+                        self.registry.untag_entry(tag, id);
                     }
                 });
                 println!();
