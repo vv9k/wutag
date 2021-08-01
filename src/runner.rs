@@ -210,37 +210,29 @@ impl CommandRunner {
             &opts.pattern,
             &self.base_dir.clone(),
             self.max_depth,
-            |entry: &DirEntry| match entry.has_tags() {
-                Ok(has_tags) => {
-                    if has_tags {
-                        if opts.verbose {
-                            println!("{}:", fmt_path(entry.path()));
-                        }
-                        match entry.list_tags() {
-                            Ok(tags) => {
-                                for tag in tags {
-                                    if let Some(id) = self.registry.find_entry(entry.path()) {
-                                        self.registry.untag_entry(&tag, id);
-                                    }
+            |entry: &DirEntry| {
+                if let Some(id) = self.registry.find_entry(entry.path()) {
+                    self.registry.clear_entry(id);
+                }
+                match entry.has_tags() {
+                    Ok(has_tags) => {
+                        if has_tags {
+                            if opts.verbose {
+                                println!("{}:", fmt_path(entry.path()));
+                            }
+                            if opts.verbose {
+                                if let Err(e) = entry.clear_tags() {
+                                    err!('\t', e, entry);
+                                } else {
+                                    println!("\t{}", fmt_ok("cleared."));
                                 }
-                            }
-                            Err(e) => {
-                                err!('\t', e, entry);
-                            }
-                        }
-                        let res = entry.clear_tags();
-                        if opts.verbose {
-                            if let Err(e) = res {
-                                err!('\t', e, entry);
-                            } else {
-                                println!("\t{}", fmt_ok("cleared."));
                             }
                         }
                     }
-                }
-                Err(e) => {
-                    if opts.verbose {
-                        err!(e, entry);
+                    Err(e) => {
+                        if opts.verbose {
+                            err!(e, entry);
+                        }
                     }
                 }
             },

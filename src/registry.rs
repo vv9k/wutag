@@ -115,6 +115,15 @@ impl TagRegistry {
         None
     }
 
+    /// Clears all tags of the `entry`.
+    pub fn clear_entry(&mut self, entry: EntryId) {
+        self.tags.iter_mut().for_each(|(_, entries)| {
+            if let Some(idx) = entries.iter().copied().find(|&e| e == entry) {
+                entries.remove(idx);
+            }
+        })
+    }
+
     /// Finds the entry by a `path`. Returns the id of the entry.
     pub fn find_entry<P: AsRef<Path>>(&self, path: P) -> Option<EntryId> {
         self.entries
