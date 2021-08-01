@@ -4,7 +4,8 @@ use std::fmt::Display;
 use std::path::Path;
 
 use crate::DEFAULT_MAX_DEPTH;
-use wutag_core::{tags::Tag, Error, Result};
+use anyhow::{Context, Result};
+use wutag_core::tag::Tag;
 
 pub fn fmt_err<E: Display>(err: E) -> String {
     format!("{} {}", "ERROR".red().bold(), format!("{}", err).white())
@@ -36,7 +37,7 @@ where
     } else {
         builder = builder.max_depth(DEFAULT_MAX_DEPTH);
     }
-    builder.build().map_err(Error::from)
+    builder.build().context("invalid path")
 }
 
 /// Utility function that executes the function `f` on all directory entries that are Ok, by

@@ -1,12 +1,13 @@
 #![allow(dead_code)]
+
+use wutag_core::tag::Tag;
+
+use anyhow::{Context, Result};
+use colored::Color;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use wutag_core::tags::Tag;
-use wutag_core::{Error, Result};
-
-use colored::Color;
-use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]
 pub struct EntryData {
@@ -45,15 +46,15 @@ impl TagRegistry {
     /// Loads a registry from the specified `path`.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref();
-        let data = fs::read(path)?;
+        let data = fs::read(path).context("failed to read saved registry")?;
 
-        serde_cbor::from_slice(&data).map_err(|e| Error::Other(e.to_string()))
+        serde_cbor::from_slice(&data).context("failed to deserialize tag registry")
     }
 
     /// Saves the registry serialized to the path from which it was loaded.
     pub fn save(&self) -> Result<()> {
-        let serialized = serde_cbor::to_vec(&self)?;
-        fs::write(&self.path, &serialized).map_err(|e| Error::Other(e.to_string()))
+        let serialized = serde_cbor::to_vec(&self).context("failed to serialize tag registry")?;
+        fs::write(&self.path, &serialized).context("failed to save registry")
     }
 
     /// Updates the entry or adds it if it is not present.
@@ -64,7 +65,7 @@ impl TagRegistry {
             .map(|(idx, _)| *idx);
 
         let pos = if let Some(pos) = pos {
-            let e = self.entries.get_mut(&pos).unwrap();
+            let e = self.entries.get_mut(&pos).expect("entry");
             *e = entry;
             pos
         } else {
@@ -220,7 +221,7 @@ impl TagRegistry {
     /// otherwise.
     pub fn update_tag_color<T: AsRef<str>>(&mut self, tag: T, color: Color) -> bool {
         if let Some(mut t) = self.tags.keys().find(|t| t.name() == tag.as_ref()).cloned() {
-            let data = self.tags.remove(&t).unwrap();
+            let data = self.tags.remove(&t).expect("removed tag");
             t.set_color(&color);
             self.tags.insert(t, data);
             true

@@ -1,8 +1,8 @@
 //! Options used by the main executable
 use std::{path::PathBuf, str::FromStr};
 
+use anyhow::Error;
 use clap::{AppSettings, Clap};
-use wutag_core::Error;
 
 pub const APP_NAME: &str = "wutag";
 pub const APP_VERSION: &str = "0.4.0";
@@ -125,7 +125,7 @@ impl FromStr for Shell {
             "fish" => Ok(Shell::Fish),
             "powershell" => Ok(Shell::PowerShell),
             "zsh" => Ok(Shell::Zsh),
-            _ => Err(Error::InvalidShell(s.to_string())),
+            _ => Err(Error::msg(format!("invalid shell `{}`", s))),
         }
     }
 }

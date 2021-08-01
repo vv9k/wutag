@@ -14,9 +14,9 @@ use crate::registry::{EntryData, TagRegistry};
 use crate::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
 use crate::DEFAULT_COLORS;
 use wutag_core::color::parse_color;
-use wutag_core::tags::{list_tags, DirEntryExt, Tag};
+use wutag_core::tag::{list_tags, DirEntryExt, Tag};
 
-pub struct CommandRunner {
+pub struct App {
     pub base_dir: PathBuf,
     pub max_depth: Option<usize>,
     pub colors: Vec<Color>,
@@ -39,18 +39,18 @@ macro_rules! err {
     }};
 }
 
-impl CommandRunner {
+impl App {
     pub fn run(opts: Opts, config: Config) -> Result<()> {
-        let mut runner = Self::new(&opts, config)?;
-        runner.run_command(opts.cmd);
+        let mut app = Self::new(&opts, config)?;
+        app.run_command(opts.cmd);
 
         Ok(())
     }
-    pub fn new(opts: &Opts, config: Config) -> Result<CommandRunner> {
+    pub fn new(opts: &Opts, config: Config) -> Result<App> {
         let base_dir = if let Some(base_dir) = &opts.dir {
             base_dir.to_path_buf()
         } else {
-            std::env::current_dir()?
+            std::env::current_dir().context("failed to determine current working directory")?
         };
 
         let colors = if let Some(_colors) = config.colors {
@@ -63,13 +63,13 @@ impl CommandRunner {
             DEFAULT_COLORS.to_vec()
         };
 
-        let cache_dir = dirs::cache_dir().context("can't find cache directory")?;
+        let cache_dir = dirs::cache_dir().context("failed to determine cache directory")?;
         let state_file = cache_dir.join("wutag.registry");
 
         let registry =
             TagRegistry::load(&state_file).unwrap_or_else(|_| TagRegistry::new(&state_file));
 
-        Ok(CommandRunner {
+        Ok(App {
             base_dir,
             max_depth: if opts.max_depth.is_some() {
                 opts.max_depth
