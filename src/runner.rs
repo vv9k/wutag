@@ -247,22 +247,16 @@ impl CommandRunner {
                 match entry.has_tags() {
                     Ok(has_tags) => {
                         if has_tags {
-                            if opts.verbose {
-                                println!("{}:", fmt_path(entry.path()));
-                            }
+                            println!("{}:", fmt_path(entry.path()));
                             if let Err(e) = entry.clear_tags() {
-                                if opts.verbose {
-                                    err!('\t', e, entry);
-                                }
-                            } else if opts.verbose {
+                                err!('\t', e, entry);
+                            } else {
                                 println!("\t{}", fmt_ok("cleared."));
                             }
                         }
                     }
                     Err(e) => {
-                        if opts.verbose {
-                            err!(e, entry);
-                        }
+                        err!(e, entry);
                     }
                 }
             },

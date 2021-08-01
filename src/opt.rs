@@ -74,9 +74,6 @@ pub struct RmOpts {
 pub struct ClearOpts {
     /// A glob pattern like '*.png'.
     pub pattern: String,
-    #[clap(short, long)]
-    /// If specified output and errors will be displayed
-    pub verbose: bool,
 }
 #[derive(Clap)]
 pub struct SearchOpts {
