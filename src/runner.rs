@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::IntoApp;
-use colored::{Color, Colorize};
+use colored::{Color, ColoredString, Colorize};
 use globwalk::DirEntry;
 use std::io;
 use std::path::PathBuf;
@@ -106,12 +106,36 @@ impl CommandRunner {
 
     fn list(&self, opts: &ListOpts) {
         match opts.object {
-            ListObject::Files => {
-                for file in self.registry.list_entries() {
-                    if opts.raw {
-                        println!("{}", file.path().display())
+            ListObject::Files { with_tags } => {
+                for (id, file) in self.registry.list_entries_and_ids() {
+                    let tags = if with_tags {
+                        self.registry
+                            .list_entry_tags(*id)
+                            .unwrap_or_default()
+                            .iter()
+                            .map(|t| {
+                                if opts.raw {
+                                    t.name().to_owned()
+                                } else {
+                                    fmt_tag(t).to_string()
+                                }
+                            })
+                            .collect::<Vec<_>>()
+                            .join(" ")
                     } else {
-                        println!("{}", fmt_path(file.path()))
+                        String::new()
+                    };
+
+                    if opts.raw {
+                        print!("{}", file.path().display());
+                        if with_tags {
+                            println!(": {}", tags);
+                        }
+                    } else {
+                        print!("{}", fmt_path(file.path()));
+                        if with_tags {
+                            println!(": {}", tags);
+                        }
                     }
                 }
             }
@@ -230,10 +254,8 @@ impl CommandRunner {
                                 if opts.verbose {
                                     err!('\t', e, entry);
                                 }
-                            } else {
-                                if opts.verbose {
-                                    println!("\t{}", fmt_ok("cleared."));
-                                }
+                            } else if opts.verbose {
+                                println!("\t{}", fmt_ok("cleared."));
                             }
                         }
                     }

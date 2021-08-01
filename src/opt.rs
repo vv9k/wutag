@@ -38,7 +38,11 @@ pub struct Opts {
 #[derive(Clap)]
 pub enum ListObject {
     Tags,
-    Files,
+    Files {
+        #[clap(long, short = 't')]
+        /// Should the tags of the entry be display.
+        with_tags: bool,
+    },
 }
 
 #[derive(Clap)]
