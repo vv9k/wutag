@@ -239,7 +239,7 @@ mod tests {
     #[test]
     fn adds_and_tags_entry() {
         let path = PathBuf::from("/tmp");
-        let entry = EntryData { path: path.clone() };
+        let entry = EntryData::new(path.clone());
         let mut registry = TagRegistry::default();
         registry.add_or_update_entry(entry.clone());
         let id = registry.find_entry(&path).unwrap();
@@ -264,26 +264,26 @@ mod tests {
 
     #[test]
     fn adds_multiple_entries() {
-        let path = PathBuf::from("/tmp");
-        let entry = EntryData { path };
         let mut registry = TagRegistry::default();
-        registry.add_or_update_entry(entry);
-        let path = PathBuf::from("/tmp/test");
-        let entry = EntryData { path };
-        registry.add_or_update_entry(entry);
+
+        let entry = EntryData::new("/tmp");
+        let fst_id = registry.add_or_update_entry(entry.clone());
+        let snd_entry = EntryData::new("/tmp/123");
+        let snd_id = registry.add_or_update_entry(snd_entry.clone());
 
         assert_eq!(registry.list_entries().count(), 2);
+
+        let entries: Vec<_> = registry.list_entries_and_ids().collect();
+        assert!(entries.contains(&(&fst_id, &entry)));
+        assert!(entries.contains(&(&snd_id, &snd_entry)));
     }
 
     #[test]
     fn updates_tag_color() {
-        let path = PathBuf::from("/tmp");
-        let entry = EntryData { path: path.clone() };
+        let entry = EntryData::new("/tmp");
 
         let mut registry = TagRegistry::default();
-        registry.add_or_update_entry(entry);
-
-        let id = registry.find_entry(&path).unwrap();
+        let id = registry.add_or_update_entry(entry);
 
         let tag = Tag::new("test", Black);
 
@@ -294,8 +294,7 @@ mod tests {
 
     #[test]
     fn removes_an_entry_when_no_tags_left() {
-        let path = PathBuf::from("/tmp");
-        let entry = EntryData { path };
+        let entry = EntryData::new("/tmp");
 
         let mut registry = TagRegistry::default();
         let id = registry.add_or_update_entry(entry.clone());
@@ -303,14 +302,14 @@ mod tests {
         let tag = Tag::new("test", Black);
         let tag2 = Tag::new("test2", Red);
 
-        assert_eq!(registry.list_entries().count(), 1);
-
         assert!(registry.tag_entry(&tag, id).is_none());
+        assert_eq!(registry.list_entries().count(), 1);
         assert_eq!(registry.untag_entry(&tag, id), Some(entry.clone()));
         assert_eq!(registry.list_entries().count(), 0);
 
         let id = registry.add_or_update_entry(entry.clone());
         assert!(registry.tag_entry(&tag2, id).is_none());
+        assert_eq!(registry.list_entries().count(), 1);
         assert_eq!(registry.untag_by_name(tag2.name(), id), Some(entry.clone()));
         assert_eq!(registry.list_entries().count(), 0);
 
@@ -320,5 +319,89 @@ mod tests {
         assert_eq!(registry.list_entries().count(), 1);
         registry.clear_entry(id);
         assert_eq!(registry.list_entries().count(), 0);
+    }
+
+    #[test]
+    fn lists_entry_tags() {
+        let mut registry = TagRegistry::default();
+
+        let tag1 = Tag::new("src", Black);
+        let tag2 = Tag::new("code", Red);
+
+        let entry = EntryData::new("/tmp");
+
+        let id = registry.add_or_update_entry(entry);
+        registry.tag_entry(&tag1, id);
+        registry.tag_entry(&tag2, id);
+
+        let tags = registry.list_entry_tags(id).unwrap();
+        assert_eq!(tags.len(), 2);
+        assert!(tags.contains(&&tag1));
+        assert!(tags.contains(&&tag2));
+    }
+
+    #[test]
+    fn lists_entries_with_tags() {
+        let mut registry = TagRegistry::default();
+
+        let tag1 = Tag::new("src", Black);
+        let tag2 = Tag::new("code", Red);
+
+        let entry = EntryData::new("/tmp");
+        let entry1 = EntryData::new("/tmp/1");
+        let entry2 = EntryData::new("/tmp/2");
+        let entry3 = EntryData::new("/tmp/3");
+
+        let id = registry.add_or_update_entry(entry);
+        let id1 = registry.add_or_update_entry(entry1);
+        let id2 = registry.add_or_update_entry(entry2);
+        let id3 = registry.add_or_update_entry(entry3);
+
+        registry.tag_entry(&tag1, id);
+        registry.tag_entry(&tag1, id2);
+
+        registry.tag_entry(&tag2, id1);
+        registry.tag_entry(&tag2, id3);
+
+        let entries1 = registry.list_entries_with_tags(vec![tag1.name()]);
+        assert_eq!(entries1.len(), 2);
+        assert!(entries1.contains(&id));
+        assert!(entries1.contains(&id2));
+
+        let entries2 = registry.list_entries_with_tags(vec![tag2.name()]);
+        assert_eq!(entries2.len(), 2);
+        assert!(entries2.contains(&id1));
+        assert!(entries2.contains(&id3));
+
+        let entries = registry.list_entries_with_tags(vec![tag2.name(), tag1.name()]);
+        assert_eq!(entries.len(), 4);
+        assert!(entries.contains(&id));
+        assert!(entries.contains(&id1));
+        assert!(entries.contains(&id2));
+        assert!(entries.contains(&id3));
+    }
+
+    #[test]
+    fn saves_and_loads() {
+        let tmp_dir = tempdir::TempDir::new("registry-test").unwrap();
+        let registry_path = tmp_dir.path().join("wutag.registry");
+
+        let mut registry = TagRegistry::new(&registry_path);
+
+        let tag = Tag::new("src", Black);
+        let entry = EntryData::new("/tmp");
+
+        let id = registry.add_or_update_entry(entry.clone());
+        registry.tag_entry(&tag, id);
+
+        registry.save().unwrap();
+
+        let registry = TagRegistry::load(registry_path).unwrap();
+        let mut entries = registry.list_entries_and_ids();
+        let (got_id, got_entry) = entries.next().unwrap();
+        assert!(entries.next().is_none());
+        assert_eq!(got_id, &id);
+        assert_eq!(got_entry, &entry);
+        assert_eq!(registry.list_entries_with_tags(vec![tag.name()]), vec![id]);
     }
 }
