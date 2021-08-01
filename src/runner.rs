@@ -171,12 +171,23 @@ impl CommandRunner {
             &self.base_dir.clone(),
             self.max_depth,
             |entry: &DirEntry| {
-                println!("{}:", fmt_path(entry.path()));
+                let id = self.registry.find_entry(entry.path());
                 let tags = opts
                     .tags
                     .iter()
-                    .map(|tag| entry.get_tag(tag))
+                    .map(|tag| {
+                        if let Some(id) = id {
+                            self.registry.untag_by_name(tag, id);
+                        }
+                        entry.get_tag(tag)
+                    })
                     .collect::<Vec<_>>();
+
+                if tags.is_empty() {
+                    return;
+                }
+
+                println!("{}:", fmt_path(entry.path()));
                 tags.iter().for_each(|tag| {
                     let tag = match tag {
                         Ok(tag) => tag,
@@ -189,11 +200,6 @@ impl CommandRunner {
                         err!('\t', e, entry);
                     } else {
                         print!("\t{} {}", "X".bold().red(), fmt_tag(tag));
-                    }
-
-                    // untag the entry in the registry even if it fails to untag on the fs.
-                    if let Some(id) = self.registry.find_entry(entry.path()) {
-                        self.registry.untag_entry(tag, id);
                     }
                 });
                 println!();

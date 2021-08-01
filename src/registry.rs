@@ -51,7 +51,6 @@ impl TagRegistry {
     /// Saves the registry serialized to the path from which it was loaded.
     pub fn save(&self) -> Result<()> {
         let serialized = serde_cbor::to_vec(&self)?;
-        println!("saving to {}", self.path.display());
         fs::write(&self.path, &serialized).map_err(|e| Error::Other(e.to_string()))
     }
 
@@ -115,10 +114,22 @@ impl TagRegistry {
         None
     }
 
+    /// Removes the tag with the `name` from the `entry`.
+    pub fn untag_by_name(&mut self, tag: &str, entry: EntryId) -> Option<EntryId> {
+        let tag = self.get_tag(tag)?.to_owned();
+        let entries = self.mut_tag_entries(&tag);
+
+        if let Some(pos) = entries.iter().position(|e| *e == entry) {
+            return Some(entries.remove(pos));
+        }
+
+        None
+    }
+
     /// Clears all tags of the `entry`.
     pub fn clear_entry(&mut self, entry: EntryId) {
         self.tags.iter_mut().for_each(|(_, entries)| {
-            if let Some(idx) = entries.iter().copied().find(|&e| e == entry) {
+            if let Some(idx) = entries.iter().copied().position(|e| e == entry) {
                 entries.remove(idx);
             }
         })
