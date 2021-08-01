@@ -130,6 +130,8 @@ impl App {
                             .join(" ");
 
                         println!(": {}", tags);
+                    } else {
+                        println!();
                     }
                 }
             }
