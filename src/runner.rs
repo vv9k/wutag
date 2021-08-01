@@ -226,10 +226,12 @@ impl CommandRunner {
                             if opts.verbose {
                                 println!("{}:", fmt_path(entry.path()));
                             }
-                            if opts.verbose {
-                                if let Err(e) = entry.clear_tags() {
+                            if let Err(e) = entry.clear_tags() {
+                                if opts.verbose {
                                     err!('\t', e, entry);
-                                } else {
+                                }
+                            } else {
+                                if opts.verbose {
                                     println!("\t{}", fmt_ok("cleared."));
                                 }
                             }
