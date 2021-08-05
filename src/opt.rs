@@ -83,7 +83,7 @@ pub struct SearchOpts {
     /// If provided output will be raw so that it can be easily piped to other commands
     pub raw: bool,
     #[clap(long, short)]
-    /// If set to `true` all entries containing any of provided tags will be returned
+    /// If set to 'true' all entries containing any of provided tags will be returned
     pub any: bool,
 }
 
@@ -147,7 +147,7 @@ pub enum Command {
     Rm(RmOpts),
     /// Clears all tags of the files that match the provided pattern.
     Clear(ClearOpts),
-    /// Searches for files that have all of the provided `tags`.
+    /// Searches for files that have all of the provided 'tags'.
     Search(SearchOpts),
     /// Copies tags from the specified file to files that match a pattern.
     Cp(CpOpts),
