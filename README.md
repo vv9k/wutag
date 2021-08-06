@@ -3,8 +3,6 @@
 
 CLI tool for tagging and organizing files by tags.
 
-![Example usage](https://github.com/vv9k/wutag/blob/master/static/usage.svg)
-
 ## Install
 
 If you use arch Linux and have AUR repositories set up you can use your favourite AUR manager to download `wutag`. For example with `paru`:
@@ -70,38 +68,6 @@ Available shells are:
  To enable completions on the fly use:
  - `. <(wutag print-completions bash)`
 
-
-## User interface
-```
-USAGE:
-    wutag [FLAGS] [OPTIONS] <SUBCOMMAND>
-
-FLAGS:
-    -h, --help        Prints help information
-    -n, --no-color    If passed the output won't be colored
-    -V, --version     Prints version information
-
-OPTIONS:
-    -d, --dir <dir>                When this parameter is specified the program will look for files
-                                   starting from provided path, otherwise defaults to current
-                                   directory. Only applies to subcommands that take a pattern as a
-                                   positional argument
-    -m, --max-depth <max-depth>    If provided increase maximum recursion depth of filesystem
-                                   traversal to specified value, otherwise default depth is 2. Only
-                                   applies to subcommands that take a pattern as a positional
-                                   argument
-
-SUBCOMMANDS:
-    clear                Clears all tags of the files that match the provided pattern
-    cp                   Copies tags from the specified file to files that match a pattern
-    edit                 Edits a tag
-    help                 Prints this message or the help of the given subcommand(s)
-    list                 Lists all available tags or files
-    print-completions    Prints completions for the specified shell to stdout
-    rm                   Removes the specified tags of the files that match the provided pattern
-    search               Searches for files that have all of the provided `tags`
-    set                  Tags the files that match the given pattern with specified tags
-```
 
 ## License
 [MIT](https://github.com/vv9k/wutag/blob/master/LICENSE)
