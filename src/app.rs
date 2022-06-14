@@ -370,19 +370,19 @@ impl App {
     }
 
     fn print_completions(&self, opts: &CompletionsOpts) {
-        use clap_generate::{
+        use clap_complete::{
             generate,
-            generators::{Bash, Elvish, Fish, PowerShell, Zsh},
+            shells::{Bash, Elvish, Fish, PowerShell, Zsh},
         };
 
         let mut app = Opts::into_app();
 
         match opts.shell {
-            Shell::Bash => generate::<Bash, _>(&mut app, APP_NAME, &mut io::stdout()),
-            Shell::Elvish => generate::<Elvish, _>(&mut app, APP_NAME, &mut io::stdout()),
-            Shell::Fish => generate::<Fish, _>(&mut app, APP_NAME, &mut io::stdout()),
-            Shell::PowerShell => generate::<PowerShell, _>(&mut app, APP_NAME, &mut io::stdout()),
-            Shell::Zsh => generate::<Zsh, _>(&mut app, APP_NAME, &mut io::stdout()),
+            Shell::Bash => generate(Bash, &mut app, APP_NAME, &mut io::stdout()),
+            Shell::Elvish => generate(Elvish, &mut app, APP_NAME, &mut io::stdout()),
+            Shell::Fish => generate(Fish, &mut app, APP_NAME, &mut io::stdout()),
+            Shell::PowerShell => generate(PowerShell, &mut app, APP_NAME, &mut io::stdout()),
+            Shell::Zsh => generate(Zsh, &mut app, APP_NAME, &mut io::stdout()),
         }
     }
 }

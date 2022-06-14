@@ -4,7 +4,7 @@ mod opt;
 mod registry;
 mod util;
 
-use clap::Clap;
+use clap::Parser;
 use colored::Color::{self, *};
 
 use app::App;
@@ -33,7 +33,7 @@ pub const DEFAULT_COLORS: &[Color] = &[
 fn main() {
     let config = Config::load_default_location().unwrap_or_default();
 
-    if let Err(e) = App::run(Opts::parse(), config) {
+    if let Err(e) = App::run(Opts::from_args(), config) {
         eprintln!("{}", e);
     }
 }

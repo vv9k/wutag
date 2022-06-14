@@ -2,20 +2,18 @@
 use std::{path::PathBuf, str::FromStr};
 
 use anyhow::Error;
-use clap::{AppSettings, Clap};
+use clap::Parser;
 
 pub const APP_NAME: &str = "wutag";
 pub const APP_VERSION: &str = "0.4.0";
 pub const APP_AUTHOR: &str = "Wojciech Kępka <wojciech@wkepka.dev>";
 pub const APP_ABOUT: &str = "Tool to tag and manage tags of files.";
 
-#[derive(Clap)]
+#[derive(Parser)]
 #[clap(
     version = APP_VERSION,
     author = APP_AUTHOR,
     about = APP_ABOUT,
-    global_setting = AppSettings::ColoredHelp,
-    global_setting = AppSettings::ColorAuto
 )]
 pub struct Opts {
     #[clap(short, long)]
@@ -35,7 +33,7 @@ pub struct Opts {
     pub cmd: Command,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub enum ListObject {
     Tags,
     Files {
@@ -45,7 +43,7 @@ pub enum ListObject {
     },
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub struct ListOpts {
     #[clap(subcommand)]
     /// The object to list. Valid values are: `tags`, `files`.
@@ -55,7 +53,7 @@ pub struct ListOpts {
     pub raw: bool,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub struct SetOpts {
     /// A glob pattern like '*.png'.
     pub pattern: String,
@@ -63,19 +61,19 @@ pub struct SetOpts {
     pub tags: Vec<String>,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub struct RmOpts {
     /// A glob pattern like '*.png'.
     pub pattern: String,
     pub tags: Vec<String>,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub struct ClearOpts {
     /// A glob pattern like '*.png'.
     pub pattern: String,
 }
-#[derive(Clap)]
+#[derive(Parser)]
 pub struct SearchOpts {
     #[clap(required = true)]
     pub tags: Vec<String>,
@@ -87,7 +85,7 @@ pub struct SearchOpts {
     pub any: bool,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub struct CpOpts {
     /// Path to the file from which to copy tags from
     pub input_path: PathBuf,
@@ -95,7 +93,7 @@ pub struct CpOpts {
     pub pattern: String,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub struct EditOpts {
     /// The tag to edit
     pub tag: String,
@@ -106,7 +104,7 @@ pub struct EditOpts {
     pub color: String,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 #[allow(clippy::enum_variant_names)]
 pub enum Shell {
     Bash,
@@ -130,14 +128,14 @@ impl FromStr for Shell {
     }
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub struct CompletionsOpts {
     /// A shell for which to print completions. Available shells are: bash, elvish, fish,
     /// powershell, zsh
     pub shell: Shell,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub enum Command {
     /// Lists all available tags or files.
     List(ListOpts),
