@@ -42,7 +42,7 @@ If you are into emojis then surely you can use emojis to tag files 🙂 ```wutag
 
 ## Configuration
 
-`wutag` lets you configure base colors used when creating tags or modify other settings globally. To do this create a file `.wutag.yml` in your home directory like `~/.wutag.yml`.
+`wutag` lets you configure base colors used when creating tags or modify other settings globally. To do this create a file `wutag.yml` in your config directory (on unix XDG_CONFIG_DIR) lihe `~/.config/wutag.yml`.
 
 Example configuration:
 ```yaml

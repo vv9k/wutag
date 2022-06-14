@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 
-const CONFIG_FILE: &str = ".wutag.yml";
+const CONFIG_FILE: &str = "wutag.yml";
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Config {
@@ -20,8 +20,8 @@ impl Config {
             .context("failed to deserialize config file")
     }
 
-    /// Loads config file from home directory of user executing the program
+    /// Loads config file from config directory of user executing the program
     pub fn load_default_location() -> Result<Self> {
-        Self::load(dirs::home_dir().context("home directory not found")?)
+        Self::load(dirs::config_dir().context("config directory not found")?)
     }
 }
