@@ -2,7 +2,7 @@
 name = "wutag"
 version = "0.5.0-dev"
 authors = ["wojciechkepka <wojtek.kepka@protonmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "wutag_core"
