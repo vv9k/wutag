@@ -195,7 +195,7 @@ where
 {
     let path = path.as_ref();
     let tag = tag.as_ref();
-    for _tag in list_xattrs(path)?.into_iter().map(Tag::try_from).flatten() {
+    for _tag in list_xattrs(path)?.into_iter().flat_map(Tag::try_from) {
         if _tag.name == tag {
             return Ok(_tag);
         }
