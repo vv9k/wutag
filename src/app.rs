@@ -102,6 +102,7 @@ impl App {
             Command::Edit(ref opts) => self.edit(opts),
             Command::PrintCompletions(ref opts) => self.print_completions(opts),
             Command::CleanCache => self.clean_cache(),
+            Command::UpdateRegistry => self.update_registry(),
         }
     }
 
@@ -110,6 +111,22 @@ impl App {
         if let Err(e) = self.registry.save() {
             println!("{:?}", e);
         }
+    }
+
+    fn update_registry(&mut self) {
+        let mut entries_to_remove = vec![];
+        println!("Entries removed:");
+        for (id, file) in self.registry.list_entries_and_ids() {
+            if !file.path().exists() {
+                println!(" - {}", file.path().display());
+                entries_to_remove.push(*id);
+            }
+        }
+        println!("Total: {}", entries_to_remove.len());
+        entries_to_remove.into_iter().for_each(|entry| {
+            self.registry.clear_entry(entry);
+        });
+        self.save_registry();
     }
 
     fn list(&self, opts: &ListOpts) {

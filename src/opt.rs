@@ -155,4 +155,7 @@ pub enum Command {
     PrintCompletions(CompletionsOpts),
     /// Clean the cached tag registry.
     CleanCache,
+    /// Run a scan of all files in the registry to see if they are still available. This is useful
+    /// to detect any changes made to the files tracked by wutag.
+    UpdateRegistry,
 }
