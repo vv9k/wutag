@@ -26,9 +26,10 @@ pub struct Opts {
     /// otherwise default depth is 2. Only applies to subcommands that take a pattern as a
     /// positional argument.
     pub max_depth: Option<usize>,
-    /// If passed the output won't be colored
+    /// Make the output pretty (add color and reorder things). This is not recommended when using
+    /// wutag in scripts.
     #[clap(long, short)]
-    pub no_color: bool,
+    pub pretty: bool,
     #[clap(subcommand)]
     pub cmd: Command,
 }
@@ -48,9 +49,6 @@ pub struct ListOpts {
     #[clap(subcommand)]
     /// The object to list. Valid values are: `tags`, `files`.
     pub object: ListObject,
-    #[clap(long, short)]
-    /// If provided output will be raw so that it can be easily piped to other commands
-    pub raw: bool,
 }
 
 #[derive(Parser)]
@@ -77,9 +75,6 @@ pub struct ClearOpts {
 pub struct SearchOpts {
     #[clap(required = true)]
     pub tags: Vec<String>,
-    #[clap(long, short)]
-    /// If provided output will be raw so that it can be easily piped to other commands
-    pub raw: bool,
     #[clap(long, short)]
     /// If set to 'true' all entries containing any of provided tags will be returned
     pub any: bool,

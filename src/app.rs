@@ -20,7 +20,7 @@ pub struct App {
     pub base_dir: PathBuf,
     pub max_depth: Option<usize>,
     pub colors: Vec<Color>,
-    pub no_color: bool,
+    pub pretty: bool,
     pub registry: TagRegistry,
 }
 
@@ -77,7 +77,7 @@ impl App {
                 config.max_depth
             },
             colors,
-            no_color: opts.no_color,
+            pretty: opts.pretty,
             registry,
         })
     }
@@ -89,7 +89,7 @@ impl App {
     }
 
     pub fn run_command(&mut self, cmd: Command) {
-        if self.no_color {
+        if !self.pretty {
             colored::control::SHOULD_COLORIZE.set_override(false);
         }
         match cmd {
@@ -133,10 +133,10 @@ impl App {
         match opts.object {
             ListObject::Files { with_tags } => {
                 for (id, file) in self.registry.list_entries_and_ids() {
-                    if opts.raw {
-                        print!("{}", file.path().display());
-                    } else {
+                    if self.pretty {
                         print!("{}", fmt_path(file.path()));
+                    } else {
+                        print!("{}", file.path().display());
                     }
                     if with_tags {
                         let tags = self
@@ -145,10 +145,10 @@ impl App {
                             .unwrap_or_default()
                             .iter()
                             .map(|t| {
-                                if opts.raw {
-                                    t.name().to_owned()
-                                } else {
+                                if self.pretty {
                                     fmt_tag(t).to_string()
+                                } else {
+                                    t.name().to_owned()
                                 }
                             })
                             .collect::<Vec<_>>()
@@ -162,10 +162,10 @@ impl App {
             }
             ListObject::Tags => {
                 for tag in self.registry.list_tags() {
-                    if opts.raw {
-                        print!("{}\t", tag);
-                    } else {
+                    if self.pretty {
                         print!("{}\t", fmt_tag(tag));
+                    } else {
+                        print!("{}\t", tag);
                     }
                 }
             }
@@ -291,9 +291,7 @@ impl App {
     fn search(&self, opts: &SearchOpts) {
         if opts.any {
             for (&id, entry) in self.registry.list_entries_and_ids() {
-                if opts.raw {
-                    println!("{}", entry.path().display());
-                } else {
+                if self.pretty {
                     let tags = self
                         .registry
                         .list_entry_tags(id)
@@ -305,6 +303,8 @@ impl App {
                         })
                         .unwrap_or_default();
                     println!("{}: {}", fmt_path(entry.path()), tags)
+                } else {
+                    println!("{}", entry.path().display());
                 }
             }
         } else {
@@ -313,9 +313,7 @@ impl App {
                     Some(entry) => entry.path(),
                     None => continue,
                 };
-                if opts.raw {
-                    println!("{}", path.display());
-                } else {
+                if self.pretty {
                     let tags = self
                         .registry
                         .list_entry_tags(id)
@@ -327,6 +325,8 @@ impl App {
                         })
                         .unwrap_or_default();
                     println!("{}: {}", fmt_path(path), tags)
+                } else {
+                    println!("{}", path.display());
                 }
             }
         }
