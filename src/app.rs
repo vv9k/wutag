@@ -15,6 +15,7 @@ use crate::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
 use crate::DEFAULT_COLORS;
 use wutag_core::color::parse_color;
 use wutag_core::tag::{list_tags, DirEntryExt, Tag};
+use wutag_core::Error;
 
 pub struct App {
     pub base_dir: PathBuf,
@@ -30,12 +31,7 @@ macro_rules! err {
     };
     ($prefix:expr, $err:ident, $entry:ident) => {{
         let err = fmt_err($err);
-        eprintln!(
-            "{}{} - {}",
-            $prefix,
-            err,
-            $entry.path().to_string_lossy().bold()
-        );
+        eprintln!("{}{}", $prefix, err);
     }};
 }
 
@@ -191,16 +187,20 @@ impl App {
             self.max_depth,
             |entry: &DirEntry| {
                 println!("{}:", fmt_path(entry.path()));
-                tags.iter().for_each(|tag| {
+                for tag in &tags {
                     if let Err(e) = entry.tag(tag) {
+                        let should_break = matches!(e, Error::TagListFull(_));
                         err!('\t', e, entry);
+                        if should_break {
+                            break;
+                        }
                     } else {
                         let entry = EntryData::new(entry.path());
                         let id = self.registry.add_or_update_entry(entry);
                         self.registry.tag_entry(tag, id);
                         print!("\t{} {}", "+".bold().green(), fmt_tag(tag));
                     }
-                });
+                }
                 println!();
             },
         ) {

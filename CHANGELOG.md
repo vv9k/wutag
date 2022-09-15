@@ -1,6 +1,7 @@
 # 0.5.0
 * **BREAKING** Global configuration will now be loaded from the users configuration directoy (for example `~/.config/wutag.yml`) and the file must not contain a `.` at the start of the filename.
 * Add `update-registry` subcommand that scans for changes to the files tracked by wutag
+* Add better handling of errors when a file has a maximum number of xattributes
 
 # 0.4.0
 

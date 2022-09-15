@@ -33,6 +33,8 @@ pub enum Error {
     YamlSerDeError(#[from] serde_yaml::Error),
     #[error("failed to decode data with base64 - `{0}`")]
     Base64DecodeError(#[from] base64::DecodeError),
+    #[error("xattributes limit reached on the file - `{0}`")]
+    TagListFull(io::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -43,6 +45,7 @@ impl From<io::Error> for Error {
             io::ErrorKind::AlreadyExists => Error::TagExists,
             _ => match err.raw_os_error() {
                 Some(61) => Error::TagNotFound("".to_string()),
+                Some(28) => Error::TagListFull(err),
                 _ => Error::Other(err.to_string()),
             },
         }
