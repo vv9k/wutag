@@ -7,22 +7,6 @@ on:
     tags:
       - "**"
 jobs:
-  codestyle:
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Set up Rust
-        uses: hecrj/setup-rust-action@v1
-        with:
-          components: rustfmt
-          rust-version: stable
-      - uses: actions/checkout@v1
-      - run: cargo fmt --all -- --check
-
   lint:
     strategy:
       matrix:
@@ -34,41 +18,27 @@ jobs:
       - name: Set up Rust
         uses: hecrj/setup-rust-action@v1
         with:
-          components: clippy
-      - uses: actions/checkout@v1
-      - run: cargo clippy --all-targets -- -D clippy::all
-
-  compile:
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Set up Rust
-        uses: hecrj/setup-rust-action@v1
-      - uses: actions/checkout@master
-      - run: cargo check --all
+          components: clippy,rustfmt
+      - uses: actions/checkout@v2
+      - run: |
+          cargo clippy --all-targets -- -D clippy::all
+          cargo fmt --all -- --check
 
   test:
-    needs: [codestyle, lint, compile]
+    needs: [lint]
     strategy:
       matrix:
         os:
           - ubuntu-latest
           - macos-latest
     runs-on: ${{ matrix.os }}
-
     steps:
       - name: Setup Rust
         uses: hecrj/setup-rust-action@v1
-        with:
-          rust-version: ${{ matrix.rust }}
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Test
-        run: cargo test
+        run: cargo test --all-targets --all-features
 
   build_and_upload_artifacts:
     name: Upload Artifacts
