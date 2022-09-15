@@ -51,11 +51,11 @@ The output of the `search` subcommand can easily be piped to other programs:
 
 When `--any` flag is provided as in the example `wutag` will match files containing any of the provided tags rather than all of them.
 
-If you are into emojis then surely you can use emojis to tag files 🙂 ```wutag set -g '*.doc' -- 📋```
+If you are into emojis then surely you can use emojis to tag files 🙂 `wutag set -g '*.doc' -- 📋`
 
 ## Configuration
 
-`wutag` lets you configure base colors used when creating tags or modify other settings globally. To do this create a file `wutag.yml` in your config directory (on unix XDG_CONFIG_DIR) lihe `~/.config/wutag.yml`.
+`wutag` lets you configure base colors used when creating tags or modify other settings globally. To do this create a file `wutag.yml` in your config directory (on unix **XDG_CONFIG_DIR**) like `~/.config/wutag.yml`.
 
 Example configuration:
 ```yaml
