@@ -73,7 +73,7 @@ impl App {
                 config.max_depth
             },
             colors,
-            pretty: opts.pretty,
+            pretty: opts.pretty || config.pretty_output,
             registry,
         })
     }

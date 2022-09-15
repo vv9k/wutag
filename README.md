@@ -48,6 +48,7 @@ Example configuration:
 ```yaml
 ---
 max_depth: 100
+pretty_output: true
 colors:
 - '0xabba0f'
 - '#121212'

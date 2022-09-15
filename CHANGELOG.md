@@ -2,6 +2,7 @@
 * **BREAKING** Global configuration will now be loaded from the users configuration directoy (for example `~/.config/wutag.yml`) and the file must not contain a `.` at the start of the filename.
 * Add `update-registry` subcommand that scans for changes to the files tracked by wutag
 * Add better handling of errors when a file has a maximum number of xattributes
+* All output is now raw by default, to enable it use `-p` or `--pretty` global flag or set `pretty_output: true` in configuration
 
 # 0.4.0
 

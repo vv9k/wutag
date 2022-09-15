@@ -9,6 +9,8 @@ const CONFIG_FILE: &str = "wutag.yml";
 pub struct Config {
     pub max_depth: Option<usize>,
     pub colors: Option<Vec<String>>,
+    #[serde(default)]
+    pub pretty_output: bool,
 }
 
 impl Config {
