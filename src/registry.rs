@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 pub struct EntryData {
     path: PathBuf,
 }
@@ -77,7 +77,7 @@ impl TagRegistry {
         } else {
             let timestamp = chrono::Utc::now().timestamp_nanos();
             let timestamp = if timestamp < 0 {
-                timestamp.abs() as usize
+                timestamp.unsigned_abs() as usize
             } else {
                 timestamp as usize
             };

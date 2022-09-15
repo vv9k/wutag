@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use clap::IntoApp;
 use colored::{Color, Colorize};
 use globwalk::DirEntry;
+use std::fmt::Write;
 use std::io;
 use std::path::PathBuf;
 
@@ -297,7 +298,7 @@ impl App {
                         .list_entry_tags(id)
                         .map(|tags| {
                             tags.iter().fold(String::new(), |mut acc, t| {
-                                acc.push_str(&format!("{} ", fmt_tag(t)));
+                                let _ = write!(acc, "{} ", fmt_tag(t));
                                 acc
                             })
                         })
@@ -319,7 +320,7 @@ impl App {
                         .list_entry_tags(id)
                         .map(|tags| {
                             tags.iter().fold(String::new(), |mut acc, t| {
-                                acc.push_str(&format!("{} ", fmt_tag(t)));
+                                let _ = write!(acc, "{} ", fmt_tag(t));
                                 acc
                             })
                         })
