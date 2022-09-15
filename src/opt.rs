@@ -64,6 +64,15 @@ pub struct SetOpts {
 }
 
 #[derive(Parser)]
+pub struct GetOpts {
+    /// A list of entries to retrieve tags from
+    pub paths: Vec<String>,
+    #[clap(short, long)]
+    /// Treat the first path as a glob pattern
+    pub glob: bool,
+}
+
+#[derive(Parser)]
 pub struct RmOpts {
     /// A list of entries to tag
     pub paths: Vec<String>,
@@ -147,6 +156,8 @@ pub enum Command {
     List(ListOpts),
     /// Tags the files that match the given pattern with specified tags.
     Set(SetOpts),
+    /// Retrieve tags of files
+    Get(GetOpts),
     /// Removes the specified tags of the files that match the provided pattern.
     Rm(RmOpts),
     /// Clears all tags of the files that match the provided pattern.

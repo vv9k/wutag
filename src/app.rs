@@ -8,8 +8,8 @@ use std::path::PathBuf;
 
 use crate::config::Config;
 use crate::opt::{
-    ClearOpts, Command, CompletionsOpts, CpOpts, EditOpts, ListObject, ListOpts, Opts, RmOpts,
-    SearchOpts, SetOpts, Shell, APP_NAME,
+    ClearOpts, Command, CompletionsOpts, CpOpts, EditOpts, GetOpts, ListObject, ListOpts, Opts,
+    RmOpts, SearchOpts, SetOpts, Shell, APP_NAME,
 };
 use crate::registry::{EntryData, TagRegistry};
 use crate::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
@@ -92,6 +92,7 @@ impl App {
         match cmd {
             Command::List(ref opts) => self.list(opts),
             Command::Set(opts) => self.set(&opts),
+            Command::Get(opts) => self.get(&opts),
             Command::Rm(ref opts) => self.rm(opts),
             Command::Clear(ref opts) => self.clear(opts),
             Command::Search(ref opts) => self.search(opts),
@@ -226,6 +227,54 @@ impl App {
                     }
                 };
                 handle_entry(&path, &tags);
+                println!();
+            }
+        }
+
+        self.save_registry();
+    }
+
+    fn get(&mut self, opts: &GetOpts) {
+        if opts.paths.is_empty() {
+            eprintln!("no entries to check...");
+            return;
+        }
+
+        let handle_entry = |path: &std::path::Path| {
+            let tags = match list_tags(path) {
+                Ok(tags) => tags,
+                Err(e) => {
+                    eprintln!("{}: {e}", path.display());
+                    return;
+                }
+            };
+            print!("{}:", fmt_path(path));
+            for tag in &tags {
+                print!(" {}", fmt_tag(tag))
+            }
+        };
+
+        if opts.glob {
+            if let Err(e) = glob_ok(
+                &opts.paths[0],
+                &self.base_dir.clone(),
+                self.max_depth,
+                |entry: &DirEntry| {
+                    handle_entry(entry.path());
+                },
+            ) {
+                eprintln!("{}", fmt_err(e));
+            }
+        } else {
+            for path in &opts.paths {
+                let path = match PathBuf::from(&path).canonicalize() {
+                    Ok(path) => path,
+                    Err(e) => {
+                        eprintln!("{path}: {e}");
+                        continue;
+                    }
+                };
+                handle_entry(&path);
                 println!();
             }
         }

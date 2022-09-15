@@ -27,6 +27,9 @@ To set a tag on multiple files use the `set` subcommand:
 The `set` subcommand can also be used with a pattern like this:
  - `wutag set -g '**' -- rust code`
 
+To get the tags of some entries use:
+ - `wutag get src/lib.rs src/main.rs`
+
 The `rm` subcommand removes specified tags from the list of files. It behaves similarly to the `set` subcommand:
  - `wutag rm src/lib.rs src/main.rs -- code`
  - `wutag rm -g '**' -- rust code`

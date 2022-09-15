@@ -4,6 +4,7 @@
 * Add better handling of errors when a file has a maximum number of xattributes
 * All output is now raw by default, to enable it use `-p` or `--pretty` global flag or set `pretty_output: true` in configuration
 * Subcommands `set`, `rm` and `clear` now take a list of paths to process rather than a pattern by default. Previous behaviour was preserved with a flag `-g` or `--glob` to treat the first provided path as a glob pattern.
+* Add `get` subcommand that lists tags of specified entries
 
 # 0.4.0
 
