@@ -53,23 +53,34 @@ pub struct ListOpts {
 
 #[derive(Parser)]
 pub struct SetOpts {
-    /// A glob pattern like '*.png'.
-    pub pattern: String,
-    #[clap(required = true)]
+    /// A list of entries to tag
+    pub paths: Vec<String>,
+    #[clap(short, long)]
+    /// Treat the first path as a glob pattern
+    pub glob: bool,
+    #[clap(required = true, last = true)]
+    /// List of tags to tag the entries with
     pub tags: Vec<String>,
 }
 
 #[derive(Parser)]
 pub struct RmOpts {
-    /// A glob pattern like '*.png'.
-    pub pattern: String,
+    /// A list of entries to tag
+    pub paths: Vec<String>,
+    #[clap(short, long)]
+    /// Treat the first path as a glob pattern
+    pub glob: bool,
+    #[clap(required = true, last = true)]
     pub tags: Vec<String>,
 }
 
 #[derive(Parser)]
 pub struct ClearOpts {
-    /// A glob pattern like '*.png'.
-    pub pattern: String,
+    /// A list of entries to tag
+    pub paths: Vec<String>,
+    #[clap(short, long)]
+    /// Treat the first path as a glob pattern
+    pub glob: bool,
 }
 #[derive(Parser)]
 pub struct SearchOpts {

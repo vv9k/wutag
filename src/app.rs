@@ -15,7 +15,7 @@ use crate::registry::{EntryData, TagRegistry};
 use crate::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
 use crate::DEFAULT_COLORS;
 use wutag_core::color::parse_color;
-use wutag_core::tag::{list_tags, DirEntryExt, Tag};
+use wutag_core::tag::{clear_tags, get_tag, has_tags, list_tags, DirEntryExt, Tag};
 use wutag_core::Error;
 
 pub struct App {
@@ -170,6 +170,10 @@ impl App {
     }
 
     fn set(&mut self, opts: &SetOpts) {
+        if opts.paths.is_empty() {
+            eprintln!("no entries to tag...");
+            return;
+        }
         let tags = opts
             .tags
             .iter()
@@ -182,108 +186,167 @@ impl App {
             })
             .collect::<Vec<_>>();
 
-        if let Err(e) = glob_ok(
-            &opts.pattern,
-            &self.base_dir.clone(),
-            self.max_depth,
-            |entry: &DirEntry| {
-                println!("{}:", fmt_path(entry.path()));
-                for tag in &tags {
-                    if let Err(e) = entry.tag(tag) {
-                        let should_break = matches!(e, Error::TagListFull(_));
-                        err!('\t', e, entry);
-                        if should_break {
-                            break;
-                        }
-                    } else {
-                        let entry = EntryData::new(entry.path());
-                        let id = self.registry.add_or_update_entry(entry);
-                        self.registry.tag_entry(tag, id);
-                        print!("\t{} {}", "+".bold().green(), fmt_tag(tag));
+        let mut handle_entry = |path: &std::path::Path, tags: &[Tag]| {
+            println!("{}:", fmt_path(path));
+            for tag in tags {
+                if let Err(e) = tag.save_to(path) {
+                    let should_break = matches!(e, Error::TagListFull(_));
+                    err!('\t', e, entry);
+                    if should_break {
+                        break;
                     }
+                } else {
+                    let entry = EntryData::new(path);
+                    let id = self.registry.add_or_update_entry(entry);
+                    self.registry.tag_entry(tag, id);
+                    print!("\t{} {}", "+".bold().green(), fmt_tag(tag));
                 }
+            }
+            println!();
+        };
+
+        if opts.glob {
+            if let Err(e) = glob_ok(
+                &opts.paths[0],
+                &self.base_dir.clone(),
+                self.max_depth,
+                |entry: &DirEntry| {
+                    handle_entry(entry.path(), &tags);
+                },
+            ) {
+                eprintln!("{}", fmt_err(e));
+            }
+        } else {
+            for path in &opts.paths {
+                let path = match PathBuf::from(&path).canonicalize() {
+                    Ok(path) => path,
+                    Err(e) => {
+                        eprintln!("{path}: {e}");
+                        continue;
+                    }
+                };
+                handle_entry(&path, &tags);
                 println!();
-            },
-        ) {
-            eprintln!("{}", fmt_err(e));
+            }
         }
 
         self.save_registry();
     }
 
     fn rm(&mut self, opts: &RmOpts) {
-        if let Err(e) = glob_ok(
-            &opts.pattern,
-            &self.base_dir.clone(),
-            self.max_depth,
-            |entry: &DirEntry| {
-                let id = self.registry.find_entry(entry.path());
-                let tags = opts
-                    .tags
-                    .iter()
-                    .map(|tag| {
-                        if let Some(id) = id {
-                            self.registry.untag_by_name(tag, id);
-                        }
-                        entry.get_tag(tag)
-                    })
-                    .collect::<Vec<_>>();
-
-                if tags.is_empty() {
-                    return;
-                }
-
-                println!("{}:", fmt_path(entry.path()));
-                tags.iter().for_each(|tag| {
-                    let tag = match tag {
-                        Ok(tag) => tag,
-                        Err(e) => {
-                            err!('\t', e, entry);
-                            return;
-                        }
-                    };
-                    if let Err(e) = entry.untag(tag) {
-                        err!('\t', e, entry);
-                    } else {
-                        print!("\t{} {}", "X".bold().red(), fmt_tag(tag));
+        if opts.paths.is_empty() {
+            eprintln!("no entries to remove tags from...");
+            return;
+        }
+        let mut handle_entry = |path: &std::path::Path| {
+            let id = self.registry.find_entry(path);
+            let tags = opts
+                .tags
+                .iter()
+                .map(|tag| {
+                    if let Some(id) = id {
+                        self.registry.untag_by_name(tag, id);
                     }
-                });
+                    get_tag(path, tag)
+                })
+                .collect::<Vec<_>>();
+
+            if tags.is_empty() {
+                return;
+            }
+
+            println!("{}:", fmt_path(path));
+            tags.iter().for_each(|tag| {
+                let tag = match tag {
+                    Ok(tag) => tag,
+                    Err(e) => {
+                        err!('\t', e, entry);
+                        return;
+                    }
+                };
+                if let Err(e) = tag.remove_from(path) {
+                    err!('\t', e, entry);
+                } else {
+                    print!("\t{} {}", "X".bold().red(), fmt_tag(tag));
+                }
+            });
+            println!();
+        };
+
+        if opts.glob {
+            if let Err(e) = glob_ok(
+                &opts.paths[0],
+                &self.base_dir.clone(),
+                self.max_depth,
+                |entry: &DirEntry| handle_entry(entry.path()),
+            ) {
+                eprintln!("{}", fmt_err(e));
+            }
+        } else {
+            for path in &opts.paths {
+                let path = match PathBuf::from(&path).canonicalize() {
+                    Ok(path) => path,
+                    Err(e) => {
+                        eprintln!("{path}: {e}");
+                        continue;
+                    }
+                };
+                handle_entry(&path);
                 println!();
-            },
-        ) {
-            eprintln!("{}", fmt_err(e));
+            }
         }
 
         self.save_registry();
     }
 
     fn clear(&mut self, opts: &ClearOpts) {
-        if let Err(e) = glob_ok(
-            &opts.pattern,
-            &self.base_dir.clone(),
-            self.max_depth,
-            |entry: &DirEntry| {
-                if let Some(id) = self.registry.find_entry(entry.path()) {
-                    self.registry.clear_entry(id);
-                }
-                match entry.has_tags() {
-                    Ok(has_tags) => {
-                        if has_tags {
-                            println!("{}:", fmt_path(entry.path()));
-                            if let Err(e) = entry.clear_tags() {
-                                err!('\t', e, entry);
-                            } else {
-                                println!("\t{}", fmt_ok("cleared."));
-                            }
+        if opts.paths.is_empty() {
+            eprintln!("no entries to remove tags from...");
+            return;
+        }
+
+        let mut handle_entry = |path: &std::path::Path| {
+            if let Some(id) = self.registry.find_entry(path) {
+                self.registry.clear_entry(id);
+            }
+            match has_tags(path) {
+                Ok(has_tags) => {
+                    if has_tags {
+                        println!("{}:", fmt_path(path));
+                        if let Err(e) = clear_tags(path) {
+                            err!('\t', e, entry);
+                        } else {
+                            println!("\t{}", fmt_ok("cleared."));
                         }
                     }
-                    Err(e) => {
-                        err!(e, entry);
-                    }
                 }
-            },
-        ) {
-            eprintln!("{}", fmt_err(e));
+                Err(e) => {
+                    err!(e, entry);
+                }
+            }
+        };
+
+        if opts.glob {
+            if let Err(e) = glob_ok(
+                &opts.paths[0],
+                &self.base_dir.clone(),
+                self.max_depth,
+                |entry: &DirEntry| handle_entry(entry.path()),
+            ) {
+                eprintln!("{}", fmt_err(e));
+            }
+        } else {
+            for path in &opts.paths {
+                let path = match PathBuf::from(&path).canonicalize() {
+                    Ok(path) => path,
+                    Err(e) => {
+                        eprintln!("{path}: {e}");
+                        continue;
+                    }
+                };
+                handle_entry(&path);
+                println!();
+            }
         }
 
         self.save_registry();

@@ -22,23 +22,33 @@ By default each tag will be assigned with a random color from 8 base colors (eit
  - or `wutag edit work --color FF0000`
  - The colors are case insensitive
 
-Each command that takes a pattern starts a filesystem traversal from current working directory. To override this
-behaviour specify a global parameter `--dir` or `-d` like this:
- - `wutag -d ~ set '**' code`
+To set a tag on multiple files use the `set` subcommand:
+ - `wutag set src/lib.rs src/main.rs -- code`
+The `set` subcommand can also be used with a pattern like this:
+ - `wutag set -g '**' -- rust code`
 
-Default recursion depth is set to *2*. To increase it use `--max-depth` or `-m` global parameter.
+The `rm` subcommand removes specified tags from the list of files. It behaves similarly to the `set` subcommand:
+ - `wutag rm src/lib.rs src/main.rs -- code`
+ - `wutag rm -g '**' -- rust code`
+
+There is also `clear` that clears all tags from the specified files like so:
+ - `wutag clear Cargo.toml`
+ - `wutag clear -g '**'`
+
+When using glob processing, default recursion depth is set to *2*. To increase it use `--max-depth` or `-m` global parameter. For example:
+ - `wutag -m 5 set -g '**' trash`
 
 After tagging your files with `set` like:
- - `wutag set '*.jpg' photos`
- - `wutag set 'DCIM_12*' doge`  
+ - `wutag set -g '**/*.jpg' -- photos`
+ - `wutag set -g '**/DCIM_12*' -- doge`  
 you can easily get the list of files with specified tags by doing `wutag search photos doge`. 
 
-To utilize the list by other programs pass the `--raw` or `-r` flag to `search` subcommand like:
- - `wutag search -r --any cat doge | xargs rm -rf  # please don't do this :(`. 
+The output of the `search` subcommand can easily be piped to other programs:
+ - `wutag search --any cat doge | xargs rm -rf  # please don't do this :(`. 
 
 When `--any` flag is provided as in the example `wutag` will match files containing any of the provided tags rather than all of them.
 
-If you are into emojis then surely you can use emojis to tag files 🙂 ```wutag set '*.doc' 📋```
+If you are into emojis then surely you can use emojis to tag files 🙂 ```wutag set -g '*.doc' -- 📋```
 
 ## Configuration
 
