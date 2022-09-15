@@ -15,7 +15,9 @@ use crate::registry::{EntryData, TagRegistry};
 use crate::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
 use crate::DEFAULT_COLORS;
 use wutag_core::color::parse_color;
-use wutag_core::tag::{clear_tags, get_tag, has_tags, list_tags, DirEntryExt, Tag};
+use wutag_core::tag::{
+    clear_tags, get_tag, has_tags, list_tags, list_tags_btree, DirEntryExt, Tag,
+};
 use wutag_core::Error;
 
 pub struct App {
@@ -113,17 +115,60 @@ impl App {
 
     fn update_registry(&mut self) {
         let mut entries_to_remove = vec![];
-        println!("Entries removed:");
+        let mut entries_to_tag = vec![];
+        let mut entries_to_untag = vec![];
+        println!("Modified entries:");
         for (id, file) in self.registry.list_entries_and_ids() {
+            let id = *id;
             if !file.path().exists() {
-                println!(" - {}", file.path().display());
-                entries_to_remove.push(*id);
+                entries_to_remove.push(id);
+            }
+            let tags = self.registry.list_entry_tags_btree(id).unwrap_or_default();
+
+            let file_tags = list_tags_btree(file.path()).unwrap_or_default();
+            let file_tags = file_tags.iter().collect();
+
+            let diff: Vec<_> = tags.difference(&file_tags).collect();
+            for tag in diff {
+                if tags.contains(tag) {
+                    println!(" - UNTAG {} {}", file.path().display(), fmt_tag(tag));
+                    entries_to_untag.push((id, (*tag).clone()));
+                } else {
+                    println!(" - TAG {} {}", file.path().display(), fmt_tag(tag));
+                    entries_to_tag.push((id, (*tag).clone()));
+                }
             }
         }
-        println!("Total: {}", entries_to_remove.len());
+        let removed_count = entries_to_remove.len();
+        let untagged_count = entries_to_untag.len();
+        let tagged_count = entries_to_tag.len();
         entries_to_remove.into_iter().for_each(|entry| {
-            self.registry.clear_entry(entry);
+            if let Some(entry_data) = self.registry.get_entry(entry) {
+                println!(" - REMOVE {}", entry_data.path().display());
+                self.registry.clear_entry(entry);
+            }
         });
+        entries_to_tag.into_iter().for_each(|(id, tag)| {
+            self.registry.tag_entry(&tag, id);
+            if let Some(entry) = self.registry.get_entry(id) {
+                println!(" - TAG {} {}", entry.path().display(), fmt_tag(&tag));
+                if let Err(e) = tag.save_to(entry.path()) {
+                    println!("    ERROR: {e}")
+                }
+            }
+        });
+        entries_to_untag.into_iter().for_each(|(id, tag)| {
+            self.registry.untag_entry(&tag, id);
+            if let Some(entry) = self.registry.get_entry(id) {
+                println!(" - UNTAG {} {}", entry.path().display(), fmt_tag(&tag));
+                if let Err(e) = tag.remove_from(entry.path()) {
+                    println!("    ERROR: {e}")
+                }
+            }
+        });
+        println!("Total removed: {}", removed_count);
+        println!("Total tagged: {}", tagged_count);
+        println!("Total untagged: {}", untagged_count);
         self.save_registry();
     }
 

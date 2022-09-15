@@ -1,0 +1,22 @@
+[package]
+name = "wutag"
+version = "0.5.0-dev"
+authors = ["wojciechkepka <wojtek.kepka@protonmail.com>"]
+edition = "2021"
+
+[dependencies]
+wutag_core = { path = "../wutag_core" }
+anyhow = "1"
+clap = { version = "3", features = ["derive"] }
+clap_complete = "3"
+serde_yaml = "0.8"
+serde_cbor = "0.11"
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+walkdir = "2"
+colored = { git = "https://github.com/wojciechkepka/colored", branch = "master", features = ["serde"] }
+globwalk = "0.8"
+dirs = "4"
+
+[dev-dependencies]
+tempdir = "0.3"

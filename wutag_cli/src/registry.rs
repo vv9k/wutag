@@ -5,7 +5,7 @@ use wutag_core::tag::Tag;
 use anyhow::{Context, Result};
 use colored::Color;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -183,6 +183,25 @@ impl TagRegistry {
             .fold(Vec::new(), |mut acc, (tag, entries)| {
                 if entries.iter().any(|id| entry == *id) {
                     acc.push(tag);
+                }
+                acc
+            });
+
+        if tags.is_empty() {
+            None
+        } else {
+            Some(tags)
+        }
+    }
+
+    /// Lists tags of the `entry` as BtreeSet if such entry exists.
+    pub fn list_entry_tags_btree(&self, entry: EntryId) -> Option<BTreeSet<&Tag>> {
+        let tags = self
+            .tags
+            .iter()
+            .fold(BTreeSet::new(), |mut acc, (tag, entries)| {
+                if entries.iter().any(|id| entry == *id) {
+                    acc.insert(tag);
                 }
                 acc
             });

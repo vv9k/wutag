@@ -1,29 +1,7 @@
-[package]
-name = "wutag"
-version = "0.5.0-dev"
-authors = ["wojciechkepka <wojtek.kepka@protonmail.com>"]
-edition = "2021"
+[workspace]
 
-[lib]
-name = "wutag_core"
-path = "wutag_core/lib.rs"
+members = [
+    "wutag_core",
+    "wutag_cli",
+]
 
-[dependencies]
-anyhow = "1"
-libc = "0.2"
-thiserror = "1"
-clap = { version = "3", features = ["derive"] }
-clap_complete = "3"
-serde_yaml = "0.8"
-serde_cbor = "0.11"
-chrono = { version = "0.4", features = ["serde"] }
-serde = { version = "1", features = ["derive"] }
-walkdir = "2"
-colored = { git = "https://github.com/wojciechkepka/colored", branch = "master", features = ["serde"] }
-globwalk = "0.8"
-rand = "0.8"
-base64 = "0.13.0"
-dirs = "4"
-
-[dev-dependencies]
-tempdir = "0.3"

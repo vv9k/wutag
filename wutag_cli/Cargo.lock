@@ -801,26 +801,12 @@ name = "wutag"
 version = "0.5.0-dev"
 dependencies = [
  "anyhow",
+ "base64",
  "chrono",
  "clap",
  "clap_complete",
  "colored",
  "dirs",
- "globwalk",
- "serde",
- "serde_cbor",
- "serde_yaml",
- "tempdir",
- "walkdir",
- "wutag_core",
-]
-
-[[package]]
-name = "wutag_core"
-version = "0.5.0-dev"
-dependencies = [
- "base64",
- "colored",
  "globwalk",
  "libc",
  "rand 0.8.5",
@@ -829,11 +815,8 @@ dependencies = [
  "serde_yaml",
  "tempdir",
  "thiserror",
+ "walkdir",
 ]
-
-[[package]]
-name = "wutag_daemon"
-version = "0.1.0"
 
 [[package]]
 name = "yaml-rust"
