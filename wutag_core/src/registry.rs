@@ -258,7 +258,7 @@ impl TagRegistry {
                 .tags
                 .iter()
                 .find(|(t, _)| t.name() == tag.as_ref())
-                .map(|(_, e)| e.into_iter().collect::<BTreeSet<_>>())
+                .map(|(_, e)| e.iter().collect::<BTreeSet<_>>())
             {
                 if acc.is_empty() {
                     acc = entries.iter().cloned().collect();
@@ -269,7 +269,7 @@ impl TagRegistry {
             acc
         });
 
-        entries.into_iter().map(|e| *e).collect()
+        entries.into_iter().copied().collect()
     }
 
     /// Lists ids of all entries present in the registry.

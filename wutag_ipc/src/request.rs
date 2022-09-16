@@ -76,6 +76,7 @@ pub enum Response {
     CopyTags(RequestResult<(), Vec<String>>),
     ClearTags(RequestResult<(), Vec<String>>),
     ListTags(RequestResult<Vec<Tag>, String>),
+    #[allow(clippy::type_complexity)]
     ListFiles(RequestResult<Vec<(EntryData, Option<Vec<Tag>>)>, String>),
     InspectFiles(RequestResult<Vec<(EntryData, Vec<Tag>)>, String>),
     Search(RequestResult<Vec<EntryData>, String>),
