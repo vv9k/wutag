@@ -142,21 +142,11 @@ impl App {
                     }
                 };
                 for (entry, tags) in entries {
-                    if self.pretty {
-                        print!("{}", fmt_path(entry.path()));
-                    } else {
-                        print!("{}", entry.path().display());
-                    }
+                    print!("{}", fmt_path(entry.path()));
                     if let Some(tags) = tags {
                         let tags = tags
                             .into_iter()
-                            .map(|t| {
-                                if self.pretty {
-                                    fmt_tag(&t).to_string()
-                                } else {
-                                    t.name().to_owned()
-                                }
-                            })
+                            .map(|t| fmt_tag(&t).to_string())
                             .collect::<Vec<_>>()
                             .join(" ");
 
@@ -179,11 +169,7 @@ impl App {
                     }
                 };
                 for tag in tags {
-                    if self.pretty {
-                        print!("{}\t", fmt_tag(&tag));
-                    } else {
-                        print!("{}\t", tag);
-                    }
+                    print!("{} ", fmt_tag(&tag));
                 }
             }
         }
@@ -349,7 +335,7 @@ impl App {
             }
         };
         for entry in entries {
-            println!("{}", entry.path().display());
+            println!("{}", fmt_path(entry.path()));
         }
         Ok(())
     }

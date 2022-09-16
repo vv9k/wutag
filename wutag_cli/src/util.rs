@@ -6,12 +6,16 @@ use crate::DEFAULT_MAX_DEPTH;
 use anyhow::{Context, Result};
 use wutag_core::tag::Tag;
 
-pub fn fmt_path<P: AsRef<Path>>(path: P) -> String {
-    format!("{}", path.as_ref().display().to_string().bold().blue())
+pub fn fmt_path<P: AsRef<Path>>(path: P) -> ColoredString {
+    path.as_ref().display().to_string().bold().blue()
 }
 
 pub fn fmt_tag(tag: &Tag) -> ColoredString {
-    tag.name().color(*tag.color()).bold()
+    if tag.name().chars().any(|c| c.is_ascii_whitespace()) {
+        format!("\"{}\"", tag.name()).color(*tag.color()).bold()
+    } else {
+        tag.name().color(*tag.color()).bold()
+    }
 }
 
 /// Returns a GlobWalker instance with base path set to `base_path` and pattern to `pattern`. If
