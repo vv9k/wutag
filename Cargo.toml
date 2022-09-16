@@ -1,7 +1,8 @@
 [workspace]
 
 members = [
-    "wutag_core",
     "wutag_cli",
+    "wutag_core",
+    "wutag_ipc"
 ]
 
