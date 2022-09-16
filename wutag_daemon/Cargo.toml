@@ -1,0 +1,17 @@
+[package]
+name = "wutag_daemon"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wutag_core = { path = "../wutag_core" }
+wutag_ipc = { path = "../wutag_ipc" }
+
+anyhow = "1"
+dirs = "4"
+inotify = "0.10"
+interprocess = "1"
+log = "0.4"
+once_cell = "1"
+pretty_env_logger = "0.4"
+serde_cbor = "0.11"
