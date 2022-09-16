@@ -79,16 +79,16 @@ impl TagRegistry {
     }
 
     /// Updates the entry or adds it if it is not present.
-    pub fn add_or_update_entry(&mut self, entry: EntryData) -> EntryId {
+    pub fn add_or_update_entry(&mut self, entry: EntryData) -> (EntryId, bool) {
         let pos = self
             .list_entries_and_ids()
             .find(|(_, e)| **e == entry)
             .map(|(idx, _)| *idx);
 
-        let pos = if let Some(pos) = pos {
+        let res = if let Some(pos) = pos {
             let e = self.entries.get_mut(&pos).expect("entry");
             *e = entry;
-            pos
+            (pos, false)
         } else {
             let timestamp = chrono::Utc::now().timestamp_nanos();
             let timestamp = if timestamp < 0 {
@@ -97,10 +97,10 @@ impl TagRegistry {
                 timestamp as usize
             };
             self.entries.insert(timestamp, entry);
-            timestamp
+            (timestamp, true)
         };
 
-        pos
+        res
     }
 
     fn mut_tag_entries(&mut self, tag: &Tag) -> &mut BTreeSet<EntryId> {
@@ -356,8 +356,8 @@ mod tests {
         assert_eq!(registry.list_entries().count(), 2);
 
         let entries: Vec<_> = registry.list_entries_and_ids().collect();
-        assert!(entries.contains(&(&fst_id, &entry)));
-        assert!(entries.contains(&(&snd_id, &snd_entry)));
+        assert!(entries.contains(&(&fst_id.0, &entry)));
+        assert!(entries.contains(&(&snd_id.0, &snd_entry)));
     }
 
     #[test]
@@ -369,7 +369,7 @@ mod tests {
 
         let tag = Tag::new("test", Black);
 
-        assert!(registry.tag_entry(&tag, id).is_none());
+        assert!(registry.tag_entry(&tag, id.0).is_none());
         assert!(registry.update_tag_color("test", Red));
         assert_eq!(registry.list_tags().next().unwrap().color(), &Red);
     }
@@ -379,7 +379,7 @@ mod tests {
         let entry = EntryData::new("/tmp");
 
         let mut registry = TagRegistry::default();
-        let id = registry.add_or_update_entry(entry.clone());
+        let (id, _) = registry.add_or_update_entry(entry.clone());
 
         let tag1 = Tag::new("test", Black);
         let tag2 = Tag::new("test2", Red);
@@ -394,7 +394,7 @@ mod tests {
         assert_eq!(registry.list_entries().count(), 0);
         assert!(registry.tags.is_empty());
 
-        let id = registry.add_or_update_entry(entry.clone());
+        let (id, _) = registry.add_or_update_entry(entry.clone());
         assert!(registry.tag_entry(&tag2, id).is_none());
         assert_eq!(
             registry.tags.iter().next(),
@@ -405,7 +405,7 @@ mod tests {
         assert_eq!(registry.list_entries().count(), 0);
         assert!(registry.tags.is_empty());
 
-        let id = registry.add_or_update_entry(entry);
+        let (id, _) = registry.add_or_update_entry(entry);
         assert!(registry.tag_entry(&tag1, id).is_none());
         assert!(registry.tag_entry(&tag2, id).is_none());
         let tags: Vec<_> = registry.tags.iter().collect();
@@ -426,7 +426,7 @@ mod tests {
 
         let entry = EntryData::new("/tmp");
 
-        let id = registry.add_or_update_entry(entry);
+        let (id, _) = registry.add_or_update_entry(entry);
         registry.tag_entry(&tag1, id);
         registry.tag_entry(&tag2, id);
 
@@ -449,11 +449,11 @@ mod tests {
         let entry3 = EntryData::new("/tmp/3");
         let entry4 = EntryData::new("/tmp/4");
 
-        let id = registry.add_or_update_entry(entry);
-        let id1 = registry.add_or_update_entry(entry1);
-        let id2 = registry.add_or_update_entry(entry2);
-        let id3 = registry.add_or_update_entry(entry3);
-        let id4 = registry.add_or_update_entry(entry4);
+        let (id, _) = registry.add_or_update_entry(entry);
+        let (id1, _) = registry.add_or_update_entry(entry1);
+        let (id2, _) = registry.add_or_update_entry(entry2);
+        let (id3, _) = registry.add_or_update_entry(entry3);
+        let (id4, _) = registry.add_or_update_entry(entry4);
 
         registry.tag_entry(&tag1, id);
         registry.tag_entry(&tag1, id2);
@@ -505,7 +505,7 @@ mod tests {
         let tag = Tag::new("src", Black);
         let entry = EntryData::new("/tmp");
 
-        let id = registry.add_or_update_entry(entry.clone());
+        let (id, _) = registry.add_or_update_entry(entry.clone());
         registry.tag_entry(&tag, id);
 
         registry.save().unwrap();
