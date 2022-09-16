@@ -44,7 +44,7 @@ pub type EntryId = usize;
 
 #[derive(Default, Deserialize, Serialize)]
 pub struct TagRegistry {
-    tags: HashMap<Tag, Vec<EntryId>>,
+    tags: HashMap<Tag, BTreeSet<EntryId>>,
     entries: HashMap<EntryId, EntryData>,
     path: PathBuf,
 }
@@ -103,11 +103,11 @@ impl TagRegistry {
         pos
     }
 
-    fn mut_tag_entries(&mut self, tag: &Tag) -> &mut Vec<EntryId> {
+    fn mut_tag_entries(&mut self, tag: &Tag) -> &mut BTreeSet<EntryId> {
         let exists = self.tags.iter().find(|(t, _)| t == &tag);
 
         if exists.is_none() {
-            self.tags.insert(tag.clone(), Vec::new());
+            self.tags.insert(tag.clone(), BTreeSet::new());
         }
 
         self.tags.get_mut(tag).unwrap()
@@ -121,7 +121,7 @@ impl TagRegistry {
         if let Some(entry) = entries.iter().find(|&e| *e == entry) {
             return Some(*entry);
         }
-        entries.push(entry);
+        entries.insert(entry);
 
         None
     }
@@ -143,14 +143,10 @@ impl TagRegistry {
     pub fn untag_entry(&mut self, tag: &Tag, entry: EntryId) -> Option<EntryData> {
         let entries = self.mut_tag_entries(tag);
 
-        if let Some(pos) = entries.iter().position(|e| *e == entry) {
-            let entry = entries.remove(pos);
-
-            self.clean_tag_if_no_entries(tag);
-
-            if self.list_entry_tags(entry).is_none() {
-                return self.entries.remove(&entry);
-            }
+        let _ = entries.remove(&entry);
+        self.clean_tag_if_no_entries(tag);
+        if self.list_entry_tags(entry).is_none() {
+            return self.entries.remove(&entry);
         }
 
         None
@@ -167,9 +163,7 @@ impl TagRegistry {
     pub fn clear_entry(&mut self, entry: EntryId) {
         let mut to_remove = vec![];
         self.tags.iter_mut().for_each(|(tag, entries)| {
-            if let Some(idx) = entries.iter().copied().position(|e| e == entry) {
-                entries.remove(idx);
-            }
+            entries.remove(&entry);
             if entries.is_empty() {
                 to_remove.push(tag.to_owned());
             }
@@ -228,27 +222,50 @@ impl TagRegistry {
         }
     }
 
-    /// Returns entries that have all of the `tags`.
-    pub fn list_entries_with_tags<T, S>(&self, tags: T) -> Vec<EntryId>
+    /// Returns entries that have any tag of the `tags`.
+    pub fn list_entries_with_any_tags<T, S>(&self, tags: T) -> Vec<EntryId>
     where
         T: IntoIterator<Item = S>,
         S: AsRef<str>,
     {
-        let mut entries = tags.into_iter().fold(Vec::new(), |mut acc, tag| {
+        let entries = tags.into_iter().fold(BTreeSet::new(), |mut acc, tag| {
             if let Some(entries) = self
                 .tags
                 .iter()
                 .find(|(t, _)| t.name() == tag.as_ref())
                 .map(|(_, e)| e)
             {
-                acc.extend_from_slice(&entries[..]);
+                acc.extend(entries);
             }
             acc
         });
 
-        entries.dedup();
+        entries.into_iter().collect()
+    }
 
-        entries
+    /// Returns entries that have all of the `tags`.
+    pub fn list_entries_with_all_tags<T, S>(&self, tags: T) -> Vec<EntryId>
+    where
+        T: IntoIterator<Item = S>,
+        S: AsRef<str>,
+    {
+        let entries = tags.into_iter().fold(BTreeSet::new(), |mut acc, tag| {
+            if let Some(entries) = self
+                .tags
+                .iter()
+                .find(|(t, _)| t.name() == tag.as_ref())
+                .map(|(_, e)| e.into_iter().collect::<BTreeSet<_>>())
+            {
+                if acc.is_empty() {
+                    acc = entries.iter().cloned().collect();
+                } else {
+                    acc = acc.intersection(&entries).cloned().collect();
+                }
+            }
+            acc
+        });
+
+        entries.into_iter().map(|e| *e).collect()
     }
 
     /// Lists ids of all entries present in the registry.
@@ -383,7 +400,10 @@ mod tests {
         let tag2 = Tag::new("test2", Red);
 
         assert!(registry.tag_entry(&tag1, id).is_none());
-        assert_eq!(registry.tags.iter().next(), Some((&tag1, &vec![id])));
+        assert_eq!(
+            registry.tags.iter().next(),
+            Some((&tag1, &([id].into_iter().collect())))
+        );
         assert_eq!(registry.list_entries().count(), 1);
         assert_eq!(registry.untag_entry(&tag1, id), Some(entry.clone()));
         assert_eq!(registry.list_entries().count(), 0);
@@ -391,7 +411,10 @@ mod tests {
 
         let id = registry.add_or_update_entry(entry.clone());
         assert!(registry.tag_entry(&tag2, id).is_none());
-        assert_eq!(registry.tags.iter().next(), Some((&tag2, &vec![id])));
+        assert_eq!(
+            registry.tags.iter().next(),
+            Some((&tag2, &[id].into_iter().collect()))
+        );
         assert_eq!(registry.list_entries().count(), 1);
         assert_eq!(registry.untag_by_name(tag2.name(), id), Some(entry.clone()));
         assert_eq!(registry.list_entries().count(), 0);
@@ -401,8 +424,8 @@ mod tests {
         assert!(registry.tag_entry(&tag1, id).is_none());
         assert!(registry.tag_entry(&tag2, id).is_none());
         let tags: Vec<_> = registry.tags.iter().collect();
-        assert!(tags.contains(&(&tag1, &vec![id])));
-        assert!(tags.contains(&(&tag2, &vec![id])));
+        assert!(tags.contains(&(&tag1, &[id].into_iter().collect())));
+        assert!(tags.contains(&(&tag2, &[id].into_iter().collect())));
         assert_eq!(registry.list_entries().count(), 1);
         registry.clear_entry(id);
         assert_eq!(registry.list_entries().count(), 0);
@@ -439,11 +462,13 @@ mod tests {
         let entry1 = EntryData::new("/tmp/1");
         let entry2 = EntryData::new("/tmp/2");
         let entry3 = EntryData::new("/tmp/3");
+        let entry4 = EntryData::new("/tmp/4");
 
         let id = registry.add_or_update_entry(entry);
         let id1 = registry.add_or_update_entry(entry1);
         let id2 = registry.add_or_update_entry(entry2);
         let id3 = registry.add_or_update_entry(entry3);
+        let id4 = registry.add_or_update_entry(entry4);
 
         registry.tag_entry(&tag1, id);
         registry.tag_entry(&tag1, id2);
@@ -451,22 +476,38 @@ mod tests {
         registry.tag_entry(&tag2, id1);
         registry.tag_entry(&tag2, id3);
 
-        let entries1 = registry.list_entries_with_tags(vec![tag1.name()]);
-        assert_eq!(entries1.len(), 2);
+        registry.tag_entry(&tag1, id4);
+        registry.tag_entry(&tag2, id4);
+
+        let entries1 = registry.list_entries_with_any_tags(vec![tag1.name()]);
+        assert_eq!(entries1.len(), 3);
         assert!(entries1.contains(&id));
         assert!(entries1.contains(&id2));
+        assert!(entries1.contains(&id4));
 
-        let entries2 = registry.list_entries_with_tags(vec![tag2.name()]);
-        assert_eq!(entries2.len(), 2);
+        let entries2 = registry.list_entries_with_any_tags(vec![tag2.name()]);
+        assert_eq!(entries2.len(), 3);
         assert!(entries2.contains(&id1));
         assert!(entries2.contains(&id3));
+        assert!(entries1.contains(&id4));
 
-        let entries = registry.list_entries_with_tags(vec![tag2.name(), tag1.name()]);
-        assert_eq!(entries.len(), 4);
+        let entries = registry.list_entries_with_any_tags(vec![tag2.name(), tag1.name()]);
+        assert_eq!(entries.len(), 5);
         assert!(entries.contains(&id));
         assert!(entries.contains(&id1));
         assert!(entries.contains(&id2));
         assert!(entries.contains(&id3));
+        assert!(entries.contains(&id4));
+
+        let entries1 = registry.list_entries_with_all_tags(vec![tag1.name()]);
+        assert_eq!(entries1.len(), 3);
+        assert!(entries1.contains(&id));
+        assert!(entries1.contains(&id2));
+        assert!(entries1.contains(&id4));
+
+        let entries = registry.list_entries_with_all_tags(vec![tag2.name(), tag1.name()]);
+        assert_eq!(entries.len(), 1);
+        assert!(entries.contains(&id4));
     }
 
     #[test]
@@ -490,6 +531,9 @@ mod tests {
         assert!(entries.next().is_none());
         assert_eq!(got_id, &id);
         assert_eq!(got_entry, &entry);
-        assert_eq!(registry.list_entries_with_tags(vec![tag.name()]), vec![id]);
+        assert_eq!(
+            registry.list_entries_with_any_tags(vec![tag.name()]),
+            vec![id]
+        );
     }
 }

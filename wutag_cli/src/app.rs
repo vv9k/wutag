@@ -466,7 +466,7 @@ impl App {
                 }
             }
         } else {
-            for id in self.registry.list_entries_with_tags(&opts.tags) {
+            for id in self.registry.list_entries_with_all_tags(&opts.tags) {
                 let path = match self.registry.get_entry(id) {
                     Some(entry) => entry.path(),
                     None => continue,
