@@ -5,7 +5,6 @@ mod opt;
 mod util;
 
 use clap::Parser;
-use colored::Color::{self, *};
 
 use app::App;
 use config::Config;

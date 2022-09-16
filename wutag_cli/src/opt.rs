@@ -102,10 +102,14 @@ pub struct SearchOpts {
 
 #[derive(Parser)]
 pub struct CpOpts {
+    #[clap(short, long)]
+    /// Treat the first path as a glob pattern
+    pub glob: bool,
     /// Path to the file from which to copy tags from
     pub input_path: PathBuf,
-    /// A glob pattern like '*.png'.
-    pub pattern: String,
+    #[clap(required = true, last = true)]
+    /// A list of entries to tag
+    pub paths: Vec<String>,
 }
 
 #[derive(Parser)]
@@ -172,7 +176,4 @@ pub enum Command {
     PrintCompletions(CompletionsOpts),
     /// Clean the cached tag registry.
     CleanCache,
-    /// Run a scan of all files in the registry to see if they are still available. This is useful
-    /// to detect any changes made to the files tracked by wutag.
-    UpdateRegistry,
 }

@@ -6,16 +6,18 @@ edition = "2021"
 
 [dependencies]
 wutag_core = { path = "../wutag_core" }
+wutag_ipc = { path = "../wutag_ipc" }
+
 anyhow = "1"
 clap = { version = "3", features = ["derive"] }
 clap_complete = "3"
-serde_yaml = "0.8"
-serde_cbor = "0.11"
-serde = { version = "1", features = ["derive"] }
-walkdir = "2"
 colored = { git = "https://github.com/wojciechkepka/colored", branch = "master", features = ["serde"] }
-globwalk = "0.8"
 dirs = "4"
+globwalk = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_cbor = "0.11"
+serde_yaml = "0.8"
+walkdir = "2"
 
 [dev-dependencies]
 tempdir = "0.3"
