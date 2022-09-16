@@ -315,23 +315,8 @@ impl TagRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::color::DEFAULT_COLORS;
     use colored::Color::*;
-
-    const DEFAULT_COLORS: &[Color] = &[
-        Red,
-        Green,
-        Blue,
-        Yellow,
-        Cyan,
-        White,
-        Magenta,
-        BrightRed,
-        BrightGreen,
-        BrightYellow,
-        BrightBlue,
-        BrightMagenta,
-        BrightCyan,
-    ];
 
     #[test]
     fn adds_and_tags_entry() {

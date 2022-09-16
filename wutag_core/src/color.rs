@@ -1,33 +1,50 @@
 //! Utility functions used through this crate and by the main executable
 use colored::Color;
+use colored::Color::*;
 
 use crate::{Error, Result};
+
+pub const DEFAULT_COLORS: &[Color] = &[
+    Red,
+    Green,
+    Blue,
+    Yellow,
+    Cyan,
+    White,
+    Magenta,
+    BrightRed,
+    BrightGreen,
+    BrightYellow,
+    BrightBlue,
+    BrightMagenta,
+    BrightCyan,
+];
 
 /// Parses a [Color](colored::Color) from a foreground color string
 pub fn color_from_fg_str(s: &str) -> Option<Color> {
     match s {
-        "30" => Some(Color::Black),
-        "31" => Some(Color::Red),
-        "32" => Some(Color::Green),
-        "33" => Some(Color::Yellow),
-        "34" => Some(Color::Blue),
-        "35" => Some(Color::Magenta),
-        "36" => Some(Color::Cyan),
-        "37" => Some(Color::White),
-        "90" => Some(Color::BrightBlack),
-        "91" => Some(Color::BrightRed),
-        "92" => Some(Color::BrightGreen),
-        "93" => Some(Color::BrightYellow),
-        "94" => Some(Color::BrightBlue),
-        "95" => Some(Color::BrightMagenta),
-        "96" => Some(Color::BrightCyan),
-        "97" => Some(Color::BrightWhite),
+        "30" => Some(Black),
+        "31" => Some(Red),
+        "32" => Some(Green),
+        "33" => Some(Yellow),
+        "34" => Some(Blue),
+        "35" => Some(Magenta),
+        "36" => Some(Cyan),
+        "37" => Some(White),
+        "90" => Some(BrightBlack),
+        "91" => Some(BrightRed),
+        "92" => Some(BrightGreen),
+        "93" => Some(BrightYellow),
+        "94" => Some(BrightBlue),
+        "95" => Some(BrightMagenta),
+        "96" => Some(BrightCyan),
+        "97" => Some(BrightWhite),
         color => {
             if color.starts_with("38;2;") {
                 let mut it = s.split(';');
                 it.next()?;
                 it.next()?;
-                Some(Color::TrueColor {
+                Some(TrueColor {
                     r: it.next()?.parse().ok()?,
                     g: it.next()?.parse().ok()?,
                     b: it.next()?.parse().ok()?,

@@ -12,8 +12,7 @@ use crate::opt::{
     RmOpts, SearchOpts, SetOpts, Shell, APP_NAME,
 };
 use crate::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
-use crate::DEFAULT_COLORS;
-use wutag_core::color::parse_color;
+use wutag_core::color::{parse_color, DEFAULT_COLORS};
 use wutag_core::registry::{EntryData, TagRegistry};
 use wutag_core::tag::{
     clear_tags, get_tag, has_tags, list_tags, list_tags_btree, DirEntryExt, Tag,
