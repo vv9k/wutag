@@ -104,9 +104,9 @@ impl TagRegistry {
     }
 
     fn mut_tag_entries(&mut self, tag: &Tag) -> &mut BTreeSet<EntryId> {
-        let exists = self.tags.iter().find(|(t, _)| t == &tag);
+        let exists = self.tags.iter().any(|(t, _)| t == tag);
 
-        if exists.is_none() {
+        if !exists {
             self.tags.insert(tag.clone(), BTreeSet::new());
         }
 

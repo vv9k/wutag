@@ -24,7 +24,6 @@ pub struct Tag {
 impl Hash for Tag {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.name.hash(state);
-        self.color.to_fg_str().hash(state);
     }
 }
 
