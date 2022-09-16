@@ -176,6 +176,10 @@ impl TagRegistry {
         self.entries.remove(&entry);
     }
 
+    pub fn remove_entry(&mut self, entry: EntryId) -> Option<EntryData> {
+        self.entries.remove(&entry)
+    }
+
     /// Finds the entry by a `path`. Returns the id of the entry if found.
     pub fn find_entry<P: AsRef<Path>>(&self, path: P) -> Option<EntryId> {
         self.entries
