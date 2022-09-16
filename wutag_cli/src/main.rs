@@ -1,7 +1,6 @@
 mod app;
 mod config;
 mod opt;
-mod registry;
 mod util;
 
 use clap::Parser;

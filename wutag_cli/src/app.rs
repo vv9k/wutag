@@ -11,10 +11,10 @@ use crate::opt::{
     ClearOpts, Command, CompletionsOpts, CpOpts, EditOpts, GetOpts, ListObject, ListOpts, Opts,
     RmOpts, SearchOpts, SetOpts, Shell, APP_NAME,
 };
-use crate::registry::{EntryData, TagRegistry};
 use crate::util::{fmt_err, fmt_ok, fmt_path, fmt_tag, glob_ok};
 use crate::DEFAULT_COLORS;
 use wutag_core::color::parse_color;
+use wutag_core::registry::{EntryData, TagRegistry};
 use wutag_core::tag::{
     clear_tags, get_tag, has_tags, list_tags, list_tags_btree, DirEntryExt, Tag,
 };

@@ -1,4 +1,5 @@
 pub mod color;
+pub mod registry;
 pub mod tag;
 pub mod xattr;
 

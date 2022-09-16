@@ -1,13 +1,28 @@
 #![allow(dead_code)]
 
-use wutag_core::tag::Tag;
+use crate::tag::Tag;
 
-use anyhow::{Context, Result};
 use colored::Color;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum RegistryError {
+    #[error("Failed to load registry - {0}")]
+    LoadRegistry(io::Error),
+    #[error("Failed to deserialize registry - {0}")]
+    DeserializeRegistry(serde_cbor::Error),
+    #[error("Failed to save registry - {0}")]
+    SaveRegistry(io::Error),
+    #[error("Failed to serialize registry - {0}")]
+    SerializeRegistry(serde_cbor::Error),
+}
+
+type Result<T> = std::result::Result<T, RegistryError>;
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 pub struct EntryData {
@@ -46,15 +61,15 @@ impl TagRegistry {
     /// Loads a registry from the specified `path`.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref();
-        let data = fs::read(path).context("failed to read saved registry")?;
+        let data = fs::read(path).map_err(RegistryError::LoadRegistry)?;
 
-        serde_cbor::from_slice(&data).context("failed to deserialize tag registry")
+        serde_cbor::from_slice(&data).map_err(RegistryError::DeserializeRegistry)
     }
 
     /// Saves the registry serialized to the path from which it was loaded.
     pub fn save(&self) -> Result<()> {
-        let serialized = serde_cbor::to_vec(&self).context("failed to serialize tag registry")?;
-        fs::write(&self.path, &serialized).context("failed to save registry")
+        let serialized = serde_cbor::to_vec(&self).map_err(RegistryError::SerializeRegistry)?;
+        fs::write(&self.path, &serialized).map_err(RegistryError::SaveRegistry)
     }
 
     /// Clears this tag registry by removing all entries and tags.
@@ -283,8 +298,23 @@ impl TagRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::DEFAULT_COLORS;
-    use colored::Color::{Black, Red};
+    use colored::Color::*;
+
+    const DEFAULT_COLORS: &[Color] = &[
+        Red,
+        Green,
+        Blue,
+        Yellow,
+        Cyan,
+        White,
+        Magenta,
+        BrightRed,
+        BrightGreen,
+        BrightYellow,
+        BrightBlue,
+        BrightMagenta,
+        BrightCyan,
+    ];
 
     #[test]
     fn adds_and_tags_entry() {
