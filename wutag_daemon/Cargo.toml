@@ -1,5 +1,5 @@
 [package]
-name = "wutag_daemon"
+name = "wutagd"
 version = "0.1.0"
 edition = "2021"
 

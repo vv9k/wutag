@@ -1233,7 +1233,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "wutag_daemon"
+name = "wutag_ipc"
+version = "0.1.0"
+dependencies = [
+ "interprocess",
+ "log",
+ "serde",
+ "serde_cbor",
+ "thiserror",
+ "wutag_core",
+]
+
+[[package]]
+name = "wutagd"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -1246,18 +1258,6 @@ dependencies = [
  "serde_cbor",
  "wutag_core",
  "wutag_ipc",
-]
-
-[[package]]
-name = "wutag_ipc"
-version = "0.1.0"
-dependencies = [
- "interprocess",
- "log",
- "serde",
- "serde_cbor",
- "thiserror",
- "wutag_core",
 ]
 
 [[package]]
