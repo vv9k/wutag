@@ -143,7 +143,8 @@ impl App {
                 };
                 for (entry, tags) in entries {
                     print!("{}", fmt_path(entry.path()));
-                    if let Some(tags) = tags {
+                    if let Some(mut tags) = tags {
+                        tags.sort_unstable();
                         let tags = tags
                             .into_iter()
                             .map(|t| fmt_tag(&t).to_string())
@@ -157,7 +158,7 @@ impl App {
                 }
             }
             ListObject::Tags => {
-                let tags = match self.client.list_tags().context("failed to list tags")? {
+                let mut tags = match self.client.list_tags().context("failed to list tags")? {
                     Response::ListTags(res) => match res {
                         RequestResult::Ok(tags) => tags,
                         RequestResult::Error(e) => {
@@ -168,6 +169,7 @@ impl App {
                         return err!("Failed to list tags, reason: unexpected response from client {response:?}");
                     }
                 };
+                tags.sort_unstable();
                 for tag in tags {
                     print!("{} ", fmt_tag(&tag));
                 }
@@ -240,7 +242,8 @@ impl App {
             }
         };
 
-        for (entry, tags) in entries {
+        for (entry, mut tags) in entries {
+            tags.sort_unstable();
             print!("{}:", fmt_path(entry.path()));
             for tag in &tags {
                 print!(" {}", fmt_tag(tag))
@@ -269,6 +272,13 @@ impl App {
         {
             Response::UntagFiles(res) => {
                 if let RequestResult::Error(e) = res {
+                    let e: Vec<_> = e
+                        .into_iter()
+                        .filter(|e| !e.contains("doesn't exist"))
+                        .collect();
+                    if e.is_empty() {
+                        return Ok(());
+                    }
                     eprintln!("Failed to untag some entries, reason: ");
                     for error in e {
                         eprintln!(" - {error}");
