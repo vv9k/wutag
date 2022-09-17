@@ -35,8 +35,13 @@ impl EntryData {
             path: path.as_ref().to_path_buf(),
         }
     }
+
     pub fn path(&self) -> &Path {
         &self.path
+    }
+
+    pub fn into_path_buf(self) -> PathBuf {
+        self.path
     }
 }
 
