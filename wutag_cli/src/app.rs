@@ -85,7 +85,6 @@ impl App {
             Command::Cp(opts) => self.cp(opts),
             Command::Edit(opts) => self.edit(opts),
             Command::PrintCompletions(opts) => self.print_completions(opts),
-            Command::CleanCache => self.clean_cache(),
         }
         .context("failed executing command");
 
@@ -95,8 +94,8 @@ impl App {
         }
     }
 
-    fn clean_cache(&mut self) -> Result<()> {
-        self.client.clean_cache().context("failed to clean cache")
+    fn clear_cache(&mut self) -> Result<()> {
+        self.client.clear_cache().context("failed to clean cache")
     }
 
     fn get_paths(&self, glob: bool, paths: Vec<String>) -> Result<Vec<String>> {
@@ -351,6 +350,7 @@ impl App {
                     }
                 };
             }
+            ClearObject::Cache => self.clear_cache()?,
         }
         Ok(())
     }

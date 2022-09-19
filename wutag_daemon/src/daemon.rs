@@ -41,7 +41,7 @@ impl WutagDaemon {
             Request::CopyTags { source, target } => self.copy_tags(source, target),
             Request::Ping => self.ping(),
             Request::EditTag { tag, color } => self.edit_tag(tag, color),
-            Request::CleanCache => self.clean_cache(),
+            Request::ClearCache => self.clean_cache(),
         }
     }
 
@@ -379,6 +379,6 @@ impl WutagDaemon {
         if let Err(e) = registry.save() {
             log::error!("{e}")
         }
-        Response::CleanCache(RequestResult::Ok(()))
+        Response::ClearCache(RequestResult::Ok(()))
     }
 }

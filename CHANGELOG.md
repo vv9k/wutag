@@ -8,6 +8,7 @@
 * The `clear` subcommand is now split into multiple subcommands like `wutag clear tags <TAGS>...` or `wutag clear files <PATHS>...`
 * A running `wutagd` daemon is now required for **wutag** to work. The daemon is responsible for tracking tagged files and filesystem changes made to them.
 * **BREAKING** the format of tags has changed, all previously tagged files won't work with this version.
+* Replace `wutag clean-cache` subcommand with `wutag clear cache`
 
 # 0.4.0
 

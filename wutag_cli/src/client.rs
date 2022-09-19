@@ -115,7 +115,7 @@ impl Client {
         self.client.request(Request::Ping).map(|_| ())
     }
 
-    pub fn clean_cache(&self) -> Result<()> {
-        self.client.request(Request::CleanCache).map(|_| ())
+    pub fn clear_cache(&self) -> Result<()> {
+        self.client.request(Request::ClearCache).map(|_| ())
     }
 }

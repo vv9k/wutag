@@ -52,7 +52,7 @@ pub enum Request {
         any: bool,
     },
     Ping,
-    CleanCache,
+    ClearCache,
 }
 
 impl Request {
@@ -85,7 +85,7 @@ pub enum Response {
     InspectFiles(RequestResult<Vec<(EntryData, Vec<Tag>)>, String>),
     Search(RequestResult<Vec<EntryData>, String>),
     Ping(RequestResult<(), String>),
-    CleanCache(RequestResult<(), String>),
+    ClearCache(RequestResult<(), String>),
 }
 
 impl Response {
