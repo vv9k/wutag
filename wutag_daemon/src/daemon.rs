@@ -2,7 +2,7 @@ use crate::registry::{get_registry_read, get_registry_write};
 use crate::{EntryEvent, ENTRIES_EVENTS};
 use anyhow::{Context, Result};
 use std::path::PathBuf;
-use wutag_core::color::Color;
+use wutag_core::color::{Color, DEFAULT_COLORS};
 use wutag_core::registry::EntryData;
 use wutag_core::tag::{clear_tags, list_tags, Tag};
 use wutag_ipc::{IpcServer, Request, RequestResult, Response};
@@ -35,7 +35,8 @@ impl Daemon {
             Request::ListTags => self.list_tags(),
             Request::ListFiles { with_tags } => self.list_files(with_tags),
             Request::InspectFiles { files } => self.inspect_files(files),
-            Request::ClearTags { files } => self.clear_tags(files),
+            Request::ClearFiles { files } => self.clear_files(files),
+            Request::ClearTags { tags } => self.clear_tags(tags),
             Request::Search { tags, any } => self.search(tags, any),
             Request::CopyTags { source, target } => self.copy_tags(source, target),
             Request::Ping => self.ping(),
@@ -227,9 +228,9 @@ impl Daemon {
         }
     }
 
-    fn clear_tags(&mut self, files: Vec<PathBuf>) -> Response {
+    fn clear_files(&mut self, files: Vec<PathBuf>) -> Response {
         if files.is_empty() {
-            return Response::ClearTags(RequestResult::Error(vec!["no files to clear".into()]));
+            return Response::ClearFiles(RequestResult::Error(vec!["no files to clear".into()]));
         }
 
         let mut errors = vec![];
@@ -263,10 +264,45 @@ impl Daemon {
         }
 
         if errors.is_empty() {
-            Response::ClearTags(RequestResult::Ok(()))
+            Response::ClearFiles(RequestResult::Ok(()))
         } else {
-            Response::ClearTags(RequestResult::Error(errors))
+            Response::ClearFiles(RequestResult::Error(errors))
         }
+    }
+
+    fn clear_tags(&mut self, tags: Vec<String>) -> Response {
+        if tags.is_empty() {
+            return Response::ClearTags(RequestResult::Error(vec!["no tags to clear".into()]));
+        }
+
+        let mut removed = vec![];
+        let mut registry = get_registry_write();
+
+        for tag in &tags {
+            let tag = Tag::random(tag, DEFAULT_COLORS);
+            let cleared = registry.clear_tag(&tag);
+            if let Some(cleared) = cleared {
+                cleared
+                    .into_iter()
+                    .map(|e| e.into_path_buf())
+                    .for_each(|e| removed.push(e));
+            }
+        }
+
+        if let Err(e) = registry.save() {
+            log::error!("{e}")
+        }
+
+        match ENTRIES_EVENTS.try_write() {
+            Ok(mut events) => {
+                events.push(EntryEvent::Remove(removed));
+            }
+            Err(e) => {
+                log::error!("failed to lock entries events, reason: {e}");
+            }
+        }
+
+        Response::ClearFiles(RequestResult::Ok(()))
     }
 
     fn list_tags(&mut self) -> Response {

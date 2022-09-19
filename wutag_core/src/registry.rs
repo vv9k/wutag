@@ -83,6 +83,28 @@ impl TagRegistry {
         self.entries.clear();
     }
 
+    /// Removes the tag from this registry returing a set of entries that were
+    /// completely removed.
+    pub fn clear_tag(&mut self, tag: &Tag) -> Option<Vec<EntryData>> {
+        let removed = self.tags.remove(tag);
+        let mut final_removed = None;
+        if let Some(removed) = removed {
+            final_removed = Some(
+                removed
+                    .into_iter()
+                    .filter_map(|entry| {
+                        if self.list_entry_tags(entry).is_none() {
+                            self.remove_entry(entry)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
+            );
+        }
+        final_removed
+    }
+
     /// Updates the entry or adds it if it is not present.
     pub fn add_or_update_entry(&mut self, entry: EntryData) -> (EntryId, bool) {
         let pos = self
@@ -164,6 +186,10 @@ impl TagRegistry {
         self.untag_entry(&tag, entry)
     }
 
+    pub fn remove_entry(&mut self, entry: EntryId) -> Option<EntryData> {
+        self.entries.remove(&entry)
+    }
+
     /// Clears all tags of the `entry`.
     pub fn clear_entry(&mut self, entry: EntryId) {
         let mut to_remove = vec![];
@@ -178,11 +204,7 @@ impl TagRegistry {
             self.tags.remove(&tag);
         }
 
-        self.entries.remove(&entry);
-    }
-
-    pub fn remove_entry(&mut self, entry: EntryId) -> Option<EntryData> {
-        self.entries.remove(&entry)
+        self.remove_entry(entry);
     }
 
     /// Finds the entry by a `path`. Returns the id of the entry if found.

@@ -62,15 +62,21 @@ impl Client {
         })
     }
 
-    pub fn clear_tags<P: AsRef<Path>>(
+    pub fn clear_files<P: AsRef<Path>>(
         &self,
         files: impl IntoIterator<Item = P>,
     ) -> Result<Response> {
-        self.client.request(Request::ClearTags {
+        self.client.request(Request::ClearFiles {
             files: files
                 .into_iter()
                 .map(|p| p.as_ref().to_path_buf())
                 .collect(),
+        })
+    }
+
+    pub fn clear_tags<T: AsRef<str>>(&self, tags: impl IntoIterator<Item = T>) -> Result<Response> {
+        self.client.request(Request::ClearTags {
+            tags: tags.into_iter().map(|t| t.as_ref().to_string()).collect(),
         })
     }
 

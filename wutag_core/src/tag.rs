@@ -1,5 +1,4 @@
 //! Functions for manipulating tags on files.
-use colored::Color;
 use globwalk::DirEntry;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -10,6 +9,7 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
 
+use crate::color::Color;
 use crate::xattr::{list_xattrs, remove_xattr, set_xattr, Xattr};
 use crate::{Error, Result, WUTAG_NAMESPACE};
 

@@ -5,6 +5,7 @@
 * All output is now raw by default, to enable it use `-p` or `--pretty` global flag or set `pretty_output: true` in configuration
 * Subcommands `set`, `rm` and `clear` now take a list of paths to process rather than a pattern by default. Previous behaviour was preserved with a flag `-g` or `--glob` to treat the first provided path as a glob pattern.
 * Add `get` subcommand that lists tags of specified entries
+* The `clear` subcommand is now split into multiple subcommands like `wutag clear tags <TAGS>...` or `wutag clear files <PATHS>...`
 
 # 0.4.0
 

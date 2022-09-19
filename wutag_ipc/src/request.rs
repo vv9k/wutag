@@ -30,8 +30,11 @@ pub enum Request {
         tag: String,
         color: Color,
     },
-    ClearTags {
+    ClearFiles {
         files: Vec<PathBuf>,
+    },
+    ClearTags {
+        tags: Vec<String>,
     },
     CopyTags {
         source: PathBuf,
@@ -74,6 +77,7 @@ pub enum Response {
     UntagFiles(RequestResult<(), Vec<String>>),
     EditTag(RequestResult<(), String>),
     CopyTags(RequestResult<(), Vec<String>>),
+    ClearFiles(RequestResult<(), Vec<String>>),
     ClearTags(RequestResult<(), Vec<String>>),
     ListTags(RequestResult<Vec<Tag>, String>),
     #[allow(clippy::type_complexity)]

@@ -6,8 +6,8 @@ use std::path::PathBuf;
 use crate::client::Client;
 use crate::config::Config;
 use crate::opt::{
-    ClearOpts, Command, CompletionsOpts, CpOpts, EditOpts, GetOpts, ListObject, ListOpts, Opts,
-    RmOpts, SearchOpts, SetOpts, Shell, APP_NAME,
+    ClearObject, ClearOpts, Command, CompletionsOpts, CpOpts, EditOpts, GetOpts, ListObject,
+    ListOpts, Opts, RmOpts, SearchOpts, SetOpts, Shell, APP_NAME,
 };
 use crate::util::{fmt_path, fmt_tag, glob_paths};
 use wutag_core::color::{self, parse_color, Color, DEFAULT_COLORS};
@@ -296,33 +296,62 @@ impl App {
     }
 
     fn clear(&mut self, opts: ClearOpts) -> Result<()> {
-        if opts.paths.is_empty() {
-            return err!("no entries to remove tags from...");
-        }
-        let paths = self
-            .get_paths(opts.glob, opts.paths)
-            .context("failed to get a list of paths")?;
-
-        match self
-            .client
-            .clear_tags(paths)
-            .context("failed to clear tags")?
-        {
-            Response::ClearTags(res) => {
-                if let RequestResult::Error(e) = res {
-                    eprintln!("Failed to clear tags of some entries, reason: ");
-                    for error in e {
-                        eprintln!(" - {error}");
-                    }
-                    std::process::exit(1);
+        match opts.object {
+            ClearObject::Files { paths, glob } => {
+                if paths.is_empty() {
+                    return err!("no entries to remove tags from...");
                 }
-            }
-            response => {
-                return err!(
+                let paths = self
+                    .get_paths(glob, paths)
+                    .context("failed to get a list of paths")?;
+
+                match self
+                    .client
+                    .clear_files(paths)
+                    .context("failed to clear entries")?
+                {
+                    Response::ClearFiles(res) => {
+                        if let RequestResult::Error(e) = res {
+                            eprintln!("Failed to clear tags of some entries, reason: ");
+                            for error in e {
+                                eprintln!(" - {error}");
+                            }
+                            std::process::exit(1);
+                        }
+                    }
+                    response => {
+                        return err!(
                     "Failed to clear tags from entries, reason: unexpected response from client {response:?}"
                 );
+                    }
+                };
             }
-        };
+            ClearObject::Tags { names } => {
+                if names.is_empty() {
+                    return err!("no tags to clear...");
+                }
+                match self
+                    .client
+                    .clear_tags(names)
+                    .context("failed to clear tags")?
+                {
+                    Response::ClearTags(res) => {
+                        if let RequestResult::Error(e) = res {
+                            eprintln!("Failed to clear tags, reason: ");
+                            for error in e {
+                                eprintln!(" - {error}");
+                            }
+                            std::process::exit(1);
+                        }
+                    }
+                    response => {
+                        return err!(
+                    "Failed to clear tags, reason: unexpected response from client {response:?}"
+                );
+                    }
+                };
+            }
+        }
         Ok(())
     }
 

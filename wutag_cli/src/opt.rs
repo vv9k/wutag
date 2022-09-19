@@ -84,13 +84,29 @@ pub struct RmOpts {
 }
 
 #[derive(Parser)]
-pub struct ClearOpts {
-    /// A list of entries to tag
-    pub paths: Vec<String>,
-    #[clap(short, long)]
-    /// Treat the first path as a glob pattern
-    pub glob: bool,
+pub enum ClearObject {
+    /// Remove tags completely
+    Tags {
+        /// The names of the tags to clear from all entries
+        names: Vec<String>,
+    },
+    /// Remove all tags from specified files
+    Files {
+        /// A list of entries to tag
+        paths: Vec<String>,
+        #[clap(short, long)]
+        /// Treat the first path as a glob pattern
+        glob: bool,
+    },
 }
+
+#[derive(Parser)]
+pub struct ClearOpts {
+    #[clap(subcommand)]
+    /// The object to list. Valid values are: `tags`, `files`.
+    pub object: ClearObject,
+}
+
 #[derive(Parser)]
 pub struct SearchOpts {
     #[clap(required = true)]
