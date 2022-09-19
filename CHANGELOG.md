@@ -6,6 +6,8 @@
 * Subcommands `set`, `rm` and `clear` now take a list of paths to process rather than a pattern by default. Previous behaviour was preserved with a flag `-g` or `--glob` to treat the first provided path as a glob pattern.
 * Add `get` subcommand that lists tags of specified entries
 * The `clear` subcommand is now split into multiple subcommands like `wutag clear tags <TAGS>...` or `wutag clear files <PATHS>...`
+* A running `wutagd` daemon is now required for **wutag** to work. The daemon is responsible for tracking tagged files and filesystem changes made to them.
+* **BREAKING** the format of tags has changed, all previously tagged files won't work with this version.
 
 # 0.4.0
 
