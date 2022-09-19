@@ -14,7 +14,7 @@ pub struct NotifyDaemon {
 
 struct Handler;
 
-impl<'a> EventHandler for Handler {
+impl EventHandler for Handler {
     fn handle_event(&mut self, event: notify::Result<Event>) {
         match event {
             Ok(event) => match event.kind {

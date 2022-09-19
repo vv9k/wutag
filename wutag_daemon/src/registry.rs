@@ -52,25 +52,3 @@ pub fn try_get_registry_write_loop() -> Result<RwLockWriteGuard<'static, TagRegi
         break Ok(registry);
     }
 }
-
-pub fn try_get_registry_read_loop() -> Result<RwLockReadGuard<'static, TagRegistry>> {
-    let mut i = 0;
-    loop {
-        i += 1;
-        if i >= 5 {
-            return Err(Error::msg("failed to lock registry for reading"));
-        }
-        let registry = match REGISTRY.try_read() {
-            Ok(registry) => registry,
-            Err(e) => match e {
-                TryLockError::Poisoned(e) => {
-                    return Err(Error::msg(format!(
-                        "failed to lock registry for reading, reason: {e}"
-                    )))
-                }
-                TryLockError::WouldBlock => continue,
-            },
-        };
-        break Ok(registry);
-    }
-}

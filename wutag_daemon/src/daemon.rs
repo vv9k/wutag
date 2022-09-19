@@ -123,10 +123,8 @@ impl WutagDaemon {
                 for tag in &tags {
                     if let Err(e) = tag.remove_from(file) {
                         errors.push(format!("{} tag: {tag}, error: {e}", file.display()));
-                    } else {
-                        if let Some(entry) = registry.untag_entry(tag, id) {
-                            removed.push(entry.into_path_buf());
-                        }
+                    } else if let Some(entry) = registry.untag_entry(tag, id) {
+                        removed.push(entry.into_path_buf());
                     }
                 }
             }
