@@ -39,6 +39,8 @@ pub enum Error {
     TagListFull(io::Error),
     #[error("failed to glob pattern - {0}")]
     Glob(#[from] globwalk::GlobError),
+    #[error("failed to determine current working directory")]
+    GetCurrentWorkingDir,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

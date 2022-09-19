@@ -1,9 +1,38 @@
 use crate::{Error, Result};
 use globwalk::{GlobWalker, GlobWalkerBuilder};
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 /// Default max depth passed to [GlobWalker](globwalker::GlobWalker)
 pub const DEFAULT_MAX_DEPTH: usize = 2;
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Glob {
+    pub pattern: String,
+    pub base_dir: PathBuf,
+    pub max_depth: usize,
+}
+
+impl Glob {
+    pub fn new(
+        pattern: String,
+        base_dir: Option<PathBuf>,
+        max_depth: Option<usize>,
+    ) -> Result<Self> {
+        let base_dir = base_dir
+            .or(std::env::current_dir().ok())
+            .ok_or_else(|| Error::GetCurrentWorkingDir)?;
+        Ok(Self {
+            pattern,
+            base_dir,
+            max_depth: max_depth.unwrap_or(DEFAULT_MAX_DEPTH),
+        })
+    }
+
+    pub fn glob_paths(&self) -> Result<Vec<PathBuf>> {
+        paths(&self.pattern, &self.base_dir, Some(self.max_depth))
+    }
+}
 
 /// Returns a GlobWalker instance with base path set to `base_path` and pattern to `pattern`. If
 /// max_depth is specified the GlobWalker will have it's max depth set to its value, otherwise max

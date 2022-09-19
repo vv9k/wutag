@@ -2,6 +2,7 @@
 use crate::Result;
 use thiserror::Error as ThisError;
 use wutag_core::color::Color;
+use wutag_core::glob::Glob;
 use wutag_core::registry::EntryData;
 use wutag_core::tag::Tag;
 use wutag_ipc::{IpcClient, Request, RequestResult, Response};
@@ -146,20 +147,48 @@ impl Client {
         }
     }
 
+    fn tag_files_impl(&self, request: Request) -> Result<()> {
+        debug_assert!(matches!(
+            request,
+            Request::TagFiles { .. } | Request::TagFilesPattern { .. }
+        ));
+        self.client
+            .request(request)
+            .map_err(|e| ClientError::TagFiles(e.to_string()).into())
+            .and_then(handle_error)
+            .map(|_| ())
+    }
+
     pub fn tag_files<P: AsRef<Path>>(
         &self,
         files: impl IntoIterator<Item = P>,
         tags: impl IntoIterator<Item = Tag>,
     ) -> Result<()> {
+        self.tag_files_impl(Request::TagFiles {
+            files: files
+                .into_iter()
+                .map(|p| p.as_ref().to_path_buf())
+                .collect(),
+            tags: tags.into_iter().collect(),
+        })
+    }
+
+    pub fn tag_files_pattern(&self, glob: Glob, tags: impl IntoIterator<Item = Tag>) -> Result<()> {
+        self.tag_files_impl(Request::TagFilesPattern {
+            glob,
+
+            tags: tags.into_iter().collect(),
+        })
+    }
+
+    fn untag_files_impl(&self, request: Request) -> Result<()> {
+        debug_assert!(matches!(
+            request,
+            Request::UntagFiles { .. } | Request::UntagFilesPattern { .. }
+        ));
         self.client
-            .request(Request::TagFiles {
-                files: files
-                    .into_iter()
-                    .map(|p| p.as_ref().to_path_buf())
-                    .collect(),
-                tags: tags.into_iter().collect(),
-            })
-            .map_err(|e| ClientError::TagFiles(e.to_string()).into())
+            .request(request)
+            .map_err(|e| ClientError::UntagFiles(e.to_string()).into())
             .and_then(handle_error)
             .map(|_| ())
     }
@@ -169,23 +198,42 @@ impl Client {
         files: impl IntoIterator<Item = P>,
         tags: impl IntoIterator<Item = Tag>,
     ) -> Result<()> {
-        self.client
-            .request(Request::UntagFiles {
-                files: files
-                    .into_iter()
-                    .map(|p| p.as_ref().to_path_buf())
-                    .collect(),
-                tags: tags.into_iter().collect(),
-            })
-            .map_err(|e| ClientError::UntagFiles(e.to_string()).into())
-            .and_then(handle_error)
-            .map(|_| ())
+        self.untag_files_impl(Request::UntagFiles {
+            files: files
+                .into_iter()
+                .map(|p| p.as_ref().to_path_buf())
+                .collect(),
+            tags: tags.into_iter().collect(),
+        })
+    }
+
+    pub fn untag_files_pattern(
+        &self,
+        glob: Glob,
+        tags: impl IntoIterator<Item = Tag>,
+    ) -> Result<()> {
+        self.untag_files_impl(Request::UntagFilesPattern {
+            glob,
+            tags: tags.into_iter().collect(),
+        })
     }
 
     pub fn edit_tag(&self, tag: String, color: Color) -> Result<()> {
         self.client
             .request(Request::EditTag { tag, color })
             .map_err(|e| ClientError::EditTag(e.to_string()).into())
+            .and_then(handle_error)
+            .map(|_| ())
+    }
+
+    fn copy_tags_impl(&self, request: Request) -> Result<()> {
+        debug_assert!(matches!(
+            request,
+            Request::CopyTags { .. } | Request::CopyTagsPattern { .. }
+        ));
+        self.client
+            .request(request)
+            .map_err(|e| ClientError::CopyTags(e.to_string()).into())
             .and_then(handle_error)
             .map(|_| ())
     }
@@ -208,17 +256,36 @@ impl Client {
             .map(|_| ())
     }
 
-    pub fn clear_files<P: AsRef<Path>>(&self, files: impl IntoIterator<Item = P>) -> Result<()> {
+    pub fn copy_tags_pattern(&self, source: impl AsRef<Path>, glob: Glob) -> Result<()> {
+        self.copy_tags_impl(Request::CopyTagsPattern {
+            glob,
+            source: source.as_ref().to_path_buf(),
+        })
+    }
+
+    fn clear_files_impl(&self, request: Request) -> Result<()> {
+        debug_assert!(matches!(
+            request,
+            Request::ClearFiles { .. } | Request::ClearFilesPattern { .. }
+        ));
         self.client
-            .request(Request::ClearFiles {
-                files: files
-                    .into_iter()
-                    .map(|p| p.as_ref().to_path_buf())
-                    .collect(),
-            })
+            .request(request)
             .map_err(|e| ClientError::ClearFiles(e.to_string()).into())
             .and_then(handle_error)
             .map(|_| ())
+    }
+
+    pub fn clear_files<P: AsRef<Path>>(&self, files: impl IntoIterator<Item = P>) -> Result<()> {
+        self.clear_files_impl(Request::ClearFiles {
+            files: files
+                .into_iter()
+                .map(|p| p.as_ref().to_path_buf())
+                .collect(),
+        })
+    }
+
+    pub fn clear_files_pattern(&self, glob: Glob) -> Result<()> {
+        self.clear_files_impl(Request::ClearFilesPattern { glob })
     }
 
     pub fn clear_tags<T: AsRef<str>>(&self, tags: impl IntoIterator<Item = T>) -> Result<()> {
@@ -259,17 +326,13 @@ impl Client {
             })
     }
 
-    pub fn inspect_files<P: AsRef<Path>>(
-        &self,
-        files: impl IntoIterator<Item = P>,
-    ) -> Result<Vec<(EntryData, Vec<Tag>)>> {
+    fn inspect_files_impl(&self, request: Request) -> Result<Vec<(EntryData, Vec<Tag>)>> {
+        debug_assert!(matches!(
+            request,
+            Request::InspectFiles { files: _ } | Request::InspectFilesPattern { .. }
+        ));
         self.client
-            .request(Request::InspectFiles {
-                files: files
-                    .into_iter()
-                    .map(|p| p.as_ref().to_path_buf())
-                    .collect(),
-            })
+            .request(request)
             .map_err(|e| ClientError::InspectFiles(e.to_string()).into())
             .and_then(handle_error)
             .and_then(|r| {
@@ -279,6 +342,22 @@ impl Client {
                     Err(ClientError::UnexpectedResponse(r).into())
                 }
             })
+    }
+
+    pub fn inspect_files<P: AsRef<Path>>(
+        &self,
+        files: impl IntoIterator<Item = P>,
+    ) -> Result<Vec<(EntryData, Vec<Tag>)>> {
+        self.inspect_files_impl(Request::InspectFiles {
+            files: files
+                .into_iter()
+                .map(|p| p.as_ref().to_path_buf())
+                .collect(),
+        })
+    }
+
+    pub fn inspect_files_pattern(&self, glob: Glob) -> Result<Vec<(EntryData, Vec<Tag>)>> {
+        self.inspect_files_impl(Request::InspectFilesPattern { glob })
     }
 
     pub fn search<S: Into<String>>(

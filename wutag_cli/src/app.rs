@@ -12,7 +12,7 @@ use crate::opt::{
 use crate::{Error, Result};
 use thiserror::Error as ThisError;
 use wutag_core::color::{self, parse_color, Color, DEFAULT_COLORS};
-use wutag_core::glob;
+use wutag_core::glob::Glob;
 use wutag_core::tag::Tag;
 use wutag_ipc::{default_socket, Response};
 
@@ -104,30 +104,6 @@ impl App {
         self.client.clear_cache()
     }
 
-    fn get_paths(&self, glob: bool, paths: Vec<String>) -> Result<Vec<String>> {
-        if glob {
-            let paths = glob::paths(&paths[0], self.base_dir.clone(), self.max_depth)
-                .map_err(Error::Glob)?;
-            Ok(paths
-                .into_iter()
-                .map(|p| p.to_string_lossy().to_string())
-                .collect())
-        } else {
-            let mut parsed_paths = vec![];
-            for path in paths {
-                let path = PathBuf::from(path);
-                match path.canonicalize() {
-                    Ok(path) => parsed_paths.push(path.to_string_lossy().to_string()),
-                    Err(e) => eprintln!(
-                        "failed to canonicalize path `{}`, reason: {e}",
-                        path.display()
-                    ),
-                }
-            }
-            Ok(parsed_paths)
-        }
-    }
-
     fn list(&self, opts: ListOpts) -> Result<()> {
         match opts.object {
             ListObject::Files { with_tags } => {
@@ -160,24 +136,43 @@ impl App {
     }
 
     fn set(&mut self, opts: SetOpts) -> Result<()> {
-        let paths = self.get_paths(opts.glob, opts.paths)?;
-
         let tags: Vec<_> = opts
             .tags
             .into_iter()
             .map(|t| Tag::random(t, &self.colors))
             .collect();
 
-        self.client
-            .tag_files(paths, tags)
-            .map_err(Error::from)
-            .map(|_| ())
+        if opts.glob {
+            let glob = Glob::new(
+                opts.paths[0].clone(),
+                Some(self.base_dir.clone()),
+                self.max_depth,
+            )
+            .map_err(Error::Glob)?;
+            self.client
+                .tag_files_pattern(glob, tags)
+                .map_err(Error::from)
+                .map(|_| ())
+        } else {
+            self.client
+                .tag_files(opts.paths, tags)
+                .map_err(Error::from)
+                .map(|_| ())
+        }
     }
 
     fn get(&mut self, opts: GetOpts) -> Result<()> {
-        let paths = self.get_paths(opts.glob, opts.paths)?;
-
-        let entries = self.client.inspect_files(paths)?;
+        let entries = if opts.glob {
+            let glob = Glob::new(
+                opts.paths[0].clone(),
+                Some(self.base_dir.clone()),
+                self.max_depth,
+            )
+            .map_err(Error::Glob)?;
+            self.client.inspect_files_pattern(glob)?
+        } else {
+            self.client.inspect_files(opts.paths)?
+        };
 
         for (entry, mut tags) in entries {
             tags.sort_unstable();
@@ -190,25 +185,45 @@ impl App {
     }
 
     fn rm(&mut self, opts: RmOpts) -> Result<()> {
-        let paths = self.get_paths(opts.glob, opts.paths)?;
         let tags: Vec<_> = opts
             .tags
             .into_iter()
             .map(|t| Tag::random(t, &self.colors))
             .collect();
 
-        self.client
-            .untag_files(paths, tags)
-            .map_err(Error::from)
-            .map(|_| ())
+        if opts.glob {
+            let glob = Glob::new(
+                opts.paths[0].clone(),
+                Some(self.base_dir.clone()),
+                self.max_depth,
+            )
+            .map_err(Error::Glob)?;
+            self.client
+                .untag_files_pattern(glob, tags)
+                .map_err(Error::from)
+                .map(|_| ())
+        } else {
+            self.client
+                .untag_files(opts.paths, tags)
+                .map_err(Error::from)
+                .map(|_| ())
+        }
     }
 
     fn clear(&mut self, opts: ClearOpts) -> Result<()> {
         match opts.object {
             ClearObject::Files { paths, glob } => {
-                let paths = self.get_paths(glob, paths)?;
-
-                self.client.clear_files(paths)?;
+                if glob {
+                    let glob = Glob::new(
+                        paths[0].clone(),
+                        Some(self.base_dir.clone()),
+                        self.max_depth,
+                    )
+                    .map_err(Error::Glob)?;
+                    self.client.clear_files_pattern(glob)?;
+                } else {
+                    self.client.clear_files(paths)?;
+                }
             }
             ClearObject::Tags { names } => {
                 self.client.clear_tags(names)?;
@@ -227,12 +242,23 @@ impl App {
     }
 
     fn cp(&mut self, opts: CpOpts) -> Result<()> {
-        let paths = self.get_paths(opts.glob, opts.paths)?;
-
-        self.client
-            .copy_tags(opts.input_path, paths)
-            .map_err(Error::from)
-            .map(|_| ())
+        if opts.glob {
+            let glob = Glob::new(
+                opts.paths[0].clone(),
+                Some(self.base_dir.clone()),
+                self.max_depth,
+            )
+            .map_err(Error::Glob)?;
+            self.client
+                .copy_tags_pattern(opts.input_path, glob)
+                .map_err(Error::from)
+                .map(|_| ())
+        } else {
+            self.client
+                .copy_tags(opts.input_path, opts.paths)
+                .map_err(Error::from)
+                .map(|_| ())
+        }
     }
 
     fn edit(&mut self, opts: EditOpts) -> Result<()> {

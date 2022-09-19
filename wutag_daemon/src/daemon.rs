@@ -48,14 +48,53 @@ impl WutagDaemon {
     fn process_request(&mut self, request: Request) -> Response {
         match request {
             Request::TagFiles { files, tags } => self.tag_files(files, tags),
+            Request::TagFilesPattern { glob, tags } => {
+                let files = match glob.glob_paths() {
+                    Ok(files) => files,
+                    Err(e) => return Response::TagFiles(RequestResult::Error(vec![e.to_string()])),
+                };
+                self.tag_files(files, tags)
+            }
             Request::UntagFiles { files, tags } => self.untag_files(files, tags),
+            Request::UntagFilesPattern { glob, tags } => {
+                let files = match glob.glob_paths() {
+                    Ok(files) => files,
+                    Err(e) => {
+                        return Response::UntagFiles(RequestResult::Error(vec![e.to_string()]))
+                    }
+                };
+                self.untag_files(files, tags)
+            }
             Request::ListTags => self.list_tags(),
             Request::ListFiles { with_tags } => self.list_files(with_tags),
             Request::InspectFiles { files } => self.inspect_files(files),
+            Request::InspectFilesPattern { glob } => {
+                let files = match glob.glob_paths() {
+                    Ok(files) => files,
+                    Err(e) => return Response::InspectFiles(RequestResult::Error(e.to_string())),
+                };
+                self.inspect_files(files)
+            }
             Request::ClearFiles { files } => self.clear_files(files),
+            Request::ClearFilesPattern { glob } => {
+                let files = match glob.glob_paths() {
+                    Ok(files) => files,
+                    Err(e) => {
+                        return Response::ClearFiles(RequestResult::Error(vec![e.to_string()]))
+                    }
+                };
+                self.clear_files(files)
+            }
             Request::ClearTags { tags } => self.clear_tags(tags),
             Request::Search { tags, any } => self.search(tags, any),
             Request::CopyTags { source, target } => self.copy_tags(source, target),
+            Request::CopyTagsPattern { source, glob } => {
+                let target = match glob.glob_paths() {
+                    Ok(target) => target,
+                    Err(e) => return Response::CopyTags(RequestResult::Error(vec![e.to_string()])),
+                };
+                self.copy_tags(source, target)
+            }
             Request::Ping => self.ping(),
             Request::EditTag { tag, color } => self.edit_tag(tag, color),
             Request::ClearCache => self.clean_cache(),

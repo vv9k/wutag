@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use thiserror::Error;
 use wutag_core::color::Color;
+use wutag_core::glob::Glob;
 use wutag_core::registry::EntryData;
 use wutag_core::tag::Tag;
 
@@ -22,8 +23,16 @@ pub enum Request {
         files: Vec<PathBuf>,
         tags: Vec<Tag>,
     },
+    TagFilesPattern {
+        glob: Glob,
+        tags: Vec<Tag>,
+    },
     UntagFiles {
         files: Vec<PathBuf>,
+        tags: Vec<Tag>,
+    },
+    UntagFilesPattern {
+        glob: Glob,
         tags: Vec<Tag>,
     },
     EditTag {
@@ -33,6 +42,9 @@ pub enum Request {
     ClearFiles {
         files: Vec<PathBuf>,
     },
+    ClearFilesPattern {
+        glob: Glob,
+    },
     ClearTags {
         tags: Vec<String>,
     },
@@ -40,12 +52,19 @@ pub enum Request {
         source: PathBuf,
         target: Vec<PathBuf>,
     },
+    CopyTagsPattern {
+        source: PathBuf,
+        glob: Glob,
+    },
     ListTags,
     ListFiles {
         with_tags: bool,
     },
     InspectFiles {
         files: Vec<PathBuf>,
+    },
+    InspectFilesPattern {
+        glob: Glob,
     },
     Search {
         tags: Vec<String>,
