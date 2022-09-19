@@ -280,6 +280,14 @@ impl WutagDaemon {
             let tag = Tag::random(tag, DEFAULT_COLORS);
             let cleared = registry.clear_tag(&tag);
             if let Some(cleared) = cleared {
+                for entry in &cleared {
+                    if let Err(e) = tag.remove_from(entry.path()) {
+                        log::error!(
+                            "failed to untag {tag} entry `{}`, reason: {e}",
+                            entry.path().display()
+                        );
+                    }
+                }
                 cleared
                     .into_iter()
                     .map(|e| e.into_path_buf())
