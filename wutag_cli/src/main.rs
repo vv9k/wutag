@@ -1,8 +1,8 @@
 mod app;
 mod client;
 mod config;
+mod fmt;
 mod opt;
-mod util;
 
 use clap::Parser;
 

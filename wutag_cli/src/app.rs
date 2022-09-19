@@ -4,11 +4,11 @@ use std::path::PathBuf;
 
 use crate::client::Client;
 use crate::config::Config;
+use crate::fmt;
 use crate::opt::{
     ClearObject, ClearOpts, Command, CompletionsOpts, CpOpts, EditOpts, GetOpts, ListObject,
     ListOpts, Opts, RmOpts, SearchOpts, SetOpts, Shell, APP_NAME,
 };
-use crate::util::{fmt_path, fmt_tag};
 use crate::{Error, Result};
 use thiserror::Error as ThisError;
 use wutag_core::color::{self, parse_color, Color, DEFAULT_COLORS};
@@ -133,12 +133,12 @@ impl App {
             ListObject::Files { with_tags } => {
                 let entries = self.client.list_files(with_tags)?;
                 for (entry, tags) in entries {
-                    print!("{}", fmt_path(entry.path()));
+                    print!("{}", fmt::path(entry.path()));
                     if let Some(mut tags) = tags {
                         tags.sort_unstable();
                         let tags = tags
                             .into_iter()
-                            .map(|t| fmt_tag(&t).to_string())
+                            .map(|t| fmt::tag(&t).to_string())
                             .collect::<Vec<_>>()
                             .join(" ");
 
@@ -152,7 +152,7 @@ impl App {
                 let mut tags = self.client.list_tags()?;
                 tags.sort_unstable();
                 for tag in tags {
-                    print!("{} ", fmt_tag(&tag));
+                    print!("{} ", fmt::tag(&tag));
                 }
             }
         }
@@ -181,9 +181,9 @@ impl App {
 
         for (entry, mut tags) in entries {
             tags.sort_unstable();
-            print!("{}:", fmt_path(entry.path()));
+            print!("{}:", fmt::path(entry.path()));
             for tag in &tags {
-                print!(" {}", fmt_tag(tag))
+                print!(" {}", fmt::tag(tag))
             }
         }
         Ok(())
@@ -221,7 +221,7 @@ impl App {
     fn search(&self, opts: SearchOpts) -> Result<()> {
         let entries = self.client.search(opts.tags, opts.any)?;
         for entry in entries {
-            println!("{}", fmt_path(entry.path()));
+            println!("{}", fmt::path(entry.path()));
         }
         Ok(())
     }
