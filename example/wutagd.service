@@ -1,0 +1,13 @@
+# Example systemd service
+[Unit]
+Description=Daemon responsible for tracking tagged files
+After=basic.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/usr/bin/wutagd
+
+[Install]
+WantedBy=multi-user.target

@@ -1,5 +1,4 @@
 //! Functions for manipulating tags on files.
-use colored::Color;
 use globwalk::DirEntry;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -10,6 +9,7 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
 
+use crate::color::Color;
 use crate::xattr::{list_xattrs, remove_xattr, set_xattr, Xattr};
 use crate::{Error, Result, WUTAG_NAMESPACE};
 
@@ -95,10 +95,8 @@ impl Tag {
         self.color = *color;
     }
 
-    fn hash(&self) -> Result<String> {
-        serde_cbor::to_vec(&self)
-            .map(|tag| format!("{}.{}", WUTAG_NAMESPACE, base64::encode(tag)))
-            .map_err(Error::from)
+    fn hash(&self) -> String {
+        format!("{}.{}", WUTAG_NAMESPACE, base64::encode(&self.name))
     }
 
     /// Tags the file at the given `path` with this tag. If the tag exists returns an error.
@@ -111,7 +109,7 @@ impl Tag {
                 return Err(Error::TagExists);
             }
         }
-        set_xattr(path, self.hash()?.as_str(), "")
+        set_xattr(path, self.hash().as_str(), "")
     }
 
     /// Removes this tag from the file at the given `path`. If the tag doesn't exists returns
@@ -120,7 +118,7 @@ impl Tag {
     where
         P: AsRef<Path>,
     {
-        let hash = self.hash()?;
+        let hash = self.hash();
 
         for xattr in list_xattrs(path.as_ref())? {
             let key = xattr.key();

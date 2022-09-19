@@ -84,13 +84,29 @@ pub struct RmOpts {
 }
 
 #[derive(Parser)]
-pub struct ClearOpts {
-    /// A list of entries to tag
-    pub paths: Vec<String>,
-    #[clap(short, long)]
-    /// Treat the first path as a glob pattern
-    pub glob: bool,
+pub enum ClearObject {
+    /// Remove tags completely
+    Tags {
+        /// The names of the tags to clear from all entries
+        names: Vec<String>,
+    },
+    /// Remove all tags from specified files
+    Files {
+        /// A list of entries to tag
+        paths: Vec<String>,
+        #[clap(short, long)]
+        /// Treat the first path as a glob pattern
+        glob: bool,
+    },
 }
+
+#[derive(Parser)]
+pub struct ClearOpts {
+    #[clap(subcommand)]
+    /// The object to list. Valid values are: `tags`, `files`.
+    pub object: ClearObject,
+}
+
 #[derive(Parser)]
 pub struct SearchOpts {
     #[clap(required = true)]
@@ -102,10 +118,14 @@ pub struct SearchOpts {
 
 #[derive(Parser)]
 pub struct CpOpts {
+    #[clap(short, long)]
+    /// Treat the first path as a glob pattern
+    pub glob: bool,
     /// Path to the file from which to copy tags from
     pub input_path: PathBuf,
-    /// A glob pattern like '*.png'.
-    pub pattern: String,
+    #[clap(required = true, last = true)]
+    /// A list of entries to tag
+    pub paths: Vec<String>,
 }
 
 #[derive(Parser)]
@@ -172,7 +192,4 @@ pub enum Command {
     PrintCompletions(CompletionsOpts),
     /// Clean the cached tag registry.
     CleanCache,
-    /// Run a scan of all files in the registry to see if they are still available. This is useful
-    /// to detect any changes made to the files tracked by wutag.
-    UpdateRegistry,
 }

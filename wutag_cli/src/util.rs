@@ -1,26 +1,21 @@
 use colored::{ColoredString, Colorize};
-use globwalk::{DirEntry, GlobWalker, GlobWalkerBuilder};
-use std::fmt::Display;
-use std::path::Path;
+use globwalk::{GlobWalker, GlobWalkerBuilder};
+use std::path::{Path, PathBuf};
 
 use crate::DEFAULT_MAX_DEPTH;
 use anyhow::{Context, Result};
 use wutag_core::tag::Tag;
 
-pub fn fmt_err<E: Display>(err: E) -> String {
-    format!("{} {}", "ERROR".red().bold(), format!("{}", err).white())
-}
-
-pub fn fmt_ok<S: AsRef<str>>(msg: S) -> String {
-    format!("{} {}", "OK".green().bold(), msg.as_ref().white())
-}
-
-pub fn fmt_path<P: AsRef<Path>>(path: P) -> String {
-    format!("{}", path.as_ref().display().to_string().bold().blue())
+pub fn fmt_path<P: AsRef<Path>>(path: P) -> ColoredString {
+    path.as_ref().display().to_string().bold().blue()
 }
 
 pub fn fmt_tag(tag: &Tag) -> ColoredString {
-    tag.name().color(*tag.color()).bold()
+    if tag.name().chars().any(|c| c.is_ascii_whitespace()) {
+        format!("\"{}\"", tag.name()).color(*tag.color()).bold()
+    } else {
+        tag.name().color(*tag.color()).bold()
+    }
 }
 
 /// Returns a GlobWalker instance with base path set to `base_path` and pattern to `pattern`. If
@@ -40,18 +35,14 @@ where
     builder.build().context("invalid path")
 }
 
-/// Utility function that executes the function `f` on all directory entries that are Ok, by
-/// default ignores all errors.
-pub fn glob_ok<P, F>(pattern: &str, base_path: P, max_depth: Option<usize>, mut f: F) -> Result<()>
+pub fn glob_paths<P>(pattern: &str, base_path: P, max_depth: Option<usize>) -> Result<Vec<PathBuf>>
 where
     P: AsRef<Path>,
-    F: FnMut(&DirEntry),
 {
     let base_path = base_path.as_ref().to_string_lossy().to_string();
 
-    for entry in glob_walker(base_path.as_str(), pattern, max_depth)?.flatten() {
-        f(&entry);
-    }
-
-    Ok(())
+    Ok(glob_walker(base_path.as_str(), pattern, max_depth)?
+        .flatten()
+        .map(|entry| entry.into_path())
+        .collect())
 }

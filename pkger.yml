@@ -1,0 +1,35 @@
+---
+metadata:
+  name: wutag
+  arch: x86_64
+  version: 0.5.0
+  description: Manage files by tags
+  license: MIT
+  source: https://github.com/vv9k/$RECIPE/archive/refs/tags/$RECIPE_VERSION.tar.gz
+  build_depends:
+    all:
+      - curl
+      - gcc
+      - pkg-config
+      - python3
+configure:
+  steps:
+    - cmd: curl -o /tmp/install_rust.sh https://sh.rustup.rs
+    - cmd: sh /tmp/install_rust.sh -y --default-toolchain stable
+build:
+  working_dir: $PKGER_BLD_DIR/${RECIPE}-$RECIPE_VERSION
+  steps:
+    - cmd: $HOME/.cargo/bin/cargo build --release --bins
+install:
+  steps:
+    - cmd: >-
+        mkdir -p \
+          usr/bin \
+          usr/share/licenses/$RECIPE \
+          usr/share/doc/$RECIPE \
+          etc/systemd/user
+    - cmd: install -m755 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/target/release/wutag usr/bin/
+    - cmd: install -m755 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/target/release/wutagd usr/bin/
+    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/example/wutagd.service etc/systemd/user/wutagd.service
+    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/LICENSE usr/share/licenses/$RECIPE/LICENSE
+    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/README.md usr/share/doc/$RECIPE/README.md

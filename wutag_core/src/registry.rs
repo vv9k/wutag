@@ -35,8 +35,13 @@ impl EntryData {
             path: path.as_ref().to_path_buf(),
         }
     }
+
     pub fn path(&self) -> &Path {
         &self.path
+    }
+
+    pub fn into_path_buf(self) -> PathBuf {
+        self.path
     }
 }
 
@@ -78,17 +83,39 @@ impl TagRegistry {
         self.entries.clear();
     }
 
+    /// Removes the tag from this registry returing a set of entries that were
+    /// completely removed.
+    pub fn clear_tag(&mut self, tag: &Tag) -> Option<Vec<EntryData>> {
+        let removed = self.tags.remove(tag);
+        let mut final_removed = None;
+        if let Some(removed) = removed {
+            final_removed = Some(
+                removed
+                    .into_iter()
+                    .filter_map(|entry| {
+                        if self.list_entry_tags(entry).is_none() {
+                            self.remove_entry(entry)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
+            );
+        }
+        final_removed
+    }
+
     /// Updates the entry or adds it if it is not present.
-    pub fn add_or_update_entry(&mut self, entry: EntryData) -> EntryId {
+    pub fn add_or_update_entry(&mut self, entry: EntryData) -> (EntryId, bool) {
         let pos = self
             .list_entries_and_ids()
             .find(|(_, e)| **e == entry)
             .map(|(idx, _)| *idx);
 
-        let pos = if let Some(pos) = pos {
+        let res = if let Some(pos) = pos {
             let e = self.entries.get_mut(&pos).expect("entry");
             *e = entry;
-            pos
+            (pos, false)
         } else {
             let timestamp = chrono::Utc::now().timestamp_nanos();
             let timestamp = if timestamp < 0 {
@@ -97,10 +124,10 @@ impl TagRegistry {
                 timestamp as usize
             };
             self.entries.insert(timestamp, entry);
-            timestamp
+            (timestamp, true)
         };
 
-        pos
+        res
     }
 
     fn mut_tag_entries(&mut self, tag: &Tag) -> &mut BTreeSet<EntryId> {
@@ -159,6 +186,10 @@ impl TagRegistry {
         self.untag_entry(&tag, entry)
     }
 
+    pub fn remove_entry(&mut self, entry: EntryId) -> Option<EntryData> {
+        self.entries.remove(&entry)
+    }
+
     /// Clears all tags of the `entry`.
     pub fn clear_entry(&mut self, entry: EntryId) {
         let mut to_remove = vec![];
@@ -173,7 +204,7 @@ impl TagRegistry {
             self.tags.remove(&tag);
         }
 
-        self.entries.remove(&entry);
+        self.remove_entry(entry);
     }
 
     /// Finds the entry by a `path`. Returns the id of the entry if found.
@@ -254,7 +285,7 @@ impl TagRegistry {
                 .tags
                 .iter()
                 .find(|(t, _)| t.name() == tag.as_ref())
-                .map(|(_, e)| e.into_iter().collect::<BTreeSet<_>>())
+                .map(|(_, e)| e.iter().collect::<BTreeSet<_>>())
             {
                 if acc.is_empty() {
                     acc = entries.iter().cloned().collect();
@@ -265,7 +296,7 @@ impl TagRegistry {
             acc
         });
 
-        entries.into_iter().map(|e| *e).collect()
+        entries.into_iter().copied().collect()
     }
 
     /// Lists ids of all entries present in the registry.
@@ -281,6 +312,25 @@ impl TagRegistry {
     /// Lists ids and data of all entries present in the registry.
     pub fn list_entries_and_ids(&self) -> impl Iterator<Item = (&EntryId, &EntryData)> {
         self.entries.iter()
+    }
+
+    /// Lists entries with their tags
+    pub fn list_entries_and_tags(&self) -> impl Iterator<Item = (EntryData, Option<Vec<Tag>>)> {
+        let entries_with_tags = self.tags.iter().fold(HashMap::new(), |mut acc, it| {
+            for entry in it.1 {
+                let entry = acc.entry(*entry).or_insert(Vec::new());
+                entry.push(it.0.clone());
+            }
+            acc
+        });
+
+        entries_with_tags
+            .into_iter()
+            .map(|(id, tags)| (self.entries.get(&id).cloned(), tags))
+            .filter(|(id, _)| id.is_some())
+            .map(|(id, tags)| (id.unwrap(), Some(tags)))
+            .collect::<Vec<_>>()
+            .into_iter()
     }
 
     /// Lists available tags.
@@ -356,8 +406,8 @@ mod tests {
         assert_eq!(registry.list_entries().count(), 2);
 
         let entries: Vec<_> = registry.list_entries_and_ids().collect();
-        assert!(entries.contains(&(&fst_id, &entry)));
-        assert!(entries.contains(&(&snd_id, &snd_entry)));
+        assert!(entries.contains(&(&fst_id.0, &entry)));
+        assert!(entries.contains(&(&snd_id.0, &snd_entry)));
     }
 
     #[test]
@@ -369,7 +419,7 @@ mod tests {
 
         let tag = Tag::new("test", Black);
 
-        assert!(registry.tag_entry(&tag, id).is_none());
+        assert!(registry.tag_entry(&tag, id.0).is_none());
         assert!(registry.update_tag_color("test", Red));
         assert_eq!(registry.list_tags().next().unwrap().color(), &Red);
     }
@@ -379,7 +429,7 @@ mod tests {
         let entry = EntryData::new("/tmp");
 
         let mut registry = TagRegistry::default();
-        let id = registry.add_or_update_entry(entry.clone());
+        let (id, _) = registry.add_or_update_entry(entry.clone());
 
         let tag1 = Tag::new("test", Black);
         let tag2 = Tag::new("test2", Red);
@@ -394,7 +444,7 @@ mod tests {
         assert_eq!(registry.list_entries().count(), 0);
         assert!(registry.tags.is_empty());
 
-        let id = registry.add_or_update_entry(entry.clone());
+        let (id, _) = registry.add_or_update_entry(entry.clone());
         assert!(registry.tag_entry(&tag2, id).is_none());
         assert_eq!(
             registry.tags.iter().next(),
@@ -405,7 +455,7 @@ mod tests {
         assert_eq!(registry.list_entries().count(), 0);
         assert!(registry.tags.is_empty());
 
-        let id = registry.add_or_update_entry(entry);
+        let (id, _) = registry.add_or_update_entry(entry);
         assert!(registry.tag_entry(&tag1, id).is_none());
         assert!(registry.tag_entry(&tag2, id).is_none());
         let tags: Vec<_> = registry.tags.iter().collect();
@@ -426,7 +476,7 @@ mod tests {
 
         let entry = EntryData::new("/tmp");
 
-        let id = registry.add_or_update_entry(entry);
+        let (id, _) = registry.add_or_update_entry(entry);
         registry.tag_entry(&tag1, id);
         registry.tag_entry(&tag2, id);
 
@@ -449,11 +499,11 @@ mod tests {
         let entry3 = EntryData::new("/tmp/3");
         let entry4 = EntryData::new("/tmp/4");
 
-        let id = registry.add_or_update_entry(entry);
-        let id1 = registry.add_or_update_entry(entry1);
-        let id2 = registry.add_or_update_entry(entry2);
-        let id3 = registry.add_or_update_entry(entry3);
-        let id4 = registry.add_or_update_entry(entry4);
+        let (id, _) = registry.add_or_update_entry(entry);
+        let (id1, _) = registry.add_or_update_entry(entry1);
+        let (id2, _) = registry.add_or_update_entry(entry2);
+        let (id3, _) = registry.add_or_update_entry(entry3);
+        let (id4, _) = registry.add_or_update_entry(entry4);
 
         registry.tag_entry(&tag1, id);
         registry.tag_entry(&tag1, id2);
@@ -505,7 +555,7 @@ mod tests {
         let tag = Tag::new("src", Black);
         let entry = EntryData::new("/tmp");
 
-        let id = registry.add_or_update_entry(entry.clone());
+        let (id, _) = registry.add_or_update_entry(entry.clone());
         registry.tag_entry(&tag, id);
 
         registry.save().unwrap();
