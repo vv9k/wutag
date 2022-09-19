@@ -46,13 +46,27 @@ impl EventHandler for Handler {
 
 impl NotifyDaemon {
     pub fn new() -> Result<Self> {
-        Ok(Self {
+        let mut d = Self {
             notify: RecommendedWatcher::new(Handler, Default::default())
                 .map_err(NotifyDaemonError::NotifyWatcherInit)?,
-        })
+        };
+
+        d.rebuild_watch_entries().map(|_| d)
     }
 
-    pub fn rebuild_watch_descriptors(&mut self) -> Result<()> {
+    pub fn work_loop(mut self) {
+        loop {
+            if let Err(e) = self.handle_entries_events() {
+                log::error!("{e}");
+            }
+            if let Err(e) = self.handle_notify_events() {
+                log::error!("{e}");
+            }
+            std::thread::sleep(std::time::Duration::from_millis(200));
+        }
+    }
+
+    fn rebuild_watch_entries(&mut self) -> Result<()> {
         let mut registry = try_get_registry_write_loop()?;
         let mut to_remove = vec![];
         for entry in registry.list_entries().cloned() {
@@ -100,18 +114,6 @@ impl NotifyDaemon {
             .unwatch(entry)
             .map_err(NotifyDaemonError::RemoveWatchEntry)
             .map_err(Error::from)
-    }
-
-    pub fn work_loop(mut self) {
-        loop {
-            if let Err(e) = self.handle_entries_events() {
-                log::error!("{e}");
-            }
-            if let Err(e) = self.handle_notify_events() {
-                log::error!("{e}");
-            }
-            std::thread::sleep(std::time::Duration::from_millis(200));
-        }
     }
 
     fn handle_notify_events(&mut self) -> Result<()> {

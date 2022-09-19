@@ -43,19 +43,12 @@ pub fn main() -> Result<()> {
     pretty_env_logger::init();
 
     let listener = IpcServer::new(default_socket()).map_err(Error::IpcServerInit)?;
-    let mut daemon = WutagDaemon::new(listener)?;
-    let mut notify_daemon = NotifyDaemon::new()?;
-    notify_daemon.rebuild_watch_descriptors()?;
+    let daemon = WutagDaemon::new(listener)?;
+    let notify_daemon = NotifyDaemon::new()?;
 
     std::thread::scope(|s| {
-        let h1 = s.spawn(|| loop {
-            if let Err(e) = daemon.process_connection() {
-                log::error!("Failed to process connection, reason: '{e}'");
-            }
-        });
-        let h2 = s.spawn(|| {
-            notify_daemon.work_loop();
-        });
+        let h1 = s.spawn(|| daemon.work_loop());
+        let h2 = s.spawn(|| notify_daemon.work_loop());
 
         h1.join().unwrap();
         h2.join().unwrap();

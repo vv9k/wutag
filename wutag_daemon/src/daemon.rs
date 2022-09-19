@@ -24,6 +24,14 @@ impl WutagDaemon {
         Ok(Self { listener })
     }
 
+    pub fn work_loop(mut self) {
+        loop {
+            if let Err(e) = self.process_connection() {
+                log::error!("Failed to process connection, reason: '{e}'");
+            }
+        }
+    }
+
     pub fn process_connection(&mut self) -> Result<()> {
         let request = self
             .listener
