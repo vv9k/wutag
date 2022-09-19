@@ -1,16 +1,20 @@
 mod daemon;
-mod inotifyd;
+mod notifyd;
 mod registry;
 
 use anyhow::Context;
-use daemon::Daemon;
-use inotifyd::InotifyDaemon;
+use daemon::WutagDaemon;
+use notifyd::NotifyDaemon;
 use once_cell::sync::Lazy;
+use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::sync::RwLock;
 use wutag_ipc::{default_socket, IpcServer};
 
-pub static ENTRIES_EVENTS: Lazy<RwLock<Vec<EntryEvent>>> = Lazy::new(|| RwLock::new(Vec::new()));
+pub static ENTRIES_EVENTS: Lazy<RwLock<VecDeque<EntryEvent>>> =
+    Lazy::new(|| RwLock::new(VecDeque::new()));
+pub static NOTIFY_EVENTS: Lazy<RwLock<VecDeque<notify::Event>>> =
+    Lazy::new(|| RwLock::new(VecDeque::new()));
 
 #[derive(Debug)]
 pub enum EntryEvent {
@@ -22,9 +26,9 @@ pub fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
 
     let listener = IpcServer::new(default_socket())?;
-    let mut daemon = Daemon::new(listener).context("failed to initialize daemon")?;
-    let mut inotify_daemon = InotifyDaemon::new()?;
-    inotify_daemon.rebuild_watch_descriptors()?;
+    let mut daemon = WutagDaemon::new(listener).context("failed to initialize daemon")?;
+    let mut notify_daemon = NotifyDaemon::new()?;
+    notify_daemon.rebuild_watch_descriptors()?;
 
     std::thread::scope(|s| {
         let h1 = s.spawn(|| loop {
@@ -33,7 +37,7 @@ pub fn main() -> anyhow::Result<()> {
             }
         });
         let h2 = s.spawn(|| {
-            inotify_daemon.work_loop();
+            notify_daemon.work_loop();
         });
 
         h1.join().unwrap();

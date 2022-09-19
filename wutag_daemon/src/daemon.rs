@@ -7,11 +7,11 @@ use wutag_core::registry::EntryData;
 use wutag_core::tag::{clear_tags, list_tags, Tag};
 use wutag_ipc::{IpcServer, Request, RequestResult, Response};
 
-pub struct Daemon {
+pub struct WutagDaemon {
     listener: IpcServer,
 }
 
-impl Daemon {
+impl WutagDaemon {
     pub fn new(listener: IpcServer) -> Result<Self> {
         Ok(Self { listener })
     }
@@ -92,7 +92,7 @@ impl Daemon {
         if !new_entries.is_empty() {
             match ENTRIES_EVENTS.try_write() {
                 Ok(mut events) => {
-                    events.push(EntryEvent::Add(new_entries));
+                    events.push_back(EntryEvent::Add(new_entries));
                 }
                 Err(e) => {
                     log::error!("failed to lock entries events, reason: {e}");
@@ -139,7 +139,7 @@ impl Daemon {
         if !removed.is_empty() {
             match ENTRIES_EVENTS.try_write() {
                 Ok(mut events) => {
-                    events.push(EntryEvent::Remove(removed));
+                    events.push_back(EntryEvent::Remove(removed));
                 }
                 Err(e) => {
                     log::error!("failed to lock entries events, reason: {e}");
@@ -213,7 +213,7 @@ impl Daemon {
         if !new_entries.is_empty() {
             match ENTRIES_EVENTS.try_write() {
                 Ok(mut events) => {
-                    events.push(EntryEvent::Add(new_entries));
+                    events.push_back(EntryEvent::Add(new_entries));
                 }
                 Err(e) => {
                     log::error!("failed to lock entries events, reason: {e}");
@@ -256,7 +256,7 @@ impl Daemon {
 
         match ENTRIES_EVENTS.try_write() {
             Ok(mut events) => {
-                events.push(EntryEvent::Remove(files));
+                events.push_back(EntryEvent::Remove(files));
             }
             Err(e) => {
                 log::error!("failed to lock entries events, reason: {e}");
@@ -295,7 +295,7 @@ impl Daemon {
 
         match ENTRIES_EVENTS.try_write() {
             Ok(mut events) => {
-                events.push(EntryEvent::Remove(removed));
+                events.push_back(EntryEvent::Remove(removed));
             }
             Err(e) => {
                 log::error!("failed to lock entries events, reason: {e}");
