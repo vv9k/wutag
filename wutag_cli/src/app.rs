@@ -8,10 +8,11 @@ use crate::opt::{
     ClearObject, ClearOpts, Command, CompletionsOpts, CpOpts, EditOpts, GetOpts, ListObject,
     ListOpts, Opts, RmOpts, SearchOpts, SetOpts, Shell, APP_NAME,
 };
-use crate::util::{fmt_path, fmt_tag, glob_paths};
+use crate::util::{fmt_path, fmt_tag};
 use crate::{Error, Result};
 use thiserror::Error as ThisError;
 use wutag_core::color::{self, parse_color, Color, DEFAULT_COLORS};
+use wutag_core::glob;
 use wutag_core::tag::Tag;
 use wutag_ipc::{default_socket, Response};
 
@@ -105,7 +106,8 @@ impl App {
 
     fn get_paths(&self, glob: bool, paths: Vec<String>) -> Result<Vec<String>> {
         if glob {
-            let paths = glob_paths(&paths[0], self.base_dir.clone(), self.max_depth)?;
+            let paths = glob::paths(&paths[0], self.base_dir.clone(), self.max_depth)
+                .map_err(Error::Glob)?;
             Ok(paths
                 .into_iter()
                 .map(|p| p.to_string_lossy().to_string())

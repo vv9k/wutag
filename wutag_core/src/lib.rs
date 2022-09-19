@@ -1,4 +1,5 @@
 pub mod color;
+pub mod glob;
 pub mod registry;
 pub mod tag;
 pub mod xattr;
@@ -36,6 +37,8 @@ pub enum Error {
     Base64DecodeError(#[from] base64::DecodeError),
     #[error("xattributes limit reached on the file - `{0}`")]
     TagListFull(io::Error),
+    #[error("failed to glob pattern - {0}")]
+    Glob(#[from] globwalk::GlobError),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

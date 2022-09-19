@@ -1241,13 +1241,11 @@ dependencies = [
  "clap_complete",
  "colored",
  "dirs",
- "globwalk",
  "serde",
  "serde_cbor",
  "serde_yaml",
  "tempdir",
  "thiserror",
- "walkdir",
  "wutag_core",
  "wutag_ipc",
 ]

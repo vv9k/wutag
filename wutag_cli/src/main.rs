@@ -11,9 +11,6 @@ use config::Config;
 use opt::Opts;
 use thiserror::Error as ThisError;
 
-/// Default max depth passed to [GlobWalker](globwalker::GlobWalker)
-pub const DEFAULT_MAX_DEPTH: usize = 2;
-
 #[derive(Debug, ThisError)]
 pub enum Error {
     #[error(transparent)]
@@ -23,7 +20,7 @@ pub enum Error {
     #[error(transparent)]
     App(#[from] app::AppError),
     #[error("failed to glob pattern - {0}")]
-    Glob(#[from] globwalk::GlobError),
+    Glob(wutag_core::Error),
     #[error("invalid shell - {0}")]
     InvalidShell(String),
 }
