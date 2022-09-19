@@ -12,7 +12,30 @@ If you use arch Linux and have AUR repositories set up you can use your favourit
 If you're on another Linux distribution or MacOS you can download one of the prebuilt binaries from [here](https://github.com/vv9k/wutag/releases).
 
 To build manually you'll need latest `rust` and `cargo`. Build with:
- - `cargo build --release`
+ - `cargo build --release --bins`
+
+## Daemon
+
+Wutag works in a client-server architecture with a daemon running in a background. If you install **wutag** from package like RPM or DEB it should automatically install the systemd service for you.
+
+### Linux
+
+If **wutag** was built manually, install the [example service](https://github.com/vv9k/wutag/blob/master/example/wutagd.service) to `/etc/systemd/user/`
+
+To enable the daemon run:
+```shell
+    $ systemctl --user daemon-reload
+    $ systemctl --user enable --now wutagd.service
+```
+
+Or start the daemon manually with:
+```shell
+    $ /usr/bin/wutagd
+```
+
+### Mac OS
+
+...
 
 ## Usage
 
@@ -35,8 +58,10 @@ The `rm` subcommand removes specified tags from the list of files. It behaves si
  - `wutag rm -g '**' -- rust code`
 
 There is also `clear` that clears all tags from the specified files like so:
- - `wutag clear Cargo.toml`
- - `wutag clear -g '**'`
+ - `wutag clear files Cargo.toml`
+ - `wutag clear files -g '**'`
+Or clears the tags entirelly untagging all entries:
+ - `wutag clear tags rust code`
 
 When using glob processing, default recursion depth is set to *2*. To increase it use `--max-depth` or `-m` global parameter. For example:
  - `wutag -m 5 set -g '**' trash`
