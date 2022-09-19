@@ -22,7 +22,7 @@ impl EventHandler for Handler {
                 | EventKind::Remove(RemoveKind::Any)
                 | EventKind::Remove(RemoveKind::Folder)
                 | EventKind::Remove(RemoveKind::Other) => match NOTIFY_EVENTS.try_write() {
-                    Ok(mut events) => events.push_back(event),
+                    Ok(mut events) => events.push(event),
                     Err(e) => log::error!("failed to lock notify events, reason: {e}"),
                 },
                 _ => {}

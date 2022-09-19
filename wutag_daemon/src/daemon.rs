@@ -92,7 +92,7 @@ impl WutagDaemon {
         if !new_entries.is_empty() {
             match ENTRIES_EVENTS.try_write() {
                 Ok(mut events) => {
-                    events.push_back(EntryEvent::Add(new_entries));
+                    events.push(EntryEvent::Add(new_entries));
                 }
                 Err(e) => {
                     log::error!("failed to lock entries events, reason: {e}");
@@ -137,7 +137,7 @@ impl WutagDaemon {
         if !removed.is_empty() {
             match ENTRIES_EVENTS.try_write() {
                 Ok(mut events) => {
-                    events.push_back(EntryEvent::Remove(removed));
+                    events.push(EntryEvent::Remove(removed));
                 }
                 Err(e) => {
                     log::error!("failed to lock entries events, reason: {e}");
@@ -211,7 +211,7 @@ impl WutagDaemon {
         if !new_entries.is_empty() {
             match ENTRIES_EVENTS.try_write() {
                 Ok(mut events) => {
-                    events.push_back(EntryEvent::Add(new_entries));
+                    events.push(EntryEvent::Add(new_entries));
                 }
                 Err(e) => {
                     log::error!("failed to lock entries events, reason: {e}");
@@ -254,7 +254,7 @@ impl WutagDaemon {
 
         match ENTRIES_EVENTS.try_write() {
             Ok(mut events) => {
-                events.push_back(EntryEvent::Remove(files));
+                events.push(EntryEvent::Remove(files));
             }
             Err(e) => {
                 log::error!("failed to lock entries events, reason: {e}");
@@ -293,7 +293,7 @@ impl WutagDaemon {
 
         match ENTRIES_EVENTS.try_write() {
             Ok(mut events) => {
-                events.push_back(EntryEvent::Remove(removed));
+                events.push(EntryEvent::Remove(removed));
             }
             Err(e) => {
                 log::error!("failed to lock entries events, reason: {e}");

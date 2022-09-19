@@ -6,15 +6,12 @@ use anyhow::Context;
 use daemon::WutagDaemon;
 use notifyd::NotifyDaemon;
 use once_cell::sync::Lazy;
-use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::sync::RwLock;
 use wutag_ipc::{default_socket, IpcServer};
 
-pub static ENTRIES_EVENTS: Lazy<RwLock<VecDeque<EntryEvent>>> =
-    Lazy::new(|| RwLock::new(VecDeque::new()));
-pub static NOTIFY_EVENTS: Lazy<RwLock<VecDeque<notify::Event>>> =
-    Lazy::new(|| RwLock::new(VecDeque::new()));
+pub static ENTRIES_EVENTS: Lazy<RwLock<Vec<EntryEvent>>> = Lazy::new(|| RwLock::new(Vec::new()));
+pub static NOTIFY_EVENTS: Lazy<RwLock<Vec<notify::Event>>> = Lazy::new(|| RwLock::new(Vec::new()));
 
 #[derive(Debug)]
 pub enum EntryEvent {
