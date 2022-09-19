@@ -6,7 +6,7 @@ use wutag_core::color::Color;
 use wutag_core::registry::EntryData;
 use wutag_core::tag::Tag;
 
-pub const REQUEST_SEPARATOR: u8 = 4; // EOT
+pub const REQUEST_SEPARATOR: u8 = 3; // ETX
 
 #[derive(Debug, Error)]
 pub enum PayloadError {
