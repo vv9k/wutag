@@ -1,7 +1,16 @@
-use anyhow::{Error, Result};
+use crate::Result;
 use once_cell::sync::Lazy;
 use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard, TryLockError};
+use thiserror::Error as ThisError;
 use wutag_core::registry::TagRegistry;
+
+#[derive(Debug, ThisError)]
+pub enum RegistryError {
+    #[error("failed to acquire poisoned lock - {0}")]
+    LockPoisoned(String),
+    #[error("failed to acquire lock for registry")]
+    Lock,
+}
 
 static REGISTRY: Lazy<RwLock<TagRegistry>> = Lazy::new(|| {
     let registry_file = dirs::data_dir()
@@ -36,15 +45,13 @@ pub fn try_get_registry_write_loop() -> Result<RwLockWriteGuard<'static, TagRegi
     loop {
         i += 1;
         if i >= 5 {
-            return Err(Error::msg("failed to lock registry for writing"));
+            return Err(RegistryError::Lock.into());
         }
         let registry = match REGISTRY.try_write() {
             Ok(registry) => registry,
             Err(e) => match e {
                 TryLockError::Poisoned(e) => {
-                    return Err(Error::msg(format!(
-                        "failed to lock registry for writing, reason: {e}"
-                    )))
+                    return Err(RegistryError::LockPoisoned(e.to_string()).into());
                 }
                 TryLockError::WouldBlock => continue,
             },

@@ -1,11 +1,19 @@
 use crate::registry::{get_registry_read, get_registry_write};
-use crate::{EntryEvent, ENTRIES_EVENTS};
-use anyhow::{Context, Result};
+use crate::{EntryEvent, Error, Result, ENTRIES_EVENTS};
 use std::path::PathBuf;
+use thiserror::Error as ThisError;
 use wutag_core::color::{Color, DEFAULT_COLORS};
 use wutag_core::registry::EntryData;
 use wutag_core::tag::{clear_tags, list_tags, Tag};
-use wutag_ipc::{IpcServer, Request, RequestResult, Response};
+use wutag_ipc::{IpcError, IpcServer, Request, RequestResult, Response};
+
+#[derive(Debug, ThisError)]
+pub enum DaemonError {
+    #[error("failed to accept request - {0}")]
+    AcceptRequest(IpcError),
+    #[error("failed to send response - {0}")]
+    SendResponse(IpcError),
+}
 
 pub struct WutagDaemon {
     listener: IpcServer,
@@ -20,12 +28,13 @@ impl WutagDaemon {
         let request = self
             .listener
             .accept_request()
-            .context("failed to accept request")?;
+            .map_err(DaemonError::AcceptRequest)?;
         let response = self.process_request(request);
         log::trace!("{response:?}");
         self.listener
             .send_response(response)
-            .context("failed to send response")
+            .map_err(DaemonError::SendResponse)
+            .map_err(Error::from)
     }
 
     fn process_request(&mut self, request: Request) -> Response {

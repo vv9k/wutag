@@ -1,9 +1,9 @@
+use crate::{Error, Result};
 use colored::{ColoredString, Colorize};
 use globwalk::{GlobWalker, GlobWalkerBuilder};
 use std::path::{Path, PathBuf};
 
 use crate::DEFAULT_MAX_DEPTH;
-use anyhow::{Context, Result};
 use wutag_core::tag::Tag;
 
 pub fn fmt_path<P: AsRef<Path>>(path: P) -> ColoredString {
@@ -32,7 +32,7 @@ where
     } else {
         builder = builder.max_depth(DEFAULT_MAX_DEPTH);
     }
-    builder.build().context("invalid path")
+    builder.build().map_err(Error::from)
 }
 
 pub fn glob_paths<P>(pattern: &str, base_path: P, max_depth: Option<usize>) -> Result<Vec<PathBuf>>

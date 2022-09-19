@@ -21,12 +21,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anyhow"
-version = "1.0.65"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98161a4e3e2184da77bb14f02184cdd111e83bbbcc9979dfee3c44b9a85f5602"
-
-[[package]]
 name = "async-channel"
 version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1243,7 +1237,6 @@ checksum = "c811ca4a8c853ef420abd8592ba53ddbbac90410fab6903b3e79972a631f7680"
 name = "wutag"
 version = "0.5.0-dev"
 dependencies = [
- "anyhow",
  "clap",
  "clap_complete",
  "colored",
@@ -1253,6 +1246,7 @@ dependencies = [
  "serde_cbor",
  "serde_yaml",
  "tempdir",
+ "thiserror",
  "walkdir",
  "wutag_core",
  "wutag_ipc",
@@ -1291,7 +1285,6 @@ dependencies = [
 name = "wutagd"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "dirs",
  "interprocess",
  "log",
@@ -1299,6 +1292,7 @@ dependencies = [
  "once_cell",
  "pretty_env_logger",
  "serde_cbor",
+ "thiserror",
  "wutag_core",
  "wutag_ipc",
 ]

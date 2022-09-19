@@ -1,7 +1,6 @@
 //! Options used by the main executable
 use std::{path::PathBuf, str::FromStr};
 
-use anyhow::Error;
 use clap::Parser;
 
 pub const APP_NAME: &str = "wutag";
@@ -151,7 +150,7 @@ pub enum Shell {
 }
 
 impl FromStr for Shell {
-    type Err = Error;
+    type Err = crate::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match &s.to_lowercase()[..] {
             "bash" => Ok(Shell::Bash),
@@ -159,7 +158,7 @@ impl FromStr for Shell {
             "fish" => Ok(Shell::Fish),
             "powershell" => Ok(Shell::PowerShell),
             "zsh" => Ok(Shell::Zsh),
-            _ => Err(Error::msg(format!("invalid shell `{}`", s))),
+            _ => Err(crate::Error::InvalidShell(s.to_string())),
         }
     }
 }
