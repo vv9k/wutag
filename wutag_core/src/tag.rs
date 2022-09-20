@@ -1,5 +1,4 @@
 //! Functions for manipulating tags on files.
-use globwalk::DirEntry;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -24,40 +23,6 @@ pub struct Tag {
 impl Hash for Tag {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.name.hash(state);
-    }
-}
-
-pub trait DirEntryExt {
-    fn tag(&self, tag: &Tag) -> Result<()>;
-    fn untag(&self, tag: &Tag) -> Result<()>;
-    fn get_tag<T: AsRef<str>>(&self, tag: T) -> Result<Tag>;
-    fn list_tags(&self) -> Result<Vec<Tag>>;
-    fn list_tags_btree(&self) -> Result<BTreeSet<Tag>>;
-    fn clear_tags(&self) -> Result<()>;
-    fn has_tags(&self) -> Result<bool>;
-}
-
-impl DirEntryExt for DirEntry {
-    fn tag(&self, tag: &Tag) -> Result<()> {
-        tag.save_to(self.path())
-    }
-    fn untag(&self, tag: &Tag) -> Result<()> {
-        tag.remove_from(self.path())
-    }
-    fn get_tag<T: AsRef<str>>(&self, tag: T) -> Result<Tag> {
-        get_tag(self.path(), tag)
-    }
-    fn list_tags(&self) -> Result<Vec<Tag>> {
-        list_tags(self.path())
-    }
-    fn list_tags_btree(&self) -> Result<BTreeSet<Tag>> {
-        list_tags_btree(self.path())
-    }
-    fn clear_tags(&self) -> Result<()> {
-        clear_tags(self.path())
-    }
-    fn has_tags(&self) -> Result<bool> {
-        has_tags(self.path())
     }
 }
 
