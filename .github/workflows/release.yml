@@ -60,11 +60,9 @@ jobs:
         uses: hecrj/setup-rust-action@v1
       - uses: actions/checkout@master
       - name: Set version
-        id: set_version
-        run: echo ::set-output name=WUTAG_VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo "WUTAG_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       - name: Set archive name
-        id: set_name
-        run: echo ::set-output name=WUTAG_ARCHIVE::wutag-${{steps.set_version.outputs.WUTAG_VERSION}}-${{ matrix.target}}
+        run: echo "WUTAG_ARCHIVE=wutag-${{ env.WUTAG_VERSION }}-${{ matrix.target}}" >> $GITHUB_ENV
       - run: cargo build --release
         name: Release build
       - name: Install help2man mac
@@ -87,23 +85,56 @@ jobs:
           mv LICENSE wutag/
       - name: Create archives
         run: |
-          tar -zcvf ${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.gz wutag
-          tar -Jcvf ${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.xz wutag
+          tar -zcvf ${{ env.WUTAG_ARCHIVE }}.tar.gz wutag
+          tar -Jcvf ${{ env.WUTAG_ARCHIVE }}.tar.xz wutag
+      - name: Install pkger
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          curl -LO https://github.com/vv9k/pkger/releases/download/0.9.0/pkger-0.9.0-0.amd64.deb
+          sudo dpkg -i pkger-0.9.0-0.amd64.deb
+          /usr/bin/pkger init
+          /usr/bin/pkger new recipe wutag
+          cp pkger.yml $HOME/.config/pkger/recipes/wutag/recipe.yml
+      - name: Build RPM and DEB
+        if: matrix.os == 'ubuntu-latest'
+        run: /usr/bin/pkger build -s deb -s rpm -- wutag
       - name: Upload gz
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_name: wojciechkepka/wutag
+          repo_name: vv9k/wutag
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.gz
-          asset_name: ${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.gz
-          tag: ${{ steps.set_version.outputs.WUTAG_VERSION }}
+          file: ${{ env.WUTAG_ARCHIVE }}.tar.gz
+          asset_name: ${{ env.WUTAG_ARCHIVE }}.tar.gz
+          tag: ${{ env.WUTAG_VERSION }}
           overwrite: true
       - name: Upload xz
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_name: wojciechkepka/wutag
+          repo_name: vv9k/wutag
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.xz
-          asset_name: ${{ steps.set_name.outputs.WUTAG_ARCHIVE }}.tar.xz
-          tag: ${{ steps.set_version.outputs.WUTAG_VERSION }}
+          file: ${{ env.WUTAG_ARCHIVE }}.tar.xz
+          asset_name: ${{ env.WUTAG_ARCHIVE }}.tar.xz
+          tag: ${{ env.WUTAG_VERSION }}
           overwrite: true
+      - name: Upload deb
+        if: matrix.os == 'ubuntu-latest'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_name: vv9k/wutag
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: /home/runner/.config/pkger/output/pkger-deb/wutag-${{ env.WUTAG_VERSION }}-0.amd64.deb
+          asset_name: pkger-${{ env.WUTAG_VERSION }}-0.amd64.deb
+          tag: ${{ env.WUTAG_VERSION }}
+          overwrite: true
+      - name: Upload rpm
+        if: matrix.os == 'ubuntu-latest'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_name: vv9k/wutag
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: /home/runner/.config/pkger/output/pkger-rpm/wutag-${{ env.WUTAG_VERSION }}-0.x86_64.rpm
+          asset_name: wutag-${{ env.WUTAG_VERSION }}-0.x86_64.rpm
+          tag: ${{ env.WUTAG_VERSION }}
+          overwrite: true
+
+
