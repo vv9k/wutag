@@ -20,9 +20,7 @@ jobs:
         with:
           components: clippy,rustfmt
       - uses: actions/checkout@v2
-      - run: |
-          cargo clippy --all-targets -- -D clippy::all
-          cargo fmt --all -- --check
+      - run: make lint
 
   test:
     needs: [lint]
@@ -37,8 +35,7 @@ jobs:
         uses: hecrj/setup-rust-action@v1
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Test
-        run: cargo test --all-targets --all-features
+      - name: make test
 
   build_and_upload_artifacts:
     name: Upload Artifacts
@@ -63,7 +60,7 @@ jobs:
         run: echo "WUTAG_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       - name: Set archive name
         run: echo "WUTAG_ARCHIVE=wutag-${{ env.WUTAG_VERSION }}-${{ matrix.target}}" >> $GITHUB_ENV
-      - run: cargo build --release
+      - run: make build
         name: Release build
       - name: Install help2man mac
         if: matrix.os == 'macos-latest'
@@ -123,7 +120,7 @@ jobs:
           repo_name: vv9k/wutag
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: /home/runner/.config/pkger/output/pkger-deb/wutag-${{ env.WUTAG_VERSION }}-0.amd64.deb
-          asset_name: pkger-${{ env.WUTAG_VERSION }}-0.amd64.deb
+          asset_name: wutag-${{ env.WUTAG_VERSION }}-0.amd64.deb
           tag: ${{ env.WUTAG_VERSION }}
           overwrite: true
       - name: Upload rpm
