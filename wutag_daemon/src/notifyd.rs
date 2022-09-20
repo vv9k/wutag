@@ -73,7 +73,7 @@ impl NotifyDaemon {
             if let Err(e) = self.add_watch_entry(entry.path()) {
                 log::error!("{e}");
 
-                if let crate::Error::NotifyDaemon(NotifyDaemonError::NotifyWatcherInit(e)) = e {
+                if let crate::Error::NotifyDaemon(NotifyDaemonError::AddWatchEntry(e)) = e {
                     if let notify::ErrorKind::Io(err) = &e.kind {
                         if let std::io::ErrorKind::NotFound = err.kind() {
                             to_remove.push(entry);
