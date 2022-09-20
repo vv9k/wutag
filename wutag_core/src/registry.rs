@@ -338,6 +338,17 @@ impl TagRegistry {
         self.tags.keys()
     }
 
+    /// Lists tags and their entries
+    pub fn list_tags_and_entries(&self) -> impl Iterator<Item = (Tag, Vec<EntryData>)> + '_ {
+        self.tags.clone().into_iter().map(|(tag, entries)| {
+            let entries: Vec<_> = entries
+                .into_iter()
+                .filter_map(|e| self.get_entry(e).map(|e| e.clone()))
+                .collect();
+            (tag, entries)
+        })
+    }
+
     /// Returns data of the entry with `id` if such entry exists.
     pub fn get_entry(&self, id: EntryId) -> Option<&EntryData> {
         self.entries.get(&id)

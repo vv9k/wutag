@@ -35,7 +35,11 @@ pub struct Opts {
 
 #[derive(Parser)]
 pub enum ListObject {
-    Tags,
+    Tags {
+        #[clap(long, short = 'f')]
+        /// Should all entries tagged with a tag be shown
+        with_files: bool,
+    },
     Files {
         #[clap(long, short = 't')]
         /// Should the tags of the entry be display.

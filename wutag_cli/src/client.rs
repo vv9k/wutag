@@ -1,13 +1,14 @@
 #![allow(dead_code)]
 use crate::Result;
-use thiserror::Error as ThisError;
 use wutag_core::color::Color;
 use wutag_core::glob::Glob;
 use wutag_core::registry::EntryData;
 use wutag_core::tag::Tag;
 use wutag_ipc::{IpcClient, Request, RequestResult, Response};
 
+use std::collections::HashMap;
 use std::path::Path;
+use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
 pub enum ClientError {
@@ -47,7 +48,7 @@ pub enum HandledResponse {
     CopyTags,
     ClearFiles,
     ClearTags,
-    ListTags(Vec<Tag>),
+    ListTags(HashMap<Tag, Vec<EntryData>>),
     ListFiles(Vec<(EntryData, Option<Vec<Tag>>)>),
     InspectFiles(Vec<(EntryData, Vec<Tag>)>),
     Search(Vec<EntryData>),
@@ -298,9 +299,9 @@ impl Client {
             .map(|_| ())
     }
 
-    pub fn list_tags(&self) -> Result<Vec<Tag>> {
+    pub fn list_tags(&self, with_files: bool) -> Result<HashMap<Tag, Vec<EntryData>>> {
         self.client
-            .request(Request::ListTags)
+            .request(Request::ListTags { with_files })
             .map_err(|e| ClientError::ListTags(e.to_string()).into())
             .and_then(handle_error)
             .and_then(|r| {

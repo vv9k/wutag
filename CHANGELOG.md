@@ -9,6 +9,7 @@
 * A running `wutagd` daemon is now required for **wutag** to work. The daemon is responsible for tracking tagged files and filesystem changes made to them.
 * **BREAKING** the format of tags has changed, all previously tagged files won't work with this version.
 * Replace `wutag clean-cache` subcommand with `wutag clear cache`
+* Add `--with-files`/`-f` option to `wutag list tags` to list entries tagged with each tag
 
 # 0.4.0
 

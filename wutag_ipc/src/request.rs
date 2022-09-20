@@ -55,7 +55,9 @@ pub enum Request {
         source: PathBuf,
         glob: Glob,
     },
-    ListTags,
+    ListTags {
+        with_files: bool,
+    },
     ListFiles {
         with_tags: bool,
     },
@@ -97,7 +99,7 @@ pub enum Response {
     CopyTags(RequestResult<(), Vec<String>>),
     ClearFiles(RequestResult<(), Vec<String>>),
     ClearTags(RequestResult<(), Vec<String>>),
-    ListTags(RequestResult<Vec<Tag>, String>),
+    ListTags(RequestResult<HashMap<Tag, Vec<EntryData>>, String>),
     #[allow(clippy::type_complexity)]
     ListFiles(RequestResult<Vec<(EntryData, Option<Vec<Tag>>)>, String>),
     InspectFiles(RequestResult<Vec<(EntryData, Vec<Tag>)>, String>),

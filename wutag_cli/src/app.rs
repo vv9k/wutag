@@ -124,11 +124,21 @@ impl App {
                     }
                 }
             }
-            ListObject::Tags => {
-                let mut tags = self.client.list_tags()?;
-                tags.sort_unstable();
-                for tag in tags {
-                    print!("{} ", fmt::tag(&tag));
+            ListObject::Tags { with_files } => {
+                let tags = self.client.list_tags(with_files)?;
+                if with_files {
+                    for (tag, entries) in tags {
+                        println!("{}:", fmt::tag(&tag));
+                        for entry in entries {
+                            println!("\t{}", fmt::path(entry.path()));
+                        }
+                    }
+                } else {
+                    let mut tags: Vec<_> = tags.into_iter().map(|(t, _)| t).collect();
+                    tags.sort_unstable();
+                    for tag in tags {
+                        print!("{} ", fmt::tag(&tag));
+                    }
                 }
             }
         }

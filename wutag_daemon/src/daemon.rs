@@ -57,7 +57,7 @@ impl WutagDaemon {
                 Ok(files) => self.untag_files(files, tags),
                 Err(e) => Response::UntagFiles(RequestResult::Error(vec![e.to_string()])),
             },
-            Request::ListTags => self.list_tags(),
+            Request::ListTags { with_files } => self.list_tags(with_files),
             Request::ListFiles { with_tags } => self.list_files(with_tags),
             Request::InspectFiles { files } => self.inspect_files(files),
             Request::InspectFilesPattern { glob } => match glob.glob_paths() {
@@ -348,10 +348,17 @@ impl WutagDaemon {
         Response::ClearFiles(RequestResult::Ok(()))
     }
 
-    fn list_tags(&mut self) -> Response {
-        Response::ListTags(RequestResult::Ok(
-            get_registry_read().list_tags().cloned().collect(),
-        ))
+    fn list_tags(&mut self, with_files: bool) -> Response {
+        let registry = get_registry_read();
+        if with_files {
+            Response::ListTags(RequestResult::Ok(
+                registry.list_tags_and_entries().collect(),
+            ))
+        } else {
+            Response::ListTags(RequestResult::Ok(
+                registry.list_tags().map(|t| (t.clone(), vec![])).collect(),
+            ))
+        }
     }
 
     fn list_files(&mut self, with_tags: bool) -> Response {
