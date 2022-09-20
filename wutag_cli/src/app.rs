@@ -143,12 +143,7 @@ impl App {
             .collect();
 
         if opts.glob {
-            let glob = Glob::new(
-                opts.paths[0].clone(),
-                Some(self.base_dir.clone()),
-                self.max_depth,
-            )
-            .map_err(Error::Glob)?;
+            let glob = self.glob(&opts.paths[0])?;
             self.client
                 .tag_files_pattern(glob, tags)
                 .map_err(Error::from)
@@ -163,12 +158,7 @@ impl App {
 
     fn get(&mut self, opts: GetOpts) -> Result<()> {
         let entries = if opts.glob {
-            let glob = Glob::new(
-                opts.paths[0].clone(),
-                Some(self.base_dir.clone()),
-                self.max_depth,
-            )
-            .map_err(Error::Glob)?;
+            let glob = self.glob(&opts.paths[0])?;
             self.client.inspect_files_pattern(glob)?
         } else {
             self.client.inspect_files(opts.paths)?
@@ -192,12 +182,7 @@ impl App {
             .collect();
 
         if opts.glob {
-            let glob = Glob::new(
-                opts.paths[0].clone(),
-                Some(self.base_dir.clone()),
-                self.max_depth,
-            )
-            .map_err(Error::Glob)?;
+            let glob = self.glob(&opts.paths[0])?;
             self.client
                 .untag_files_pattern(glob, tags)
                 .map_err(Error::from)
@@ -214,12 +199,7 @@ impl App {
         match opts.object {
             ClearObject::Files { paths, glob } => {
                 if glob {
-                    let glob = Glob::new(
-                        paths[0].clone(),
-                        Some(self.base_dir.clone()),
-                        self.max_depth,
-                    )
-                    .map_err(Error::Glob)?;
+                    let glob = self.glob(&paths[0])?;
                     self.client.clear_files_pattern(glob)?;
                 } else {
                     self.client.clear_files(paths)?;
@@ -243,12 +223,7 @@ impl App {
 
     fn cp(&mut self, opts: CpOpts) -> Result<()> {
         if opts.glob {
-            let glob = Glob::new(
-                opts.paths[0].clone(),
-                Some(self.base_dir.clone()),
-                self.max_depth,
-            )
-            .map_err(Error::Glob)?;
+            let glob = self.glob(&opts.paths[0])?;
             self.client
                 .copy_tags_pattern(opts.input_path, glob)
                 .map_err(Error::from)
@@ -286,5 +261,9 @@ impl App {
             Shell::Zsh => generate(Zsh, &mut app, APP_NAME, &mut io::stdout()),
         }
         Ok(())
+    }
+
+    fn glob(&self, pattern: impl Into<String>) -> Result<Glob> {
+        Glob::new(pattern.into(), Some(self.base_dir.clone()), self.max_depth).map_err(Error::Glob)
     }
 }
