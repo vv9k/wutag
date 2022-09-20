@@ -67,44 +67,44 @@ fn handle_error(response: Response) -> Result<HandledResponse> {
     match response {
         Response::TagFiles(inner) => {
             if let RequestResult::Error(e) = inner {
-                return Err(ClientError::TagFiles(format_multiple_errors(e)).into());
+                Err(ClientError::TagFiles(format_multiple_errors(e)).into())
             } else {
-                return Ok(HandledResponse::TagFiles);
+                Ok(HandledResponse::TagFiles)
             }
         }
         Response::UntagFiles(inner) => {
             if let RequestResult::Error(e) = inner {
-                return Err(ClientError::UntagFiles(format_multiple_errors(e)).into());
+                Err(ClientError::UntagFiles(format_multiple_errors(e)).into())
             } else {
-                return Ok(HandledResponse::UntagFiles);
+                Ok(HandledResponse::UntagFiles)
             }
         }
         Response::EditTag(inner) => {
             if let RequestResult::Error(e) = inner {
-                return Err(ClientError::EditTag(e).into());
+                Err(ClientError::EditTag(e).into())
             } else {
-                return Ok(HandledResponse::EditTag);
+                Ok(HandledResponse::EditTag)
             }
         }
         Response::CopyTags(inner) => {
             if let RequestResult::Error(e) = inner {
-                return Err(ClientError::CopyTags(format_multiple_errors(e)).into());
+                Err(ClientError::CopyTags(format_multiple_errors(e)).into())
             } else {
-                return Ok(HandledResponse::CopyTags);
+                Ok(HandledResponse::CopyTags)
             }
         }
         Response::ClearFiles(inner) => {
             if let RequestResult::Error(e) = inner {
-                return Err(ClientError::ClearFiles(format_multiple_errors(e)).into());
+                Err(ClientError::ClearFiles(format_multiple_errors(e)).into())
             } else {
-                return Ok(HandledResponse::ClearFiles);
+                Ok(HandledResponse::ClearFiles)
             }
         }
         Response::ClearTags(inner) => {
             if let RequestResult::Error(e) = inner {
-                return Err(ClientError::ClearTags(format_multiple_errors(e)).into());
+                Err(ClientError::ClearTags(format_multiple_errors(e)).into())
             } else {
-                return Ok(HandledResponse::ClearTags);
+                Ok(HandledResponse::ClearTags)
             }
         }
         Response::ListFiles(inner) => match inner {
@@ -125,16 +125,16 @@ fn handle_error(response: Response) -> Result<HandledResponse> {
         },
         Response::Ping(inner) => {
             if let RequestResult::Error(e) = inner {
-                return Err(ClientError::Ping(e).into());
+                Err(ClientError::Ping(e).into())
             } else {
-                return Ok(HandledResponse::Ping);
+                Ok(HandledResponse::Ping)
             }
         }
         Response::ClearCache(inner) => {
             if let RequestResult::Error(e) = inner {
-                return Err(ClientError::ClearCache(e).into());
+                Err(ClientError::ClearCache(e).into())
             } else {
-                return Ok(HandledResponse::ClearCache);
+                Ok(HandledResponse::ClearCache)
             }
         }
     }

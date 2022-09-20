@@ -20,8 +20,8 @@ impl Glob {
         max_depth: Option<usize>,
     ) -> Result<Self> {
         let base_dir = base_dir
-            .or(std::env::current_dir().ok())
-            .ok_or_else(|| Error::GetCurrentWorkingDir)?;
+            .or_else(|| std::env::current_dir().ok())
+            .ok_or(Error::GetCurrentWorkingDir)?;
         Ok(Self {
             pattern,
             base_dir,

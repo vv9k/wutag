@@ -37,6 +37,6 @@ impl Config {
 
     /// Loads config file from config directory of user executing the program
     pub fn load_default_location() -> Result<Self> {
-        Self::load(dirs::config_dir().ok_or_else(|| ConfigError::FindUserDir)?)
+        Self::load(dirs::config_dir().ok_or(ConfigError::FindUserDir)?)
     }
 }

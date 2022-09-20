@@ -72,15 +72,13 @@ impl NotifyDaemon {
         for entry in registry.list_entries().cloned() {
             if let Err(e) = self.add_watch_entry(entry.path()) {
                 log::error!("{e}");
-                match e {
-                    crate::Error::NotifyDaemon(NotifyDaemonError::NotifyWatcherInit(e)) => {
-                        if let notify::ErrorKind::Io(err) = &e.kind {
-                            if let std::io::ErrorKind::NotFound = err.kind() {
-                                to_remove.push(entry);
-                            }
+
+                if let crate::Error::NotifyDaemon(NotifyDaemonError::NotifyWatcherInit(e)) = e {
+                    if let notify::ErrorKind::Io(err) = &e.kind {
+                        if let std::io::ErrorKind::NotFound = err.kind() {
+                            to_remove.push(entry);
                         }
                     }
-                    _ => {}
                 }
                 continue;
             }
