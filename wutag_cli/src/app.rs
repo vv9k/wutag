@@ -7,7 +7,7 @@ use crate::config::Config;
 use crate::fmt;
 use crate::opt::{
     ClearObject, ClearOpts, Command, CompletionsOpts, CpOpts, EditOpts, GetOpts, ListObject,
-    ListOpts, Opts, RmOpts, SearchOpts, SetOpts, Shell, APP_NAME,
+    ListOpts, Opts, OutputFormat, RmOpts, SearchOpts, SetOpts, Shell, APP_NAME,
 };
 use crate::{Error, Result};
 use thiserror::Error as ThisError;
@@ -32,6 +32,10 @@ pub enum AppError {
     ListTags(String),
     #[error("failed to edit tag - {0}")]
     EditTag(String),
+    #[error("failed to serialize output as yaml - {0}")]
+    SerializeYamlOutput(serde_yaml::Error),
+    #[error("failed to serialize output as json - {0}")]
+    SerializeJsonOutput(serde_json::Error),
     #[error("failed to {action} - unexpected response from server {response:?}")]
     UnexpectedResponse { action: String, response: Response },
 }
@@ -41,6 +45,7 @@ pub struct App {
     pub max_depth: Option<usize>,
     pub colors: Vec<Color>,
     pub pretty: bool,
+    pub format: OutputFormat,
     pub client: Client,
 }
 
@@ -79,6 +84,7 @@ impl App {
             },
             colors,
             pretty: opts.pretty || config.pretty_output,
+            format: opts.output_format,
             client,
         })
     }
@@ -100,6 +106,20 @@ impl App {
         }
     }
 
+    fn print_serialized<T: serde::Serialize + std::fmt::Debug>(&self, it: T) -> Result<()> {
+        let output = match self.format {
+            OutputFormat::Json => {
+                serde_json::to_string(&it).map_err(AppError::SerializeJsonOutput)?
+            }
+            OutputFormat::Yaml => {
+                serde_yaml::to_string(&it).map_err(AppError::SerializeYamlOutput)?
+            }
+            OutputFormat::Default => format!("{it:?}"),
+        };
+        println!("{output}");
+        Ok(())
+    }
+
     fn clear_cache(&mut self) -> Result<()> {
         self.client.clear_cache()
     }
@@ -108,36 +128,63 @@ impl App {
         match opts.object {
             ListObject::Files { with_tags } => {
                 let entries = self.client.list_files(with_tags)?;
-                for (entry, tags) in entries {
-                    print!("{}", fmt::path(entry.path()));
-                    if let Some(mut tags) = tags {
-                        tags.sort_unstable();
-                        let tags = tags
+                match self.format {
+                    OutputFormat::Json | OutputFormat::Yaml => {
+                        let entries: std::collections::HashMap<_, _> = entries
                             .into_iter()
-                            .map(|t| fmt::tag(&t).to_string())
-                            .collect::<Vec<_>>()
-                            .join(" ");
+                            .map(|(e, tags)| (e.into_path_buf(), tags.unwrap_or_default()))
+                            .collect();
+                        self.print_serialized(entries)?;
+                    }
+                    OutputFormat::Default => {
+                        for (entry, tags) in entries {
+                            print!("{}", fmt::path(entry.path()));
+                            if let Some(mut tags) = tags {
+                                tags.sort_unstable();
+                                let tags = tags
+                                    .into_iter()
+                                    .map(|t| fmt::tag(&t).to_string())
+                                    .collect::<Vec<_>>()
+                                    .join(" ");
 
-                        println!(": {}", tags);
-                    } else {
-                        println!();
+                                println!(": {}", tags);
+                            } else {
+                                println!();
+                            }
+                        }
                     }
                 }
             }
             ListObject::Tags { with_files } => {
                 let tags = self.client.list_tags(with_files)?;
-                if with_files {
-                    for (tag, entries) in tags {
-                        println!("{}:", fmt::tag(&tag));
-                        for entry in entries {
-                            println!("\t{}", fmt::path(entry.path()));
-                        }
+                match self.format {
+                    OutputFormat::Json | OutputFormat::Yaml => {
+                        let tags: std::collections::HashMap<_, _> = tags
+                            .into_iter()
+                            .map(|(t, e)| {
+                                (
+                                    t.name().to_string(),
+                                    e.into_iter().map(|e| e.into_path_buf()).collect::<Vec<_>>(),
+                                )
+                            })
+                            .collect();
+                        self.print_serialized(tags)?;
                     }
-                } else {
-                    let mut tags: Vec<_> = tags.into_iter().map(|(t, _)| t).collect();
-                    tags.sort_unstable();
-                    for tag in tags {
-                        print!("{} ", fmt::tag(&tag));
+                    OutputFormat::Default => {
+                        if with_files {
+                            for (tag, entries) in tags {
+                                println!("{}:", fmt::tag(&tag));
+                                for entry in entries {
+                                    println!("\t{}", fmt::path(entry.path()));
+                                }
+                            }
+                        } else {
+                            let mut tags: Vec<_> = tags.into_iter().map(|(t, _)| t).collect();
+                            tags.sort_unstable();
+                            for tag in tags {
+                                print!("{} ", fmt::tag(&tag));
+                            }
+                        }
                     }
                 }
             }
@@ -174,11 +221,22 @@ impl App {
             self.client.inspect_files(opts.paths)?
         };
 
-        for (entry, mut tags) in entries {
-            tags.sort_unstable();
-            print!("{}:", fmt::path(entry.path()));
-            for tag in &tags {
-                print!(" {}", fmt::tag(tag))
+        match self.format {
+            OutputFormat::Json | OutputFormat::Yaml => {
+                let entries: std::collections::HashMap<_, _> = entries
+                    .into_iter()
+                    .map(|(e, tags)| (e.into_path_buf(), tags))
+                    .collect();
+                self.print_serialized(entries)?;
+            }
+            OutputFormat::Default => {
+                for (entry, mut tags) in entries {
+                    tags.sort_unstable();
+                    print!("{}:", fmt::path(entry.path()));
+                    for tag in &tags {
+                        print!(" {}", fmt::tag(tag))
+                    }
+                }
             }
         }
         Ok(())
@@ -225,8 +283,16 @@ impl App {
 
     fn search(&self, opts: SearchOpts) -> Result<()> {
         let entries = self.client.search(opts.tags, opts.any)?;
-        for entry in entries {
-            println!("{}", fmt::path(entry.path()));
+        match self.format {
+            OutputFormat::Json | OutputFormat::Yaml => {
+                let entries: Vec<_> = entries.into_iter().map(|e| e.into_path_buf()).collect();
+                self.print_serialized(entries)?;
+            }
+            OutputFormat::Default => {
+                for entry in entries {
+                    println!("{}", fmt::path(entry.path()));
+                }
+            }
         }
         Ok(())
     }

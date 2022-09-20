@@ -23,6 +23,8 @@ pub enum Error {
     Glob(wutag_core::Error),
     #[error("invalid shell - {0}")]
     InvalidShell(String),
+    #[error("invalid output format - {0}")]
+    InvalidOutputFormat(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

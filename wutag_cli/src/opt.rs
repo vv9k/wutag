@@ -29,8 +29,32 @@ pub struct Opts {
     /// wutag in scripts.
     #[clap(long, short)]
     pub pretty: bool,
+    #[clap(short, long)]
+    #[clap(default_value = "default")]
+    /// Change the output format to `json` or `yaml`
+    pub output_format: OutputFormat,
     #[clap(subcommand)]
     pub cmd: Command,
+}
+
+#[derive(Parser, Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(clippy::enum_variant_names)]
+pub enum OutputFormat {
+    Yaml,
+    Json,
+    Default,
+}
+
+impl FromStr for OutputFormat {
+    type Err = crate::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match &s.to_lowercase()[..] {
+            "yaml" => Ok(OutputFormat::Yaml),
+            "json" => Ok(OutputFormat::Json),
+            "default" => Ok(OutputFormat::Default),
+            _ => Err(crate::Error::InvalidOutputFormat(s.to_string())),
+        }
+    }
 }
 
 #[derive(Parser)]

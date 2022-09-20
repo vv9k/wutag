@@ -10,6 +10,7 @@
 * **BREAKING** the format of tags has changed, all previously tagged files won't work with this version.
 * Replace `wutag clean-cache` subcommand with `wutag clear cache`
 * Add `--with-files`/`-f` option to `wutag list tags` to list entries tagged with each tag
+* Add option to print output as JSON or YAML
 
 # 0.4.0
 
