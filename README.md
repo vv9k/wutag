@@ -46,7 +46,7 @@ By default each tag will be assigned with a random color from 8 base colors (eit
  - The colors are case insensitive
 
 To set a tag on multiple files use the `set` subcommand:
- - `wutag set src/lib.rs src/main.rs -- code`
+ - `wutag set src/lib.rs src/main.rs -- code`  
 The `set` subcommand can also be used with a pattern like this:
  - `wutag set -g '**' -- rust code`
 
@@ -59,7 +59,7 @@ The `rm` subcommand removes specified tags from the list of files. It behaves si
 
 There is also `clear` that clears all tags from the specified files like so:
  - `wutag clear files Cargo.toml`
- - `wutag clear files -g '**'`
+ - `wutag clear files -g '**'`  
 Or clears the tags entirelly untagging all entries:
  - `wutag clear tags rust code`
 
