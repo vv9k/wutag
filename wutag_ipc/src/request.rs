@@ -1,13 +1,12 @@
 use crate::{IpcError, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use thiserror::Error;
 use wutag_core::color::Color;
 use wutag_core::glob::Glob;
 use wutag_core::registry::EntryData;
 use wutag_core::tag::Tag;
-
-pub const REQUEST_SEPARATOR: u8 = 3; // ETX
 
 #[derive(Debug, Error)]
 pub enum PayloadError {
@@ -118,16 +117,12 @@ impl Response {
 
 fn to_payload<T: Serialize>(item: &T) -> Result<Vec<u8>> {
     serde_cbor::to_vec(item)
-        .map(|mut payload| {
-            payload.push(REQUEST_SEPARATOR);
-            payload
-        })
         .map_err(PayloadError::Serialize)
         .map_err(IpcError::Payload)
 }
 
 fn from_payload<'de, T: Deserialize<'de>>(bytes: &'de [u8]) -> Result<T> {
-    serde_cbor::from_slice(&bytes[..bytes.len() - 1])
+    serde_cbor::from_slice(&bytes)
         .map_err(PayloadError::Deserialize)
         .map_err(IpcError::Payload)
 }

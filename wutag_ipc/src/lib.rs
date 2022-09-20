@@ -3,7 +3,7 @@ mod request;
 mod server;
 
 pub use client::{ClientError, IpcClient};
-pub use request::{PayloadError, Request, RequestResult, Response, REQUEST_SEPARATOR};
+pub use request::{PayloadError, Request, RequestResult, Response};
 pub use server::{IpcServer, ServerError};
 
 use interprocess::local_socket::NameTypeSupport;

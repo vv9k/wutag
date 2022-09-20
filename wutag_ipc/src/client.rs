@@ -1,4 +1,4 @@
-use crate::{IpcError, Request, Response, Result, REQUEST_SEPARATOR};
+use crate::{IpcError, Request, Response, Result};
 use interprocess::local_socket::LocalSocketStream;
 use std::io::{self, prelude::*, BufReader};
 use thiserror::Error;
@@ -43,16 +43,23 @@ impl IpcClient {
         conn: &mut BufReader<LocalSocketStream>,
     ) -> Result<()> {
         let payload = request.to_payload()?;
-        conn.get_mut()
-            .write_all(&payload)
+        let mut size = payload.len().to_be_bytes().to_vec();
+        let conn = conn.get_mut();
+        size.extend(payload);
+        conn.write_all(&size)
             .map_err(ClientError::ConnectionWrite)
             .map_err(IpcError::Client)
             .map(|_| ())
     }
 
     fn read_response(&self, conn: &mut BufReader<LocalSocketStream>) -> Result<Response> {
-        let mut buf = vec![];
-        conn.read_until(REQUEST_SEPARATOR, &mut buf)
+        let mut size = [0u8; 8];
+        conn.read_exact(&mut size)
+            .map_err(ClientError::ConnectionRead)?;
+        let size = u64::from_be_bytes(size);
+
+        let mut buf = vec![0; size as usize];
+        conn.read_exact(&mut buf)
             .map_err(ClientError::ConnectionRead)?;
 
         Response::from_payload(&buf)
