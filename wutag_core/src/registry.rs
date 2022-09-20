@@ -343,7 +343,7 @@ impl TagRegistry {
         self.tags.clone().into_iter().map(|(tag, entries)| {
             let entries: Vec<_> = entries
                 .into_iter()
-                .filter_map(|e| self.get_entry(e).map(|e| e.clone()))
+                .filter_map(|e| self.get_entry(e).cloned())
                 .collect();
             (tag, entries)
         })

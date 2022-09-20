@@ -124,7 +124,7 @@ fn to_payload<T: Serialize>(item: &T) -> Result<Vec<u8>> {
 }
 
 fn from_payload<'de, T: Deserialize<'de>>(bytes: &'de [u8]) -> Result<T> {
-    serde_cbor::from_slice(&bytes)
+    serde_cbor::from_slice(bytes)
         .map_err(PayloadError::Deserialize)
         .map_err(IpcError::Payload)
 }
