@@ -35,7 +35,8 @@ jobs:
         uses: hecrj/setup-rust-action@v1
       - name: Checkout
         uses: actions/checkout@v2
-      - name: make test
+      - name: Test
+        run: make test
 
   build_and_upload_artifacts:
     name: Upload Artifacts
@@ -78,6 +79,7 @@ jobs:
       - name: Move release files
         run: |
           mv target/release/wutag wutag/
+          mv target/release/wutagd wutag/
           mv README.md wutag/
           mv LICENSE wutag/
       - name: Move service file
