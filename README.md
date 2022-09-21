@@ -35,7 +35,11 @@ Or start the daemon manually with:
 
 ### Mac OS
 
-...
+To install wutag on MacOS download the static build of latest version from [releases page] and copy the binaries to `/usr/local/bin`. Last step is to copy the service definition `com.wutag.wutagd.plist` to `~/Library/LaunchAgents` and load it:
+```shell
+    $ launchctl load ~/Library/LaunchAgents/com.wutag.wutagd.plist
+    $ launchctl start com.wutag.wutagd
+```
 
 ## Usage
 
