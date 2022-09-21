@@ -17,17 +17,24 @@ pub enum DaemonError {
 
 pub struct WutagDaemon {
     listener: IpcServer,
+    unprocessed_events: Vec<EntryEvent>,
 }
 
 impl WutagDaemon {
     pub fn new(listener: IpcServer) -> Result<Self> {
-        Ok(Self { listener })
+        Ok(Self {
+            listener,
+            unprocessed_events: vec![],
+        })
     }
 
     pub fn work_loop(mut self) {
         loop {
             if let Err(e) = self.process_connection() {
                 log::error!("Failed to process connection, reason: '{e}'");
+            }
+            if !self.unprocessed_events.is_empty() {
+                self.flush_events();
             }
         }
     }
@@ -43,6 +50,27 @@ impl WutagDaemon {
             .send_response(response)
             .map_err(DaemonError::SendResponse)
             .map_err(Error::from)
+    }
+
+    fn flush_events(&mut self) {
+        match ENTRIES_EVENTS.try_write() {
+            Ok(mut events) => events.append(&mut self.unprocessed_events),
+            Err(e) => {
+                log::warn!("failed to lock entries events, reason: {e}");
+            }
+        }
+    }
+
+    fn push_event(&mut self, event: EntryEvent) {
+        match ENTRIES_EVENTS.try_write() {
+            Ok(mut events) => {
+                events.push(event);
+            }
+            Err(e) => {
+                log::warn!("failed to lock entries events, reason: {e}");
+                self.unprocessed_events.push(event);
+            }
+        }
     }
 
     fn process_request(&mut self, request: Request) -> Response {
@@ -127,14 +155,7 @@ impl WutagDaemon {
         }
 
         if !new_entries.is_empty() {
-            match ENTRIES_EVENTS.try_write() {
-                Ok(mut events) => {
-                    events.push(EntryEvent::Add(new_entries));
-                }
-                Err(e) => {
-                    log::error!("failed to lock entries events, reason: {e}");
-                }
-            }
+            self.push_event(EntryEvent::Add(new_entries));
         }
 
         if errors.is_empty() {
@@ -172,14 +193,7 @@ impl WutagDaemon {
         }
 
         if !removed.is_empty() {
-            match ENTRIES_EVENTS.try_write() {
-                Ok(mut events) => {
-                    events.push(EntryEvent::Remove(removed));
-                }
-                Err(e) => {
-                    log::error!("failed to lock entries events, reason: {e}");
-                }
-            }
+            self.push_event(EntryEvent::Remove(removed));
         }
 
         if errors.is_empty() {
@@ -246,14 +260,7 @@ impl WutagDaemon {
         }
 
         if !new_entries.is_empty() {
-            match ENTRIES_EVENTS.try_write() {
-                Ok(mut events) => {
-                    events.push(EntryEvent::Add(new_entries));
-                }
-                Err(e) => {
-                    log::error!("failed to lock entries events, reason: {e}");
-                }
-            }
+            self.push_event(EntryEvent::Add(new_entries));
         }
 
         if errors.is_empty() {
@@ -289,14 +296,7 @@ impl WutagDaemon {
             log::error!("{e}")
         }
 
-        match ENTRIES_EVENTS.try_write() {
-            Ok(mut events) => {
-                events.push(EntryEvent::Remove(files));
-            }
-            Err(e) => {
-                log::error!("failed to lock entries events, reason: {e}");
-            }
-        }
+        self.push_event(EntryEvent::Remove(files));
 
         if errors.is_empty() {
             Response::ClearFiles(RequestResult::Ok(()))
@@ -336,13 +336,8 @@ impl WutagDaemon {
             log::error!("{e}")
         }
 
-        match ENTRIES_EVENTS.try_write() {
-            Ok(mut events) => {
-                events.push(EntryEvent::Remove(removed));
-            }
-            Err(e) => {
-                log::error!("failed to lock entries events, reason: {e}");
-            }
+        if !removed.is_empty() {
+            self.push_event(EntryEvent::Remove(removed));
         }
 
         Response::ClearFiles(RequestResult::Ok(()))
