@@ -86,16 +86,16 @@ fn map_response(response: Response) -> Result<HandledResponse> {
             .map(|_| HandledResponse::ClearTags),
         Response::ListFiles(inner) => inner
             .to_result(|e| ClientError::ListFiles(e).into())
-            .map(|inner| HandledResponse::ListFiles(inner)),
+            .map(HandledResponse::ListFiles),
         Response::ListTags(inner) => inner
             .to_result(|e| ClientError::ListTags(e).into())
-            .map(|inner| HandledResponse::ListTags(inner)),
+            .map(HandledResponse::ListTags),
         Response::InspectFiles(inner) => inner
             .to_result(|e| ClientError::InspectFiles(e).into())
-            .map(|inner| HandledResponse::InspectFiles(inner)),
+            .map(HandledResponse::InspectFiles),
         Response::Search(inner) => inner
             .to_result(|e| ClientError::Search(e).into())
-            .map(|inner| HandledResponse::Search(inner)),
+            .map(HandledResponse::Search),
         Response::Ping(inner) => inner
             .to_result(|e| ClientError::Ping(e).into())
             .map(|_| HandledResponse::Ping),
