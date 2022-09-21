@@ -1,4 +1,4 @@
-use clap::IntoApp;
+use clap::CommandFactory;
 use std::io;
 use std::path::PathBuf;
 
@@ -328,7 +328,7 @@ impl App {
             shells::{Bash, Elvish, Fish, PowerShell, Zsh},
         };
 
-        let mut app = Opts::into_app();
+        let mut app = Opts::command();
 
         match opts.shell {
             Shell::Bash => generate(Bash, &mut app, APP_NAME, &mut io::stdout()),

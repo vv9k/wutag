@@ -32,7 +32,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 fn main() {
     let config = Config::load_default_location().unwrap_or_default();
 
-    if let Err(e) = App::run(Opts::from_args(), config) {
+    if let Err(e) = App::run(Opts::parse(), config) {
         eprintln!("Execution failed, reason: {}", e);
     }
 }

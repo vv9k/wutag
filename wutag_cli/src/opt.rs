@@ -15,21 +15,21 @@ pub const APP_ABOUT: &str = "Tool to tag and manage tags of files.";
     about = APP_ABOUT,
 )]
 pub struct Opts {
-    #[clap(short, long)]
+    #[arg(short, long)]
     /// When this parameter is specified the program will look for files starting from provided
     /// path, otherwise defaults to current directory. Only applies to subcommands that take a
     /// pattern as a positional argument.
     pub dir: Option<PathBuf>,
-    #[clap(long, short)]
+    #[arg(long, short)]
     /// If provided increase maximum recursion depth of filesystem traversal to specified value,
     /// otherwise default depth is 2. Only applies to subcommands that take a pattern as a
     /// positional argument.
     pub max_depth: Option<usize>,
     /// Make the output pretty (add color and reorder things). This is not recommended when using
     /// wutag in scripts.
-    #[clap(long, short)]
+    #[arg(long, short)]
     pub pretty: bool,
-    #[clap(short, long)]
+    #[arg(short, long)]
     #[clap(default_value = "default")]
     /// Change the output format to `json` or `yaml`
     pub output_format: OutputFormat,
@@ -60,12 +60,12 @@ impl FromStr for OutputFormat {
 #[derive(Parser)]
 pub enum ListObject {
     Tags {
-        #[clap(long, short = 'f')]
+        #[arg(long, short = 'f')]
         /// Should all entries tagged with a tag be shown
         with_files: bool,
     },
     Files {
-        #[clap(long, short = 't')]
+        #[arg(long, short = 't')]
         /// Should the tags of the entry be display.
         with_tags: bool,
     },
@@ -82,7 +82,7 @@ pub struct ListOpts {
 pub struct SetOpts {
     /// A list of entries to tag
     pub paths: Vec<String>,
-    #[clap(short, long)]
+    #[arg(short, long)]
     /// Treat the first path as a glob pattern
     pub glob: bool,
     #[clap(required = true, last = true)]
@@ -94,7 +94,7 @@ pub struct SetOpts {
 pub struct GetOpts {
     /// A list of entries to retrieve tags from
     pub paths: Vec<String>,
-    #[clap(short, long)]
+    #[arg(short, long)]
     /// Treat the first path as a glob pattern
     pub glob: bool,
 }
@@ -103,7 +103,7 @@ pub struct GetOpts {
 pub struct RmOpts {
     /// A list of entries to tag
     pub paths: Vec<String>,
-    #[clap(short, long)]
+    #[arg(short, long)]
     /// Treat the first path as a glob pattern
     pub glob: bool,
     #[clap(required = true, last = true)]
@@ -121,7 +121,7 @@ pub enum ClearObject {
     Files {
         /// A list of entries to tag
         paths: Vec<String>,
-        #[clap(short, long)]
+        #[arg(short, long)]
         /// Treat the first path as a glob pattern
         glob: bool,
     },
@@ -139,14 +139,14 @@ pub struct ClearOpts {
 pub struct SearchOpts {
     #[clap(required = true)]
     pub tags: Vec<String>,
-    #[clap(long, short)]
+    #[arg(long, short)]
     /// If set to 'true' all entries containing any of provided tags will be returned
     pub any: bool,
 }
 
 #[derive(Parser)]
 pub struct CpOpts {
-    #[clap(short, long)]
+    #[arg(short, long)]
     /// Treat the first path as a glob pattern
     pub glob: bool,
     /// Path to the file from which to copy tags from
@@ -160,14 +160,14 @@ pub struct CpOpts {
 pub struct EditOpts {
     /// The tag to edit
     pub tag: String,
-    #[clap(long, short)]
+    #[arg(long, short)]
     /// Set the color of the tag to the specified color. Accepted values are hex colors like
     /// `0x000000` or `#1F1F1F` or just plain `ff000a`. The colors are case insensitive meaning
     /// `1f1f1f` is equivalent to `1F1F1F`.
     pub color: String,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Clone, Copy)]
 #[allow(clippy::enum_variant_names)]
 pub enum Shell {
     Bash,
