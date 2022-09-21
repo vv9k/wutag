@@ -91,6 +91,20 @@ pub enum RequestResult<T, E> {
     Error(E),
 }
 
+impl<T, E> RequestResult<T, E> {
+    /// Converts this request result to std::result::Result by applying the `make_error_fn` to
+    /// the inner error
+    pub fn to_result<E2: std::error::Error>(
+        self,
+        make_error_fn: impl FnOnce(E) -> E2,
+    ) -> std::result::Result<T, E2> {
+        match self {
+            RequestResult::Ok(ok) => Ok(ok),
+            RequestResult::Error(e) => Err(make_error_fn(e)),
+        }
+    }
+}
+
 #[derive(Deserialize, Debug, Serialize)]
 pub enum Response {
     TagFiles(RequestResult<(), Vec<String>>),

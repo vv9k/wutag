@@ -4,7 +4,7 @@ use wutag_core::color::Color;
 use wutag_core::glob::Glob;
 use wutag_core::registry::EntryData;
 use wutag_core::tag::Tag;
-use wutag_ipc::{IpcClient, Request, RequestResult, Response};
+use wutag_ipc::{IpcClient, Request, Response};
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -60,84 +60,48 @@ pub struct Client {
     client: IpcClient,
 }
 
-fn handle_error(response: Response) -> Result<HandledResponse> {
+fn map_response(response: Response) -> Result<HandledResponse> {
     fn format_multiple_errors(e: Vec<String>) -> String {
         const SEPARATOR: &str = "\n - ";
         format!("{SEPARATOR}{}", e.join(SEPARATOR))
     }
     match response {
-        Response::TagFiles(inner) => {
-            if let RequestResult::Error(e) = inner {
-                Err(ClientError::TagFiles(format_multiple_errors(e)).into())
-            } else {
-                Ok(HandledResponse::TagFiles)
-            }
-        }
-        Response::UntagFiles(inner) => {
-            if let RequestResult::Error(e) = inner {
-                Err(ClientError::UntagFiles(format_multiple_errors(e)).into())
-            } else {
-                Ok(HandledResponse::UntagFiles)
-            }
-        }
-        Response::EditTag(inner) => {
-            if let RequestResult::Error(e) = inner {
-                Err(ClientError::EditTag(e).into())
-            } else {
-                Ok(HandledResponse::EditTag)
-            }
-        }
-        Response::CopyTags(inner) => {
-            if let RequestResult::Error(e) = inner {
-                Err(ClientError::CopyTags(format_multiple_errors(e)).into())
-            } else {
-                Ok(HandledResponse::CopyTags)
-            }
-        }
-        Response::ClearFiles(inner) => {
-            if let RequestResult::Error(e) = inner {
-                Err(ClientError::ClearFiles(format_multiple_errors(e)).into())
-            } else {
-                Ok(HandledResponse::ClearFiles)
-            }
-        }
-        Response::ClearTags(inner) => {
-            if let RequestResult::Error(e) = inner {
-                Err(ClientError::ClearTags(format_multiple_errors(e)).into())
-            } else {
-                Ok(HandledResponse::ClearTags)
-            }
-        }
-        Response::ListFiles(inner) => match inner {
-            RequestResult::Error(e) => Err(ClientError::ListFiles(e).into()),
-            RequestResult::Ok(inner) => Ok(HandledResponse::ListFiles(inner)),
-        },
-        Response::ListTags(inner) => match inner {
-            RequestResult::Error(e) => Err(ClientError::ListTags(e).into()),
-            RequestResult::Ok(inner) => Ok(HandledResponse::ListTags(inner)),
-        },
-        Response::InspectFiles(inner) => match inner {
-            RequestResult::Error(e) => Err(ClientError::InspectFiles(e).into()),
-            RequestResult::Ok(inner) => Ok(HandledResponse::InspectFiles(inner)),
-        },
-        Response::Search(inner) => match inner {
-            RequestResult::Error(e) => Err(ClientError::Search(e).into()),
-            RequestResult::Ok(inner) => Ok(HandledResponse::Search(inner)),
-        },
-        Response::Ping(inner) => {
-            if let RequestResult::Error(e) = inner {
-                Err(ClientError::Ping(e).into())
-            } else {
-                Ok(HandledResponse::Ping)
-            }
-        }
-        Response::ClearCache(inner) => {
-            if let RequestResult::Error(e) = inner {
-                Err(ClientError::ClearCache(e).into())
-            } else {
-                Ok(HandledResponse::ClearCache)
-            }
-        }
+        Response::TagFiles(inner) => inner
+            .to_result(|e| ClientError::TagFiles(format_multiple_errors(e)).into())
+            .map(|_| HandledResponse::TagFiles),
+        Response::UntagFiles(inner) => inner
+            .to_result(|e| ClientError::UntagFiles(format_multiple_errors(e)).into())
+            .map(|_| HandledResponse::UntagFiles),
+        Response::EditTag(inner) => inner
+            .to_result(|e| ClientError::EditTag(e).into())
+            .map(|_| HandledResponse::EditTag),
+        Response::CopyTags(inner) => inner
+            .to_result(|e| ClientError::CopyTags(format_multiple_errors(e)).into())
+            .map(|_| HandledResponse::CopyTags),
+        Response::ClearFiles(inner) => inner
+            .to_result(|e| ClientError::ClearFiles(format_multiple_errors(e)).into())
+            .map(|_| HandledResponse::ClearFiles),
+        Response::ClearTags(inner) => inner
+            .to_result(|e| ClientError::ClearTags(format_multiple_errors(e)).into())
+            .map(|_| HandledResponse::ClearTags),
+        Response::ListFiles(inner) => inner
+            .to_result(|e| ClientError::ListFiles(e).into())
+            .map(|inner| HandledResponse::ListFiles(inner)),
+        Response::ListTags(inner) => inner
+            .to_result(|e| ClientError::ListTags(e).into())
+            .map(|inner| HandledResponse::ListTags(inner)),
+        Response::InspectFiles(inner) => inner
+            .to_result(|e| ClientError::InspectFiles(e).into())
+            .map(|inner| HandledResponse::InspectFiles(inner)),
+        Response::Search(inner) => inner
+            .to_result(|e| ClientError::Search(e).into())
+            .map(|inner| HandledResponse::Search(inner)),
+        Response::Ping(inner) => inner
+            .to_result(|e| ClientError::Ping(e).into())
+            .map(|_| HandledResponse::Ping),
+        Response::ClearCache(inner) => inner
+            .to_result(|e| ClientError::ClearCache(e).into())
+            .map(|_| HandledResponse::ClearCache),
     }
 }
 
@@ -156,7 +120,7 @@ impl Client {
         self.client
             .request(request)
             .map_err(|e| ClientError::TagFiles(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .map(|_| ())
     }
 
@@ -190,7 +154,7 @@ impl Client {
         self.client
             .request(request)
             .map_err(|e| ClientError::UntagFiles(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .map(|_| ())
     }
 
@@ -223,7 +187,7 @@ impl Client {
         self.client
             .request(Request::EditTag { tag, color })
             .map_err(|e| ClientError::EditTag(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .map(|_| ())
     }
 
@@ -235,7 +199,7 @@ impl Client {
         self.client
             .request(request)
             .map_err(|e| ClientError::CopyTags(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .map(|_| ())
     }
 
@@ -253,7 +217,7 @@ impl Client {
                     .collect(),
             })
             .map_err(|e| ClientError::CopyTags(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .map(|_| ())
     }
 
@@ -272,7 +236,7 @@ impl Client {
         self.client
             .request(request)
             .map_err(|e| ClientError::ClearFiles(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .map(|_| ())
     }
 
@@ -295,7 +259,7 @@ impl Client {
                 tags: tags.into_iter().map(|t| t.as_ref().to_string()).collect(),
             })
             .map_err(|e| ClientError::ClearTags(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .map(|_| ())
     }
 
@@ -303,7 +267,7 @@ impl Client {
         self.client
             .request(Request::ListTags { with_files })
             .map_err(|e| ClientError::ListTags(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .and_then(|r| {
                 if let HandledResponse::ListTags(tags) = r {
                     Ok(tags)
@@ -317,7 +281,7 @@ impl Client {
         self.client
             .request(Request::ListFiles { with_tags })
             .map_err(|e| ClientError::ListFiles(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .and_then(|r| {
                 if let HandledResponse::ListFiles(files) = r {
                     Ok(files)
@@ -335,7 +299,7 @@ impl Client {
         self.client
             .request(request)
             .map_err(|e| ClientError::InspectFiles(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .and_then(|r| {
                 if let HandledResponse::InspectFiles(files) = r {
                     Ok(files)
@@ -372,7 +336,7 @@ impl Client {
                 any,
             })
             .map_err(|e| ClientError::Search(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .and_then(|r| {
                 if let HandledResponse::Search(files) = r {
                     Ok(files)
@@ -386,7 +350,7 @@ impl Client {
         self.client
             .request(Request::Ping)
             .map_err(|e| ClientError::Ping(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .map(|_| ())
     }
 
@@ -394,7 +358,7 @@ impl Client {
         self.client
             .request(Request::ClearCache)
             .map_err(|e| ClientError::ClearCache(e.to_string()).into())
-            .and_then(handle_error)
+            .and_then(map_response)
             .map(|_| ())
     }
 }
