@@ -48,19 +48,21 @@ impl IpcServer {
         conn.read_exact(&mut size)
             .map_err(ServerError::ConnectionRead)?;
         let size = u64::from_be_bytes(size);
+        log::trace!("request size: {size}");
 
         let mut buf = vec![0; size as usize];
         conn.read_exact(&mut buf)
             .map_err(ServerError::ConnectionRead)?;
 
         let request = Request::from_payload(&buf)?;
-        log::trace!("{request:?}");
+        log::debug!("got request: {request:?}");
         self.conns.push_back(conn);
         Ok(request)
     }
 
     pub fn send_response(&mut self, response: Response) -> Result<()> {
         if let Some(mut conn) = self.conns.pop_front() {
+            log::debug!("sending response: {response:?}");
             let payload = response.to_payload()?;
             let conn = conn.get_mut();
             let size = (payload.len() as u64).to_be_bytes();

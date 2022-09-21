@@ -1,5 +1,5 @@
 use crate::registry::{get_registry_read, get_registry_write};
-use crate::{EntryEvent, Error, Result, ENTRIES_EVENTS};
+use crate::{EntryEvent, Result, ENTRIES_EVENTS};
 use std::path::PathBuf;
 use thiserror::Error as ThisError;
 use wutag_core::color::{Color, DEFAULT_COLORS};
@@ -44,12 +44,14 @@ impl WutagDaemon {
             .listener
             .accept_request()
             .map_err(DaemonError::AcceptRequest)?;
+        let timestamp = std::time::Instant::now();
         let response = self.process_request(request);
-        log::trace!("{response:?}");
         self.listener
             .send_response(response)
-            .map_err(DaemonError::SendResponse)
-            .map_err(Error::from)
+            .map_err(DaemonError::SendResponse)?;
+        let processing_time = timestamp.elapsed();
+        log::trace!("processing time: {}", processing_time.as_secs_f32());
+        Ok(())
     }
 
     fn flush_events(&mut self) {
