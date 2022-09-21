@@ -132,25 +132,21 @@ impl App {
                     OutputFormat::Json | OutputFormat::Yaml => {
                         let entries: std::collections::HashMap<_, _> = entries
                             .into_iter()
-                            .map(|(e, tags)| (e.into_path_buf(), tags.unwrap_or_default()))
+                            .map(|(e, tags)| (e.into_path_buf(), tags))
                             .collect();
                         self.print_serialized(entries)?;
                     }
                     OutputFormat::Default => {
-                        for (entry, tags) in entries {
+                        for (entry, mut tags) in entries {
                             print!("{}", fmt::path(entry.path()));
-                            if let Some(mut tags) = tags {
-                                tags.sort_unstable();
-                                let tags = tags
-                                    .into_iter()
-                                    .map(|t| fmt::tag(&t).to_string())
-                                    .collect::<Vec<_>>()
-                                    .join(" ");
+                            tags.sort_unstable();
+                            let tags = tags
+                                .into_iter()
+                                .map(|t| fmt::tag(&t).to_string())
+                                .collect::<Vec<_>>()
+                                .join(" ");
 
-                                println!(": {}", tags);
-                            } else {
-                                println!();
-                            }
+                            println!(": {}", tags);
                         }
                     }
                 }

@@ -49,7 +49,7 @@ pub enum HandledResponse {
     ClearFiles,
     ClearTags,
     ListTags(HashMap<Tag, Vec<EntryData>>),
-    ListFiles(Vec<(EntryData, Option<Vec<Tag>>)>),
+    ListFiles(Vec<(EntryData, Vec<Tag>)>),
     InspectFiles(Vec<(EntryData, Vec<Tag>)>),
     Search(Vec<EntryData>),
     Ping,
@@ -313,7 +313,7 @@ impl Client {
             })
     }
 
-    pub fn list_files(&self, with_tags: bool) -> Result<Vec<(EntryData, Option<Vec<Tag>>)>> {
+    pub fn list_files(&self, with_tags: bool) -> Result<Vec<(EntryData, Vec<Tag>)>> {
         self.client
             .request(Request::ListFiles { with_tags })
             .map_err(|e| ClientError::ListFiles(e.to_string()).into())

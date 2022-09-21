@@ -315,7 +315,7 @@ impl TagRegistry {
     }
 
     /// Lists entries with their tags
-    pub fn list_entries_and_tags(&self) -> impl Iterator<Item = (EntryData, Option<Vec<Tag>>)> {
+    pub fn list_entries_and_tags(&self) -> impl Iterator<Item = (EntryData, Vec<Tag>)> {
         let entries_with_tags = self.tags.iter().fold(HashMap::new(), |mut acc, it| {
             for entry in it.1 {
                 let entry = acc.entry(*entry).or_insert(Vec::new());
@@ -328,7 +328,7 @@ impl TagRegistry {
             .into_iter()
             .map(|(id, tags)| (self.entries.get(&id).cloned(), tags))
             .filter(|(id, _)| id.is_some())
-            .map(|(id, tags)| (id.unwrap(), Some(tags)))
+            .map(|(id, tags)| (id.unwrap(), tags))
             .collect::<Vec<_>>()
             .into_iter()
     }

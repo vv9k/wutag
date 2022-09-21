@@ -366,7 +366,10 @@ impl WutagDaemon {
         let entries = if with_tags {
             registry.list_entries_and_tags().collect()
         } else {
-            registry.list_entries().map(|e| (e.clone(), None)).collect()
+            registry
+                .list_entries()
+                .map(|e| (e.clone(), vec![]))
+                .collect()
         };
         Response::ListFiles(RequestResult::Ok(entries))
     }
