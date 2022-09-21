@@ -4,7 +4,7 @@ use std::{path::PathBuf, str::FromStr};
 use clap::Parser;
 
 pub const APP_NAME: &str = "wutag";
-pub const APP_VERSION: &str = "0.5.0-dev";
+pub const APP_VERSION: &str = "0.5.0";
 pub const APP_AUTHOR: &str = "Wojciech Kępka <wojciech@wkepka.dev>";
 pub const APP_ABOUT: &str = "Tool to tag and manage tags of files.";
 

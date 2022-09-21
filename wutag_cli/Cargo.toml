@@ -1,6 +1,6 @@
 [package]
 name = "wutag"
-version = "0.5.0-dev"
+version = "0.5.0"
 authors = ["wojciechkepka <wojtek.kepka@protonmail.com>"]
 edition = "2021"
 
