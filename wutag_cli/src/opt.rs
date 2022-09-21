@@ -85,7 +85,8 @@ pub struct SetOpts {
     #[arg(short, long)]
     /// Treat the first path as a glob pattern
     pub glob: bool,
-    #[clap(required = true, last = true)]
+    #[clap(required = true)]
+    #[arg(short, long)]
     /// List of tags to tag the entries with
     pub tags: Vec<String>,
 }
@@ -106,7 +107,8 @@ pub struct RmOpts {
     #[arg(short, long)]
     /// Treat the first path as a glob pattern
     pub glob: bool,
-    #[clap(required = true, last = true)]
+    #[clap(required = true)]
+    #[arg(short, long)]
     pub tags: Vec<String>,
 }
 

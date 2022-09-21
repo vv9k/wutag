@@ -46,16 +46,16 @@ By default each tag will be assigned with a random color from 8 base colors (eit
  - The colors are case insensitive
 
 To set a tag on multiple files use the `set` subcommand:
- - `wutag set src/lib.rs src/main.rs -- code`  
+ - `wutag set src/lib.rs src/main.rs --tags code`  
 The `set` subcommand can also be used with a pattern like this:
- - `wutag set -g '**' -- rust code`
+ - `wutag set -g '**' -t rust code`
 
 To get the tags of some entries use:
  - `wutag get src/lib.rs src/main.rs`
 
 The `rm` subcommand removes specified tags from the list of files. It behaves similarly to the `set` subcommand:
- - `wutag rm src/lib.rs src/main.rs -- code`
- - `wutag rm -g '**' -- rust code`
+ - `wutag rm src/lib.rs src/main.rs -t code`
+ - `wutag rm -g '**' -t rust code`
 
 There is also `clear` that clears all tags from the specified files like so:
  - `wutag clear files Cargo.toml`
@@ -64,11 +64,11 @@ Or clears the tags entirelly untagging all entries:
  - `wutag clear tags rust code`
 
 When using glob processing, default recursion depth is set to *2*. To increase it use `--max-depth` or `-m` global parameter. For example:
- - `wutag -m 5 set -g '**' trash`
+ - `wutag -m 5 set -g '**' -t trash`
 
 After tagging your files with `set` like:
- - `wutag set -g '**/*.jpg' -- photos`
- - `wutag set -g '**/DCIM_12*' -- doge`  
+ - `wutag set -g '**/*.jpg' -t photos`
+ - `wutag set -g '**/DCIM_12*' -t doge`  
 you can easily get the list of files with specified tags by doing `wutag search photos doge`. 
 
 The output of the `search` subcommand can easily be piped to other programs:
@@ -76,7 +76,7 @@ The output of the `search` subcommand can easily be piped to other programs:
 
 When `--any` flag is provided as in the example `wutag` will match files containing any of the provided tags rather than all of them.
 
-If you are into emojis then surely you can use emojis to tag files 🙂 `wutag set -g '*.doc' -- 📋`
+If you are into emojis then surely you can use emojis to tag files 🙂 `wutag set -g '*.doc' -t 📋`
 
 ## Configuration
 

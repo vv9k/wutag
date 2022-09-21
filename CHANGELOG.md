@@ -11,6 +11,7 @@
 * Replace `wutag clean-cache` subcommand with `wutag clear cache`
 * Add `--with-files`/`-f` option to `wutag list tags` to list entries tagged with each tag
 * Add option to print output as JSON or YAML
+* The subcommands `set` and `rm` now take tags as a named parameter `--tags`/`-t`
 
 # 0.4.0
 
