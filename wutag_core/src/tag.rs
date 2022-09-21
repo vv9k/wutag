@@ -95,6 +95,11 @@ impl Tag {
 
         Err(Error::TagNotFound(self.name.clone()))
     }
+
+    /// Consumes this tag returing it's name
+    pub fn into_name(self) -> String {
+        self.name
+    }
 }
 
 impl fmt::Display for Tag {

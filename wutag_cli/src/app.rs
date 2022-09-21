@@ -132,7 +132,12 @@ impl App {
                     OutputFormat::Json | OutputFormat::Yaml => {
                         let entries: std::collections::HashMap<_, _> = entries
                             .into_iter()
-                            .map(|(e, tags)| (e.into_path_buf(), tags))
+                            .map(|(e, tags)| {
+                                (
+                                    e.into_path_buf(),
+                                    tags.into_iter().map(Tag::into_name).collect::<Vec<_>>(),
+                                )
+                            })
                             .collect();
                         self.print_serialized(entries)?;
                     }
@@ -159,7 +164,7 @@ impl App {
                             .into_iter()
                             .map(|(t, e)| {
                                 (
-                                    t.name().to_string(),
+                                    t.into_name(),
                                     e.into_iter().map(|e| e.into_path_buf()).collect::<Vec<_>>(),
                                 )
                             })
