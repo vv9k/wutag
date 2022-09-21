@@ -80,6 +80,14 @@ jobs:
           mv target/release/wutag wutag/
           mv README.md wutag/
           mv LICENSE wutag/
+      - name: Move service file
+        if: matrix.os == 'macos-latest'
+        run: |
+          mv example/com.wutag.wutagd.plist wutag/
+      - name: Move service file
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mv example/wutagd.service wutag/
       - name: Create archives
         run: |
           tar -zcvf ${{ env.WUTAG_ARCHIVE }}.tar.gz wutag
