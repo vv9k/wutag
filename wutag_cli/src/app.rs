@@ -1,13 +1,11 @@
-use clap::CommandFactory;
-use std::io;
 use std::path::PathBuf;
 
 use crate::client::Client;
 use crate::config::Config;
 use crate::fmt;
 use crate::opt::{
-    ClearObject, ClearOpts, Command, CompletionsOpts, CpOpts, EditOpts, GetOpts, ListObject,
-    ListOpts, Opts, OutputFormat, RmOpts, SearchOpts, SetOpts, Shell, APP_NAME,
+    ClearObject, ClearOpts, Command, CpOpts, EditOpts, GetOpts, ListObject, ListOpts, Opts,
+    OutputFormat, RmOpts, SearchOpts, SetOpts,
 };
 use crate::{Error, Result};
 use thiserror::Error as ThisError;
@@ -102,7 +100,8 @@ impl App {
             Command::Search(opts) => self.search(opts),
             Command::Cp(opts) => self.cp(opts),
             Command::Edit(opts) => self.edit(opts),
-            Command::PrintCompletions(opts) => self.print_completions(opts),
+            // This command should be handled in main
+            Command::PrintCompletions(_) => unreachable!(),
         }
     }
 
@@ -320,24 +319,6 @@ impl App {
             .edit_tag(opts.tag, c)
             .map_err(Error::from)
             .map(|_| ())
-    }
-
-    fn print_completions(&self, opts: CompletionsOpts) -> Result<()> {
-        use clap_complete::{
-            generate,
-            shells::{Bash, Elvish, Fish, PowerShell, Zsh},
-        };
-
-        let mut app = Opts::command();
-
-        match opts.shell {
-            Shell::Bash => generate(Bash, &mut app, APP_NAME, &mut io::stdout()),
-            Shell::Elvish => generate(Elvish, &mut app, APP_NAME, &mut io::stdout()),
-            Shell::Fish => generate(Fish, &mut app, APP_NAME, &mut io::stdout()),
-            Shell::PowerShell => generate(PowerShell, &mut app, APP_NAME, &mut io::stdout()),
-            Shell::Zsh => generate(Zsh, &mut app, APP_NAME, &mut io::stdout()),
-        }
-        Ok(())
     }
 
     fn glob(&self, pattern: impl Into<String>) -> Result<Glob> {
