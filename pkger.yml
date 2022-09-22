@@ -12,6 +12,12 @@ metadata:
       - gcc
       - pkg-config
       - python3
+  deb:
+    postinst_script: |
+      systemctl daemon-reload
+  rpm:
+    post_script: |
+      systemctl daemon-reload
 configure:
   steps:
     - cmd: curl -o /tmp/install_rust.sh https://sh.rustup.rs
