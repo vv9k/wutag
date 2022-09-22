@@ -20,6 +20,10 @@ build:
   working_dir: $PKGER_BLD_DIR/${RECIPE}-$RECIPE_VERSION
   steps:
     - cmd: $HOME/.cargo/bin/cargo build --release --bins
+    - cmd: |
+        ./target/release/wutag print-completions bash > wutag.bash
+        ./target/release/wutag print-completions fish > wutag.fish
+        ./target/release/wutag print-completions zsh > _wutag
 install:
   steps:
     - cmd: >-
@@ -27,9 +31,17 @@ install:
           usr/bin \
           usr/share/licenses/$RECIPE \
           usr/share/doc/$RECIPE \
+          usr/share/bash-completion/completions \
+          usr/share/fish/vendor_completions.d \
+          usr/share/zsh/site-functions \
           etc/systemd/user
     - cmd: install -m755 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/target/release/wutag usr/bin/
     - cmd: install -m755 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/target/release/wutagd usr/bin/
     - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/example/wutagd.service etc/systemd/user/wutagd.service
+
     - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/LICENSE usr/share/licenses/$RECIPE/LICENSE
     - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/README.md usr/share/doc/$RECIPE/README.md
+
+    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/wutag.bash usr/share/bash-completion/completions/wutag
+    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/wutag.fish usr/share/fish/vendor_completions.d/wutag.fish
+    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/_wutag usr/share/zsh/sire-functions/_wutag
