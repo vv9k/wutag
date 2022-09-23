@@ -1,7 +1,7 @@
-use colored::{ColoredString, Colorize};
-use std::path::Path;
-
+use wutag_core::color::{ColoredString, Colorize};
 use wutag_core::tag::Tag;
+
+use std::path::Path;
 
 pub fn path<P: AsRef<Path>>(path: P) -> ColoredString {
     path.as_ref().display().to_string().bold().blue()

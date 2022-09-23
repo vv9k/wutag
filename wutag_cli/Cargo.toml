@@ -10,7 +10,6 @@ wutag_ipc = { path = "../wutag_ipc" }
 
 clap = { version = "4.0.0-rc.1", features = ["derive", "color"] }
 clap_complete = "4.0.0-rc.1"
-colored = { git = "https://github.com/wojciechkepka/colored", branch = "master", features = ["serde"] }
 dirs = "4"
 serde = { version = "1", features = ["derive"] }
 serde_cbor = "0.11"

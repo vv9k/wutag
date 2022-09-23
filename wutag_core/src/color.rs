@@ -1,6 +1,6 @@
 //! Utility functions used through this crate and by the main executable
 use colored::Color::*;
-pub use colored::{control, Color};
+pub use colored::{control, Color, ColoredString, Colorize};
 
 use crate::{Error, Result};
 
