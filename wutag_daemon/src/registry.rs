@@ -13,9 +13,11 @@ pub enum RegistryError {
 }
 
 static REGISTRY: Lazy<RwLock<TagRegistry>> = Lazy::new(|| {
-    let registry_file = dirs::data_dir()
-        .expect("valid data directory")
-        .join("wutag.db");
+    let data_dir = dirs::data_dir().expect("valid data directory");
+    if !data_dir.exists() {
+        std::fs::create_dir_all(&data_dir).expect("failed to initialize data directory");
+    }
+    let registry_file = data_dir.join("wutag.db");
     RwLock::new(
         TagRegistry::load(&registry_file).unwrap_or_else(|_| TagRegistry::new(registry_file)),
     )
