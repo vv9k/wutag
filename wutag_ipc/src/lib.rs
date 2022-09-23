@@ -22,7 +22,13 @@ pub fn socket_name(base_path: impl AsRef<Path>, name: impl AsRef<str>) -> String
 }
 
 pub fn default_socket() -> String {
-    socket_name("/tmp", "wutag.sock")
+    let username = whoami::username();
+    let socketname = format!("wutag-{username}.sock");
+    let dir = dirs::runtime_dir()
+        .or_else(dirs::data_local_dir)
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|| "/tmp".into());
+    socket_name(dir, socketname)
 }
 
 #[derive(Debug, Error)]

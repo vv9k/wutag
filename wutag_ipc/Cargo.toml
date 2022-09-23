@@ -12,3 +12,5 @@ log = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_cbor = "0.11"
 thiserror = "1"
+whoami = "1"
+dirs = "4"
