@@ -6,7 +6,8 @@ pub use client::{ClientError, IpcClient};
 pub use request::{PayloadError, Request, RequestResult, Response};
 pub use server::{IpcServer, ServerError};
 
-use interprocess::local_socket::NameTypeSupport;
+use interprocess::local_socket::{LocalSocketStream, NameTypeSupport};
+use std::io::{self, prelude::*, BufReader};
 use std::path::Path;
 use thiserror::Error;
 
@@ -39,6 +40,31 @@ pub enum IpcError {
     Server(#[from] ServerError),
     #[error("{0}")]
     Client(#[from] ClientError),
+    #[error("failed to read from socket - {0}")]
+    ConnectionRead(io::Error),
+    #[error("failed to write to socket - {0}")]
+    ConnectionWrite(io::Error),
     #[error("Error: {0}")]
     Other(String),
+}
+
+fn send_payload(payload: &[u8], conn: &mut BufReader<LocalSocketStream>) -> Result<()> {
+    let mut size = payload.len().to_be_bytes().to_vec();
+    let conn = conn.get_mut();
+    size.extend(payload);
+    conn.write_all(&size)
+        .map_err(IpcError::ConnectionWrite)
+        .map(|_| ())
+}
+
+fn read_payload(conn: &mut BufReader<LocalSocketStream>) -> Result<Vec<u8>> {
+    let mut size = [0u8; 8];
+    conn.read_exact(&mut size)
+        .map_err(IpcError::ConnectionRead)?;
+    let size = u64::from_be_bytes(size);
+
+    let mut buf = vec![0; size as usize];
+    conn.read_exact(&mut buf)
+        .map_err(IpcError::ConnectionRead)
+        .map(|_| buf)
 }

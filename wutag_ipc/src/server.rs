@@ -1,7 +1,7 @@
-use crate::{IpcError, Request, Response, Result};
+use crate::{read_payload, send_payload, IpcError, Request, Response, Result};
 use interprocess::local_socket::{LocalSocketListener, LocalSocketStream};
 use std::collections::VecDeque;
-use std::io::{self, prelude::*, BufReader};
+use std::io::{self, BufReader};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -37,24 +37,12 @@ impl IpcServer {
     }
 
     pub fn accept_request(&mut self) -> Result<Request> {
-        let mut size = [0u8; 8];
-
         let conn = self
             .socket
             .accept()
             .map_err(ServerError::ConnectionAccept)?;
         let mut conn = BufReader::new(conn);
-        // read request size
-        conn.read_exact(&mut size)
-            .map_err(ServerError::ConnectionRead)?;
-        let size = u64::from_be_bytes(size);
-        log::trace!("request size: {size}");
-
-        let mut buf = vec![0; size as usize];
-        conn.read_exact(&mut buf)
-            .map_err(ServerError::ConnectionRead)?;
-
-        let request = Request::from_payload(&buf)?;
+        let request = read_payload(&mut conn).and_then(|buf| Request::from_payload(&buf))?;
         log::debug!("got request: {request:?}");
         self.conns.push_back(conn);
         Ok(request)
@@ -64,16 +52,7 @@ impl IpcServer {
         if let Some(mut conn) = self.conns.pop_front() {
             log::debug!("sending response: {response:?}");
             let payload = response.to_payload()?;
-            let conn = conn.get_mut();
-            let size = (payload.len() as u64).to_be_bytes();
-
-            conn.write_all(&size)
-                .map_err(ServerError::ConnectionWrite)?;
-
-            return conn
-                .write_all(&payload)
-                .map_err(ServerError::ConnectionWrite)
-                .map_err(IpcError::Server);
+            return send_payload(&payload, &mut conn);
         }
 
         Err(ServerError::NoActiveConnection).map_err(IpcError::Server)
