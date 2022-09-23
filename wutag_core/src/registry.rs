@@ -144,13 +144,11 @@ impl TagRegistry {
     /// or `None` if the tag was added.
     pub fn tag_entry(&mut self, tag: &Tag, entry: EntryId) -> Option<EntryId> {
         let entries = self.mut_tag_entries(tag);
-
-        if let Some(entry) = entries.iter().find(|&e| *e == entry) {
-            return Some(*entry);
+        if !entries.insert(entry) {
+            Some(entry)
+        } else {
+            None
         }
-        entries.insert(entry);
-
-        None
     }
 
     fn clean_tag_if_no_entries(&mut self, tag: &Tag) {
