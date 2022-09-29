@@ -8,8 +8,8 @@ edition = "2021"
 wutag_core = { path = "../wutag_core" }
 wutag_ipc = { path = "../wutag_ipc" }
 
-clap = { version = "4.0.0-rc.1", features = ["derive", "color"] }
-clap_complete = "4.0.0-rc.1"
+clap = { version = "4", features = ["derive", "color"] }
+clap_complete = "4"
 dirs = "4"
 serde = { version = "1", features = ["derive"] }
 serde_cbor = "0.11"
