@@ -1,4 +1,4 @@
-use crate::{read_payload, send_payload, IpcError, Request, Response, Result};
+use crate::{payload::Payload, IpcError, Result};
 use interprocess::local_socket::{LocalSocketListener, LocalSocketStream};
 use std::collections::VecDeque;
 use std::io::{self, BufReader};
@@ -36,23 +36,22 @@ impl IpcServer {
         })
     }
 
-    pub fn accept_request(&mut self) -> Result<Request> {
+    pub fn accept_request<REQUEST: Payload>(&mut self) -> Result<REQUEST> {
         let conn = self
             .socket
             .accept()
             .map_err(ServerError::ConnectionAccept)?;
         let mut conn = BufReader::new(conn);
-        let request = read_payload(&mut conn).and_then(|buf| Request::from_payload(&buf))?;
+        let request = REQUEST::read(&mut conn)?;
         log::debug!("got request: {request:?}");
         self.conns.push_back(conn);
         Ok(request)
     }
 
-    pub fn send_response(&mut self, response: Response) -> Result<()> {
+    pub fn send_response<RESPONSE: Payload>(&mut self, response: RESPONSE) -> Result<()> {
         if let Some(mut conn) = self.conns.pop_front() {
             log::debug!("sending response: {response:?}");
-            let payload = response.to_payload()?;
-            return send_payload(&payload, &mut conn);
+            return response.send(&mut conn);
         }
 
         Err(ServerError::NoActiveConnection).map_err(IpcError::Server)

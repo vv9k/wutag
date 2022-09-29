@@ -1,4 +1,4 @@
-use crate::{read_payload, send_payload, Request, Response, Result};
+use crate::{payload::Payload, Result};
 use interprocess::local_socket::LocalSocketStream;
 use std::io::{self, BufReader};
 use thiserror::Error;
@@ -22,27 +22,17 @@ impl IpcClient {
         Self { path: path.into() }
     }
 
-    pub fn request(&self, request: Request) -> Result<Response> {
+    pub fn request<REQUEST: Payload, RESPONSE: Payload>(
+        &self,
+        request: REQUEST,
+    ) -> Result<RESPONSE> {
         let conn =
             LocalSocketStream::connect(self.path.as_str()).map_err(ClientError::ConnectionInit)?;
         let mut conn = BufReader::new(conn);
 
-        self.send_request(request, &mut conn)?;
-        let response = self.read_response(&mut conn)?;
+        request.send(&mut conn)?;
+        let response = RESPONSE::read(&mut conn)?;
 
         Ok(response)
-    }
-
-    fn send_request(
-        &self,
-        request: Request,
-        conn: &mut BufReader<LocalSocketStream>,
-    ) -> Result<()> {
-        let payload = request.to_payload()?;
-        send_payload(&payload, conn)
-    }
-
-    fn read_response(&self, conn: &mut BufReader<LocalSocketStream>) -> Result<Response> {
-        read_payload(conn).and_then(|buf| Response::from_payload(&buf))
     }
 }

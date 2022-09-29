@@ -5,7 +5,7 @@ use thiserror::Error as ThisError;
 use wutag_core::color::{Color, DEFAULT_COLORS};
 use wutag_core::registry::EntryData;
 use wutag_core::tag::{clear_tags, list_tags, Tag};
-use wutag_ipc::{IpcError, IpcServer, Request, RequestResult, Response};
+use wutag_ipc::{IpcError, IpcServer, PayloadResult, Request, Response};
 
 #[derive(Debug, ThisError)]
 pub enum DaemonError {
@@ -80,31 +80,31 @@ impl WutagDaemon {
             Request::TagFiles { files, tags } => self.tag_files(files, tags),
             Request::TagFilesPattern { glob, tags } => match glob.glob_paths() {
                 Ok(files) => self.tag_files(files, tags),
-                Err(e) => Response::TagFiles(RequestResult::Error(vec![e.to_string()])),
+                Err(e) => Response::TagFiles(PayloadResult::Error(vec![e.to_string()])),
             },
             Request::UntagFiles { files, tags } => self.untag_files(files, tags),
             Request::UntagFilesPattern { glob, tags } => match glob.glob_paths() {
                 Ok(files) => self.untag_files(files, tags),
-                Err(e) => Response::UntagFiles(RequestResult::Error(vec![e.to_string()])),
+                Err(e) => Response::UntagFiles(PayloadResult::Error(vec![e.to_string()])),
             },
             Request::ListTags { with_files } => self.list_tags(with_files),
             Request::ListFiles { with_tags } => self.list_files(with_tags),
             Request::InspectFiles { files } => self.inspect_files(files),
             Request::InspectFilesPattern { glob } => match glob.glob_paths() {
                 Ok(files) => self.inspect_files(files),
-                Err(e) => Response::InspectFiles(RequestResult::Error(e.to_string())),
+                Err(e) => Response::InspectFiles(PayloadResult::Error(e.to_string())),
             },
             Request::ClearFiles { files } => self.clear_files(files),
             Request::ClearFilesPattern { glob } => match glob.glob_paths() {
                 Ok(files) => self.clear_files(files),
-                Err(e) => Response::ClearFiles(RequestResult::Error(vec![e.to_string()])),
+                Err(e) => Response::ClearFiles(PayloadResult::Error(vec![e.to_string()])),
             },
             Request::ClearTags { tags } => self.clear_tags(tags),
             Request::Search { tags, any } => self.search(tags, any),
             Request::CopyTags { source, target } => self.copy_tags(source, target),
             Request::CopyTagsPattern { source, glob } => match glob.glob_paths() {
                 Ok(target) => self.copy_tags(source, target),
-                Err(e) => Response::CopyTags(RequestResult::Error(vec![e.to_string()])),
+                Err(e) => Response::CopyTags(PayloadResult::Error(vec![e.to_string()])),
             },
             Request::Ping => self.ping(),
             Request::EditTag { tag, color } => self.edit_tag(tag, color),
@@ -114,10 +114,10 @@ impl WutagDaemon {
 
     fn tag_files(&mut self, files: Vec<PathBuf>, tags: Vec<Tag>) -> Response {
         if files.is_empty() {
-            return Response::TagFiles(RequestResult::Error(vec!["no files to tag".into()]));
+            return Response::TagFiles(PayloadResult::Error(vec!["no files to tag".into()]));
         }
         if tags.is_empty() {
-            return Response::TagFiles(RequestResult::Error(vec!["no tags provided".into()]));
+            return Response::TagFiles(PayloadResult::Error(vec!["no tags provided".into()]));
         }
         let mut errors = vec![];
         let mut new_entries = vec![];
@@ -161,18 +161,18 @@ impl WutagDaemon {
         }
 
         if errors.is_empty() {
-            Response::TagFiles(RequestResult::Ok(()))
+            Response::TagFiles(PayloadResult::Ok(()))
         } else {
-            Response::TagFiles(RequestResult::Error(errors))
+            Response::TagFiles(PayloadResult::Error(errors))
         }
     }
 
     fn untag_files(&mut self, files: Vec<PathBuf>, tags: Vec<Tag>) -> Response {
         if files.is_empty() {
-            return Response::UntagFiles(RequestResult::Error(vec!["no files to untag".into()]));
+            return Response::UntagFiles(PayloadResult::Error(vec!["no files to untag".into()]));
         }
         if tags.is_empty() {
-            return Response::UntagFiles(RequestResult::Error(vec!["no tags provided".into()]));
+            return Response::UntagFiles(PayloadResult::Error(vec!["no tags provided".into()]));
         }
         let mut registry = get_registry_write();
         let mut errors = vec![];
@@ -199,35 +199,35 @@ impl WutagDaemon {
         }
 
         if errors.is_empty() {
-            Response::UntagFiles(RequestResult::Ok(()))
+            Response::UntagFiles(PayloadResult::Ok(()))
         } else {
-            Response::UntagFiles(RequestResult::Error(errors))
+            Response::UntagFiles(PayloadResult::Error(errors))
         }
     }
 
     fn edit_tag(&mut self, tag: String, color: Color) -> Response {
         let mut registry = get_registry_write();
         if registry.get_tag(&tag).is_none() {
-            return Response::EditTag(RequestResult::Error(format!("tag {tag} doesn't exist")));
+            return Response::EditTag(PayloadResult::Error(format!("tag {tag} doesn't exist")));
         }
         registry.update_tag_color(tag, color);
         if let Err(e) = registry.save() {
             log::error!("{e}")
         }
-        Response::EditTag(RequestResult::Ok(()))
+        Response::EditTag(PayloadResult::Ok(()))
     }
 
     fn copy_tags(&mut self, source: PathBuf, target: Vec<PathBuf>) -> Response {
         let tags = match list_tags(&source) {
             Ok(tags) => tags,
             Err(e) => {
-                return Response::CopyTags(RequestResult::Error(vec![format!(
+                return Response::CopyTags(PayloadResult::Error(vec![format!(
                     "faile to copy tags - {e}"
                 )]))
             }
         };
         if tags.is_empty() {
-            return Response::CopyTags(RequestResult::Ok(()));
+            return Response::CopyTags(PayloadResult::Ok(()));
         }
 
         let mut errors = vec![];
@@ -266,15 +266,15 @@ impl WutagDaemon {
         }
 
         if errors.is_empty() {
-            Response::CopyTags(RequestResult::Ok(()))
+            Response::CopyTags(PayloadResult::Ok(()))
         } else {
-            Response::CopyTags(RequestResult::Error(errors))
+            Response::CopyTags(PayloadResult::Error(errors))
         }
     }
 
     fn clear_files(&mut self, files: Vec<PathBuf>) -> Response {
         if files.is_empty() {
-            return Response::ClearFiles(RequestResult::Error(vec!["no files to clear".into()]));
+            return Response::ClearFiles(PayloadResult::Error(vec!["no files to clear".into()]));
         }
 
         let mut errors = vec![];
@@ -301,15 +301,15 @@ impl WutagDaemon {
         self.push_event(EntryEvent::Remove(files));
 
         if errors.is_empty() {
-            Response::ClearFiles(RequestResult::Ok(()))
+            Response::ClearFiles(PayloadResult::Ok(()))
         } else {
-            Response::ClearFiles(RequestResult::Error(errors))
+            Response::ClearFiles(PayloadResult::Error(errors))
         }
     }
 
     fn clear_tags(&mut self, tags: Vec<String>) -> Response {
         if tags.is_empty() {
-            return Response::ClearTags(RequestResult::Error(vec!["no tags to clear".into()]));
+            return Response::ClearTags(PayloadResult::Error(vec!["no tags to clear".into()]));
         }
 
         let mut removed = vec![];
@@ -342,17 +342,17 @@ impl WutagDaemon {
             self.push_event(EntryEvent::Remove(removed));
         }
 
-        Response::ClearFiles(RequestResult::Ok(()))
+        Response::ClearFiles(PayloadResult::Ok(()))
     }
 
     fn list_tags(&mut self, with_files: bool) -> Response {
         let registry = get_registry_read();
         if with_files {
-            Response::ListTags(RequestResult::Ok(
+            Response::ListTags(PayloadResult::Ok(
                 registry.list_tags_and_entries().collect(),
             ))
         } else {
-            Response::ListTags(RequestResult::Ok(
+            Response::ListTags(PayloadResult::Ok(
                 registry.list_tags().map(|t| (t.clone(), vec![])).collect(),
             ))
         }
@@ -368,12 +368,12 @@ impl WutagDaemon {
                 .map(|e| (e.clone(), vec![]))
                 .collect()
         };
-        Response::ListFiles(RequestResult::Ok(entries))
+        Response::ListFiles(PayloadResult::Ok(entries))
     }
 
     fn inspect_files(&mut self, files: Vec<PathBuf>) -> Response {
         if files.is_empty() {
-            return Response::InspectFiles(RequestResult::Error("no files to inspect".into()));
+            return Response::InspectFiles(PayloadResult::Error("no files to inspect".into()));
         }
         let mut entries = vec![];
 
@@ -391,12 +391,12 @@ impl WutagDaemon {
             }
         }
 
-        Response::InspectFiles(RequestResult::Ok(entries))
+        Response::InspectFiles(PayloadResult::Ok(entries))
     }
 
     fn search(&mut self, tags: Vec<String>, any: bool) -> Response {
         if tags.is_empty() {
-            return Response::Search(RequestResult::Error("no tags to search for".into()));
+            return Response::Search(PayloadResult::Error("no tags to search for".into()));
         }
         let registry = get_registry_read();
         let entries = if any {
@@ -410,11 +410,11 @@ impl WutagDaemon {
                 found.push(entry.clone());
             }
         }
-        Response::Search(RequestResult::Ok(found))
+        Response::Search(PayloadResult::Ok(found))
     }
 
     fn ping(&mut self) -> Response {
-        Response::Ping(RequestResult::Ok(()))
+        Response::Ping(PayloadResult::Ok(()))
     }
 
     fn clean_cache(&mut self) -> Response {
@@ -423,6 +423,6 @@ impl WutagDaemon {
         if let Err(e) = registry.save() {
             log::error!("{e}")
         }
-        Response::ClearCache(RequestResult::Ok(()))
+        Response::ClearCache(PayloadResult::Ok(()))
     }
 }

@@ -1,15 +1,22 @@
 mod client;
-mod request;
+mod payload;
 mod server;
 
 pub use client::{ClientError, IpcClient};
-pub use request::{PayloadError, Request, RequestResult, Response};
+pub use payload::{Payload, PayloadError, PayloadResult};
 pub use server::{IpcServer, ServerError};
 
-use interprocess::local_socket::{LocalSocketStream, NameTypeSupport};
-use std::io::{self, prelude::*, BufReader};
+use interprocess::local_socket::NameTypeSupport;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::io;
 use std::path::Path;
+use std::path::PathBuf;
 use thiserror::Error;
+use wutag_core::color::Color;
+use wutag_core::glob::Glob;
+use wutag_core::registry::EntryData;
+use wutag_core::tag::Tag;
 
 pub type Result<T> = std::result::Result<T, IpcError>;
 
@@ -48,23 +55,81 @@ pub enum IpcError {
     Other(String),
 }
 
-fn send_payload(payload: &[u8], conn: &mut BufReader<LocalSocketStream>) -> Result<()> {
-    let mut size = payload.len().to_be_bytes().to_vec();
-    let conn = conn.get_mut();
-    size.extend(payload);
-    conn.write_all(&size)
-        .map_err(IpcError::ConnectionWrite)
-        .map(|_| ())
+#[derive(Deserialize, Debug, Serialize)]
+pub enum Request {
+    TagFiles {
+        files: Vec<PathBuf>,
+        tags: Vec<Tag>,
+    },
+    TagFilesPattern {
+        glob: Glob,
+        tags: Vec<Tag>,
+    },
+    UntagFiles {
+        files: Vec<PathBuf>,
+        tags: Vec<Tag>,
+    },
+    UntagFilesPattern {
+        glob: Glob,
+        tags: Vec<Tag>,
+    },
+    EditTag {
+        tag: String,
+        color: Color,
+    },
+    ClearFiles {
+        files: Vec<PathBuf>,
+    },
+    ClearFilesPattern {
+        glob: Glob,
+    },
+    ClearTags {
+        tags: Vec<String>,
+    },
+    CopyTags {
+        source: PathBuf,
+        target: Vec<PathBuf>,
+    },
+    CopyTagsPattern {
+        source: PathBuf,
+        glob: Glob,
+    },
+    ListTags {
+        with_files: bool,
+    },
+    ListFiles {
+        with_tags: bool,
+    },
+    InspectFiles {
+        files: Vec<PathBuf>,
+    },
+    InspectFilesPattern {
+        glob: Glob,
+    },
+    Search {
+        tags: Vec<String>,
+        any: bool,
+    },
+    Ping,
+    ClearCache,
 }
 
-fn read_payload(conn: &mut BufReader<LocalSocketStream>) -> Result<Vec<u8>> {
-    let mut size = [0u8; 8];
-    conn.read_exact(&mut size)
-        .map_err(IpcError::ConnectionRead)?;
-    let size = u64::from_be_bytes(size);
+impl Payload for Request {}
 
-    let mut buf = vec![0; size as usize];
-    conn.read_exact(&mut buf)
-        .map_err(IpcError::ConnectionRead)
-        .map(|_| buf)
+#[derive(Deserialize, Debug, Serialize)]
+pub enum Response {
+    TagFiles(PayloadResult<(), Vec<String>>),
+    UntagFiles(PayloadResult<(), Vec<String>>),
+    EditTag(PayloadResult<(), String>),
+    CopyTags(PayloadResult<(), Vec<String>>),
+    ClearFiles(PayloadResult<(), Vec<String>>),
+    ClearTags(PayloadResult<(), Vec<String>>),
+    ListTags(PayloadResult<HashMap<Tag, Vec<EntryData>>, String>),
+    ListFiles(PayloadResult<Vec<(EntryData, Vec<Tag>)>, String>),
+    InspectFiles(PayloadResult<Vec<(EntryData, Vec<Tag>)>, String>),
+    Search(PayloadResult<Vec<EntryData>, String>),
+    Ping(PayloadResult<(), String>),
+    ClearCache(PayloadResult<(), String>),
 }
+
+impl Payload for Response {}
